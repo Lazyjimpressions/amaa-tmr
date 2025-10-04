@@ -23,6 +23,7 @@ jobs:
           ls -la wp-content/themes/amaa-tmr || true
           ls -la wp-content/plugins/supabase-bridge || true
 
+      # Create remote directory (via SSH) and upload THEME
       - name: Deploy Theme to WPE Staging
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -31,11 +32,12 @@ jobs:
           password: ${{ secrets.STAGING_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/themes/amaa-tmr"
-          remote_path: "wp-content/themes"               # <-- upload INTO this directory
-          sftp_only: true
+          remote_path: "wp-content/themes/amaa-tmr"      # <-- full target dir
+          sftp_only: false                               # <-- allow mkdir -p
           delete_remote_files: false
           sftpArgs: "-4 -o StrictHostKeyChecking=no"
 
+      # Optional: Create remote directory and upload PLUGIN (if present)
       - name: Deploy Plugin to WPE Staging (optional)
         if: ${{ hashFiles('wp-content/plugins/supabase-bridge/**') != '' }}
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
@@ -45,8 +47,8 @@ jobs:
           password: ${{ secrets.STAGING_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/plugins/supabase-bridge"
-          remote_path: "wp-content/plugins"              # <-- upload INTO this directory
-          sftp_only: true
+          remote_path: "wp-content/plugins/supabase-bridge"
+          sftp_only: false
           delete_remote_files: false
           sftpArgs: "-4 -o StrictHostKeyChecking=no"
 
@@ -71,8 +73,8 @@ jobs:
           password: ${{ secrets.PROD_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/themes/amaa-tmr"
-          remote_path: "wp-content/themes"               # <-- upload INTO this directory
-          sftp_only: true
+          remote_path: "wp-content/themes/amaa-tmr"
+          sftp_only: false
           delete_remote_files: false
           sftpArgs: "-4 -o StrictHostKeyChecking=no"
 
@@ -85,7 +87,7 @@ jobs:
           password: ${{ secrets.PROD_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/plugins/supabase-bridge"
-          remote_path: "wp-content/plugins"              # <-- upload INTO this directory
-          sftp_only: true
+          remote_path: "wp-content/plugins/supabase-bridge"
+          sftp_only: false
           delete_remote_files: false
           sftpArgs: "-4 -o StrictHostKeyChecking=no"
