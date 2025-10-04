@@ -3,6 +3,7 @@ name: Deploy to WP Engine (Theme + Plugin)
 on:
   push:
     branches: [ "staging", "main" ]
+  workflow_dispatch: {}
 
 concurrency:
   group: deploy-wpe-${{ github.ref }}
@@ -16,7 +17,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Deploy Theme to STAGING
+      # Optional: sanity check paths
+      - name: List repo files
+        run: |
+          ls -la
+          ls -la wp-content/themes/amaa-tmr || true
+          ls -la wp-content/plugins/supabase-bridge || true
+
       - name: Deploy Theme to WPE Staging
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -27,14 +34,9 @@ jobs:
           local_path: "wp-content/themes/amaa-tmr"
           remote_path: "wp-content/themes/amaa-tmr"
           sftp_only: true
-          delete: false
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/node_modules/**
-            **/.DS_Store
+          delete_remote_files: false
+          sftpArgs: "-o StrictHostKeyChecking=no"
 
-      # OPTIONAL: Deploy Plugin to STAGING
       - name: Deploy Plugin to WPE Staging
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -45,12 +47,8 @@ jobs:
           local_path: "wp-content/plugins/supabase-bridge"
           remote_path: "wp-content/plugins/supabase-bridge"
           sftp_only: true
-          delete: false
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/node_modules/**
-            **/.DS_Store
+          delete_remote_files: false
+          sftpArgs: "-o StrictHostKeyChecking=no"
 
   deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -59,7 +57,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Deploy Theme to PRODUCTION
       - name: Deploy Theme to WPE Production
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -70,14 +67,9 @@ jobs:
           local_path: "wp-content/themes/amaa-tmr"
           remote_path: "wp-content/themes/amaa-tmr"
           sftp_only: true
-          delete: false
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/node_modules/**
-            **/.DS_Store
+          delete_remote_files: false
+          sftpArgs: "-o StrictHostKeyChecking=no"
 
-      # OPTIONAL: Deploy Plugin to PRODUCTION
       - name: Deploy Plugin to WPE Production
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -88,9 +80,5 @@ jobs:
           local_path: "wp-content/plugins/supabase-bridge"
           remote_path: "wp-content/plugins/supabase-bridge"
           sftp_only: true
-          delete: false
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/node_modules/**
-            **/.DS_Store
+          delete_remote_files: false
+          sftpArgs: "-o StrictHostKeyChecking=no"
