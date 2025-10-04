@@ -1,4 +1,4 @@
-name: Deploy to WP Engine (Theme + Plugin)
+name: Deploy to WP Engine (Staging & Production)
 
 on:
   push:
@@ -17,27 +17,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Optional: sanity check paths
-      - name: List repo files
+      - name: List repo files (sanity check)
         run: |
           ls -la
           ls -la wp-content/themes/amaa-tmr || true
           ls -la wp-content/plugins/supabase-bridge || true
 
+      # Upload local 'wp-content/themes/amaa-tmr' INTO 'sites/marketrepstg/wp-content/themes'
       - name: Deploy Theme to WPE Staging
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.STAGING_SFTP_HOST }}
-          username: ${{ secrets.STAGING_SFTP_USER }}
+          server: ${{ secrets.STAGING_SFTP_HOST }}       # marketrepstg.sftp.wpengine.com
+          username: ${{ secrets.STAGING_SFTP_USER }}     # e.g., marketrepstg-admin
           password: ${{ secrets.STAGING_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/themes/amaa-tmr"
-          remote_path: "wp-content/themes/amaa-tmr"
+          remote_path: "sites/marketrepstg/wp-content/themes"
           sftp_only: true
           delete_remote_files: false
-          sftpArgs: "-o StrictHostKeyChecking=no"
+          sftpArgs: "-4 -o StrictHostKeyChecking=no"
 
+      # Optional plugin deploy (only runs if folder exists)
       - name: Deploy Plugin to WPE Staging
+        if: ${{ hashFiles('wp-content/plugins/supabase-bridge/**') != '' }}
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.STAGING_SFTP_HOST }}
@@ -45,10 +47,10 @@ jobs:
           password: ${{ secrets.STAGING_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/plugins/supabase-bridge"
-          remote_path: "wp-content/plugins/supabase-bridge"
+          remote_path: "sites/marketrepstg/wp-content/plugins"
           sftp_only: true
           delete_remote_files: false
-          sftpArgs: "-o StrictHostKeyChecking=no"
+          sftpArgs: "-4 -o StrictHostKeyChecking=no"
 
   deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -57,20 +59,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: List repo files (sanity check)
+        run: |
+          ls -la
+          ls -la wp-content/themes/amaa-tmr || true
+          ls -la wp-content/plugins/supabase-bridge || true
+
+      # Upload local 'wp-content/themes/amaa-tmr' INTO 'sites/thereport/wp-content/themes'
       - name: Deploy Theme to WPE Production
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.PROD_SFTP_HOST }}
-          username: ${{ secrets.PROD_SFTP_USER }}
+          server: ${{ secrets.PROD_SFTP_HOST }}       # thereport.sftp.wpengine.com
+          username: ${{ secrets.PROD_SFTP_USER }}     # thereport-admin
           password: ${{ secrets.PROD_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/themes/amaa-tmr"
-          remote_path: "wp-content/themes/amaa-tmr"
+          remote_path: "sites/thereport/wp-content/themes"
           sftp_only: true
           delete_remote_files: false
-          sftpArgs: "-o StrictHostKeyChecking=no"
+          sftpArgs: "-4 -o StrictHostKeyChecking=no"
 
+      # Optional plugin deploy (only runs if folder exists)
       - name: Deploy Plugin to WPE Production
+        if: ${{ hashFiles('wp-content/plugins/supabase-bridge/**') != '' }}
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.PROD_SFTP_HOST }}
@@ -78,7 +89,7 @@ jobs:
           password: ${{ secrets.PROD_SFTP_PASS }}
           port: 2222
           local_path: "wp-content/plugins/supabase-bridge"
-          remote_path: "wp-content/plugins/supabase-bridge"
+          remote_path: "sites/thereport/wp-content/plugins"
           sftp_only: true
           delete_remote_files: false
-          sftpArgs: "-o StrictHostKeyChecking=no"
+          sftpArgs: "-4 -o StrictHostKeyChecking=no"
