@@ -30,7 +30,7 @@ jobs:
           server: ${{ secrets.STAGING_SFTP_HOST }}
           username: ${{ secrets.STAGING_SFTP_USER }}
           password: ${{ secrets.STAGING_SFTP_PASS }}
-          port: 22
+          port: 2222
           local_path: "wp-content/themes/amaa-tmr"
           remote_path: "wp-content/themes/amaa-tmr"
           sftp_only: true
@@ -43,7 +43,7 @@ jobs:
           server: ${{ secrets.STAGING_SFTP_HOST }}
           username: ${{ secrets.STAGING_SFTP_USER }}
           password: ${{ secrets.STAGING_SFTP_PASS }}
-          port: 22
+          port: 2222
           local_path: "wp-content/plugins/supabase-bridge"
           remote_path: "wp-content/plugins/supabase-bridge"
           sftp_only: true
@@ -63,7 +63,7 @@ jobs:
           server: ${{ secrets.PROD_SFTP_HOST }}
           username: ${{ secrets.PROD_SFTP_USER }}
           password: ${{ secrets.PROD_SFTP_PASS }}
-          port: 22
+          port: 2222
           local_path: "wp-content/themes/amaa-tmr"
           remote_path: "wp-content/themes/amaa-tmr"
           sftp_only: true
@@ -76,7 +76,7 @@ jobs:
           server: ${{ secrets.PROD_SFTP_HOST }}
           username: ${{ secrets.PROD_SFTP_USER }}
           password: ${{ secrets.PROD_SFTP_PASS }}
-          port: 22
+          port: 2222
           local_path: "wp-content/plugins/supabase-bridge"
           remote_path: "wp-content/plugins/supabase-bridge"
           sftp_only: true
