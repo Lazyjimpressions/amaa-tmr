@@ -1,0 +1,96 @@
+name: Deploy to WP Engine (Theme + Plugin)
+
+on:
+  push:
+    branches: [ "staging", "main" ]
+
+concurrency:
+  group: deploy-wpe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Deploy Theme to STAGING
+      - name: Deploy Theme to WPE Staging
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.STAGING_SFTP_HOST }}
+          username: ${{ secrets.STAGING_SFTP_USER }}
+          password: ${{ secrets.STAGING_SFTP_PASS }}
+          port: 22
+          local_path: "wp-content/themes/amaa-tmr"
+          remote_path: "wp-content/themes/amaa-tmr"
+          sftp_only: true
+          delete: false
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/.DS_Store
+
+      # OPTIONAL: Deploy Plugin to STAGING
+      - name: Deploy Plugin to WPE Staging
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.STAGING_SFTP_HOST }}
+          username: ${{ secrets.STAGING_SFTP_USER }}
+          password: ${{ secrets.STAGING_SFTP_PASS }}
+          port: 22
+          local_path: "wp-content/plugins/supabase-bridge"
+          remote_path: "wp-content/plugins/supabase-bridge"
+          sftp_only: true
+          delete: false
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/.DS_Store
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Deploy Theme to PRODUCTION
+      - name: Deploy Theme to WPE Production
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.PROD_SFTP_HOST }}
+          username: ${{ secrets.PROD_SFTP_USER }}
+          password: ${{ secrets.PROD_SFTP_PASS }}
+          port: 22
+          local_path: "wp-content/themes/amaa-tmr"
+          remote_path: "wp-content/themes/amaa-tmr"
+          sftp_only: true
+          delete: false
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/.DS_Store
+
+      # OPTIONAL: Deploy Plugin to PRODUCTION
+      - name: Deploy Plugin to WPE Production
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.PROD_SFTP_HOST }}
+          username: ${{ secrets.PROD_SFTP_USER }}
+          password: ${{ secrets.PROD_SFTP_PASS }}
+          port: 22
+          local_path: "wp-content/plugins/supabase-bridge"
+          remote_path: "wp-content/plugins/supabase-bridge"
+          sftp_only: true
+          delete: false
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/.DS_Store
