@@ -1,39 +1,32 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { ok, bad, service, getUser } from "../_shared/utils.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { ok, bad, cors, getUser, service } from "../_shared/utils.ts";
 
-Deno.serve(async (req: Request) => {
-  try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return bad('Missing authorization header', undefined, 401);
-    }
+serve(async (req) => {
+  // CORS preflight
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors(req.headers.get("origin") || undefined) });
+  if (req.method !== "GET") return bad("method_not_allowed", req.headers.get("origin") || undefined, 405);
 
-    const user = await getUser(authHeader);
-    if (!user) {
-      return bad('Invalid token', undefined, 401);
-    }
+  const origin = req.headers.get("origin") || undefined;
+  const authHeader = req.headers.get("authorization") || undefined;
 
-    const supabase = service(authHeader);
-    
-    // Get member info from database
-    const { data: member, error: memberError } = await supabase
-      .from('members')
-      .select('user_id, email, is_member, membership_level')
-      .eq('user_id', user.id)
-      .single();
+  // Validate JWT
+  const user = await getUser(authHeader);
+  if (!user?.email) return ok({ is_member: false }, origin);
 
-    if (memberError && memberError.code !== 'PGRST116') {
-      return bad('Database error: ' + memberError.message, undefined, 500);
-    }
+  const supa = service(); // service role to bypass RLS for lookup by email (safer & simpler)
+  const { data: row } = await supa
+    .from("members")
+    .select("is_member, membership_level, email, user_id")
+    .eq("email", user.email.toLowerCase())
+    .maybeSingle();
 
-    // Return user context
-    return ok({
-      user_id: user.id,
+  return ok(
+    {
       email: user.email,
-      is_member: member?.is_member || false,
-      membership_level: member?.membership_level || ''
-    });
-  } catch (error) {
-    return bad('Internal server error: ' + error.message, undefined, 500);
-  }
+      is_member: !!row?.is_member,
+      membership_level: row?.membership_level || null,
+      user_id: row?.user_id || null,
+    },
+    origin
+  );
 });

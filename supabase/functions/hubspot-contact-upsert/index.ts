@@ -1,47 +1,43 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { ok, bad, service, json, lower, isActiveMemberFromHubSpot } from "../_shared/utils.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { ok, bad, cors, json, service, lower, isActiveMemberFromHubSpot } from "../_shared/utils.ts";
 
-Deno.serve(async (req: Request) => {
-  try {
-    const body = await json(req);
-    const { email, membership_status___amaa, membership_level } = body;
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors(req.headers.get("origin") || undefined) });
+  if (req.method !== "POST") return bad("method_not_allowed", req.headers.get("origin") || undefined, 405);
 
-    if (!email) {
-      return bad('Missing email');
-    }
+  const origin = req.headers.get("origin") || undefined;
+  const body = await json(req) as Record<string, unknown>;
 
-    const supabase = service();
-    
-    // Determine membership status using utility
-    const is_member = isActiveMemberFromHubSpot(membership_status___amaa);
+  // Support two shapes:
+  // 1) Direct payload: { email, membership_status___amaa: "Active", membership_level? }
+  // 2) HubSpot change event: { objectType, propertyName, propertyValue, objectId, ... }
+  let email = lower((body as any).email);
+  let status = (body as any).membership_status___amaa as string | undefined;
+  let membership_level = (body as any).membership_level as string | undefined;
 
-    // Upsert member record
-    const { data: member, error: memberError } = await supabase
-      .from('members')
-      .upsert({
-        email: lower(email),
-        is_member,
-        membership_level: membership_level || null
-      }, {
-        onConflict: 'email'
-      })
-      .select('id, email, is_member, membership_level')
-      .single();
-
-    if (memberError) {
-      return bad('Failed to upsert member: ' + memberError.message, undefined, 500);
-    }
-
-    return ok({
-      success: true,
-      member: {
-        id: member.id,
-        email: member.email,
-        is_member: member.is_member,
-        membership_level: member.membership_level
-      }
-    });
-  } catch (error) {
-    return bad('Internal server error: ' + error.message, undefined, 500);
+  // Try extracting from HubSpot event if direct fields absent
+  if (!email && (body as any)?.objectType === "contact") {
+    const props = (body as any).properties || (body as any).changedProperties || {};
+    status = status ?? (props.membership_status___amaa?.value ?? props.membership_status___amaa);
+    // email may be in 'email' property or 'properties.email.value'
+    email = lower(
+      (props.email?.value ??
+        (props.email || (body as any).email)) as string | undefined,
+    );
   }
+
+  if (!email) return bad("missing_email", origin);
+  const is_member = isActiveMemberFromHubSpot(status);
+
+  const supa = service();
+  const up = {
+    email,
+    is_member,
+    membership_level: membership_level ?? null,
+  };
+
+  const { error } = await supa.from("members").upsert(up, { onConflict: "email" });
+  if (error) return bad(`db_error: ${error.message}`, origin, 500);
+
+  return ok({ ok: true, email, is_member }, origin);
 });
