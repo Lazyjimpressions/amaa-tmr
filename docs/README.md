@@ -19,6 +19,7 @@ Author: Jonathan • Updated: 2025-10-05
 - WP Engine Staging: `marketrepstg` (deploys from `staging` branch)
 - WP Engine Prod: `thereport` (deploys from `main` branch)
 - Supabase Project Ref: `ffgjqlmulaqtfopgwenf`
+- **MCP Access**: ✅ Read/Write access to Supabase via Cursor MCP
 
 ## Membership source of truth
 - HubSpot Contact property: **`membership_status___amaa`** (label "Active if member is active")

@@ -22,9 +22,12 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - **RLS Policies**: All tables have RLS enabled with proper foreign key relationships
 - **WordPress Theme**: Basic structure with templates
 - **WordPress Plugin**: Placeholder structure exists
+- **Edge Functions**: ✅ **READY FOR DEPLOYMENT** - All 7 functions updated with shared utilities
+- **MCP Access**: ✅ **CONFIGURED** - Read/Write access to Supabase via Cursor
 
-### ❌ Critical Gaps
-- **Edge Functions**: ❌ **NONE EXIST** - Empty array, no functions deployed
+### 🔄 Ready for Deployment
+- **Edge Functions**: All functions updated and ready for deployment
+- **Secrets**: Core Supabase secrets configured, need OpenAI key and admin token
 - **WordPress Integration**: Plugin needs Supabase connectivity
 - **Survey UI**: React components not implemented
 

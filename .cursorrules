@@ -1,0 +1,25 @@
+# Cursor Rules for AM&AA TMR Project
+
+## MCP Supabase Access
+- ✅ **READ/WRITE ACCESS**: You have full read and write access to Supabase project `ffgjqlmulaqtfopgwenf` via MCP
+- ✅ **Available Tools**: Use MCP Supabase tools to query tables, deploy functions, check logs, etc.
+- ✅ **Secrets Configured**: Core Supabase secrets are already set up
+- 🔄 **Remaining Secrets**: Need to set `OPENAI_API_KEY` and `ADMIN_TOKEN` via Supabase dashboard
+
+## Project Context
+- **Supabase Project**: ffgjqlmulaqtfopgwenf
+- **WordPress**: WP Engine staging environment
+- **HubSpot**: Membership sync integration
+- **Edge Functions**: 7 functions ready for deployment with shared utilities
+
+## Key Reminders
+- Always check Supabase state via MCP tools before making assumptions
+- Use MCP tools to deploy Edge Functions when ready
+- All Edge Functions have been updated with shared utilities
+- Documentation reflects current MCP access status
+
+## Current Status
+- ✅ Database schema deployed
+- ✅ Edge Functions updated and ready
+- 🔄 Need to set remaining secrets (OpenAI key, admin token)
+- 🔄 Ready for Edge Function deployment
