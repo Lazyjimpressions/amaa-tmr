@@ -1,50 +1,31 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { ok, bad, getUser } from "../_shared/utils.ts";
+// Explicit STUB. Returns empty datasets and a note. No fabricated values.
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { ok, bad, cors, json, getUser } from "../_shared/utils.ts";
 
-Deno.serve(async (req: Request) => {
-  try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return bad('Missing authorization header', undefined, 401);
-    }
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors(req.headers.get("origin") || undefined) });
+  if (req.method !== "POST") return bad("method_not_allowed", req.headers.get("origin") || undefined, 405);
 
-    const user = await getUser(authHeader);
-    if (!user) {
-      return bad('Invalid token', undefined, 401);
-    }
+  const origin = req.headers.get("origin") || undefined;
+  const authHeader = req.headers.get("authorization") || undefined;
+  const user = await getUser(authHeader);
+  if (!user) return bad("unauthorized", origin, 401);
 
-    // Parse query parameters
-    const url = new URL(req.url);
-    const survey_id = url.searchParams.get('survey_id');
-    const chart_type = url.searchParams.get('chart_type') || 'deal_counts';
-
-    if (!survey_id) {
-      return bad('Missing survey_id parameter');
-    }
-
-    // For MVP, return stub data
-    const stubData = {
-      deal_counts: {
-        labels: ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'],
-        data: [45, 52, 38, 61]
-      },
-      industry_breakdown: {
-        labels: ['Technology', 'Healthcare', 'Manufacturing', 'Services'],
-        data: [35, 28, 22, 15]
-      },
-      deal_sizes: {
-        labels: ['<$1M', '$1-5M', '$5-10M', '>$10M'],
-        data: [25, 40, 20, 15]
-      }
-    };
-
-    return ok({
-      success: true,
-      chart_type,
-      data: stubData[chart_type] || stubData.deal_counts,
-      note: 'Stub data for MVP - will be replaced with real analytics in Phase 2'
-    });
-  } catch (error) {
-    return bad('Internal server error: ' + error.message, undefined, 500);
-  }
+  const _body = await json(req); // { survey_slug, filters }
+  // Intentionally no DB calls yet (Phase 2 will add aggregates)
+  return ok(
+    {
+      status: "stub",
+      note:
+        "This endpoint currently returns an empty dataset until aggregate queries are implemented. No placeholder values are included.",
+      series: [
+        { key: "deal_volume", unit: "count", data: [] },
+        { key: "participants", unit: "count", data: [] },
+        { key: "industry_mix", unit: "percent", data: [] },
+        { key: "deal_size_revenue", unit: "$M", data: [] },
+        { key: "deal_size_ebitda", unit: "$M", data: [] },
+      ],
+    },
+    origin,
+  );
 });
