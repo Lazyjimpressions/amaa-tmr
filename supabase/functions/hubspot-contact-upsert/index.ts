@@ -1,12 +1,57 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { ok, bad, cors, json, service, lower, isActiveMemberFromHubSpot } from "../_shared/utils.ts";
 
+// Verify HubSpot webhook signature
+const verifyHubSpotSignature = async (req: Request, body: string): Promise<boolean> => {
+  const signature = req.headers.get("x-hubspot-signature");
+  const appSecret = Deno.env.get("HUBSPOT_APP_SECRET");
+  
+  if (!signature || !appSecret) {
+    console.log("Missing signature or app secret");
+    return false;
+  }
+
+  // HubSpot uses HMAC-SHA256 with the app secret
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(appSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  // HubSpot sends signature as "sha256=<hash>"
+  const receivedHash = signature.replace("sha256=", "");
+  
+  return receivedHash === expectedSignature;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors(req.headers.get("origin") || undefined) });
   if (req.method !== "POST") return bad("method_not_allowed", req.headers.get("origin") || undefined, 405);
 
   const origin = req.headers.get("origin") || undefined;
-  const body = await json(req) as Record<string, unknown>;
+  
+  // Get raw body for signature verification
+  const rawBody = await req.text();
+  
+  // Verify webhook signature (skip for direct API calls without signature)
+  const hasSignature = req.headers.get("x-hubspot-signature");
+  if (hasSignature) {
+    const isValid = await verifyHubSpotSignature(req, rawBody);
+    if (!isValid) {
+      console.log("Invalid webhook signature");
+      return bad("invalid_signature", origin, 401);
+    }
+  }
+  
+  const body = JSON.parse(rawBody) as Record<string, unknown>;
 
   // Support two shapes:
   // 1) Direct payload: { email, membership_status___amaa: "Active", membership_level? }

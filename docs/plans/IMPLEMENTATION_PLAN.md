@@ -20,34 +20,79 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - **Supabase Schema**: ✅ **FULLY DEPLOYED** - All tables exist with RLS enabled
 - **Database Tables**: `members`, `surveys`, `survey_questions`, `survey_responses`, `survey_answers`, `ai_briefs`, `question_embeddings`
 - **RLS Policies**: All tables have RLS enabled with proper foreign key relationships
-- **WordPress Theme**: Basic structure with templates
-- **WordPress Plugin**: Placeholder structure exists
-- **Edge Functions**: ✅ **READY FOR DEPLOYMENT** - All 7 functions updated with shared utilities
+- **Edge Functions**: ✅ **DEPLOYED AND ACTIVE** - All 7 functions deployed with shared utilities
 - **MCP Access**: ✅ **CONFIGURED** - Read/Write access to Supabase via Cursor
+- **Test Users**: ✅ **CREATED** - Member and non-member test users ready
+- **Test Survey**: ✅ **CREATED** - 2025-winter survey ready for testing
 
-### 🔄 Ready for Deployment
-- **Edge Functions**: All functions updated and ready for deployment
-- **Secrets**: Core Supabase secrets configured, need OpenAI key and admin token
-- **WordPress Integration**: Plugin needs Supabase connectivity
-- **Survey UI**: React components not implemented
+### ❌ Critical Frontend Gaps
+- **HubSpot Integration**: ❌ **NOT CONFIGURED** - Webhooks, property setup, teaser hosting
+- **WordPress Plugin**: ❌ **PLACEHOLDER ONLY** - No Supabase connectivity
+- **WordPress Theme**: ❌ **BASIC STRUCTURE** - No functional UI/UX
+- **Survey UI**: ❌ **NOT IMPLEMENTED** - React components missing
+- **Downloads**: ❌ **NOT IMPLEMENTED** - No gating or file hosting
+- **Analytics**: ❌ **NOT IMPLEMENTED** - No GA or HubSpot tracking
 
 ## 2) Workstreams (Detailed Implementation)
 
-### A. Edge Functions (CRITICAL - Week 1)
-**Priority 1: Core Functions**
-- Create `me` function (user context/membership check)
-- Create `survey-submit` function (survey submission)
-- Create `hubspot-contact-upsert` function (membership sync)
+### A. Edge Functions ✅ **COMPLETED**
+**Status**: All 7 Edge Functions deployed and active
+- ✅ `me` function (user context/membership check)
+- ✅ `survey-submit` function (survey submission)
+- ✅ `hubspot-contact-upsert` function (membership sync)
+- ✅ `survey-save-draft` function (draft saving)
+- ✅ `data-query-charts` function (stub for charts)
+- ✅ `ai-generate-brief` function (AI brief generation)
+- ✅ `import-winter-2025` function (CSV import)
 
-**Priority 2: Supporting Functions**
-- Create `survey-save-draft` function (optional draft saving)
-- Create `data-query-charts` function (stub for charts)
-- Create `ai-generate-brief` function (AI brief generation)
-- Create `import-winter-2025` function (CSV import)
+**DOD**: ✅ **ACHIEVED** - All 7 Edge Functions created and deployed with proper error handling
 
-**DOD**: All 7 Edge Functions created and deployed with proper error handling
+### B. HubSpot Integration (CRITICAL - Week 1) 🔥 **PRIORITY 1**
+**Current State**: Membership property exists, private app created with scopes
+**Required Setup**:
+1. **Confirm membership property**: Verify `membership_status___amaa` exists with "Active" value
+2. **Configure webhooks**: Set up contact.propertyChange webhook to `hubspot-contact-upsert` function
+3. **Add webhook security**: Implement X-HubSpot-Signature verification
+4. **Host teaser files**: Upload teaser PDFs to HubSpot Files (publicly accessible)
+5. **Test webhook flow**: Verify membership changes sync to Supabase
 
-### B. WordPress Plugin Integration (Week 1-2)
+**DOD**: HubSpot webhooks working, teaser files hosted, membership sync verified
+
+#### **Detailed HubSpot Setup Steps:**
+
+**Step 1: Confirm Membership Property**
+- Navigate to HubSpot → Settings → Objects → Contacts → Properties
+- Search for `membership_status___amaa`
+- Verify "Active" is a valid value option
+
+**Step 2: Configure Private App Scopes**
+- Go to Settings → Integrations → Private Apps → open your app
+- Add scope: `crm.objects.contacts.read` (required for contact webhooks)
+- Note the app secret for webhook verification
+
+**Step 3: Set Up Webhooks**
+- In Private App → Webhooks tab → Edit webhooks
+- Set Target URL: `https://ffgjqlmulaqtfopgwenf.supabase.co/functions/v1/hubspot-contact-upsert`
+- Add Contact → propertyChange subscription for `membership_status___amaa`
+- Activate the webhook
+
+**Step 4: Add Webhook Security**
+- Add `HUBSPOT_APP_SECRET` to Supabase secrets
+- Update `hubspot-contact-upsert` function to verify `X-HubSpot-Signature` header
+- Implement HMAC-SHA256 verification with app secret + raw body
+
+**Step 5: Host Teaser Files**
+- Go to Marketing → Files → upload teaser PDFs
+- Make files publicly accessible
+- Copy URLs for WordPress integration
+
+**Step 6: Test Webhook Flow**
+- Use "Test this subscription" in HubSpot
+- Manually change a contact's `membership_status___amaa` to Active/Inactive
+- Verify Supabase `members` table updates
+- Confirm `/me` function returns correct `is_member` flag
+
+### C. WordPress Plugin Integration (Week 1-2)
 **Current State**: Plugin has placeholder `tmr_is_member()` function
 **Required Changes**:
 - Replace placeholder with Supabase EF call to `/me`
@@ -129,12 +174,14 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 ## 3) Milestones (Updated with Current State)
 
-### M0: Foundation (D0–D3) - Week 1
+### M0: Foundation (D0–D3) - Week 1 ✅ **COMPLETED**
 - ✅ WordPress theme and plugin structure (DONE)
 - ✅ Supabase schema applied (DONE) - **VERIFIED via MCP**
 - ✅ All database tables exist with RLS enabled (DONE) - **VERIFIED via MCP**
-- 🔄 **CRITICAL**: Create all 7 Edge Functions (NONE EXIST - **VERIFIED via MCP**)
-- 🔄 **CRITICAL**: Implement WordPress plugin Supabase integration
+- ✅ **COMPLETED**: All 7 Edge Functions deployed and active - **VERIFIED via MCP**
+- ✅ Test users and survey created - **VERIFIED via MCP**
+- 🔄 **CRITICAL**: HubSpot integration setup (webhooks, teaser hosting)
+- 🔄 **CRITICAL**: WordPress plugin Supabase integration
 - 🔄 **CRITICAL**: Basic authentication flow working
 
 ### M1: Core Survey Flow (D4–D7) - Week 2
