@@ -108,7 +108,7 @@ class TMR_Supabase_Bridge {
       wp_enqueue_script(
         'tmr-survey-contact',
         plugins_url('assets/tmr-survey-contact.js', __FILE__),
-        [],
+        ['tmr-auth'],
         '0.1.0',
         ['in_footer' => true]
       );

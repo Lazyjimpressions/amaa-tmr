@@ -27,6 +27,7 @@ class ContactForm {
   }
 
   render() {
+    console.log('[TMR Survey] Rendering form for container:', this.container);
     this.container.innerHTML = `
       <div class="tmr-survey-container">
         <div class="tmr-progress">
@@ -525,8 +526,13 @@ class ContactForm {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('[TMR Survey] DOM loaded, looking for container...');
   const surveyContainer = document.getElementById('tmr-public-survey');
   if (surveyContainer) {
+    console.log('[TMR Survey] Container found, initializing ContactForm...');
     window.tmrSurvey = new ContactForm('tmr-public-survey');
+    console.log('[TMR Survey] ContactForm initialized:', window.tmrSurvey);
+  } else {
+    console.log('[TMR Survey] Container not found! Available elements:', document.querySelectorAll('[id*="survey"]));
   }
 });
