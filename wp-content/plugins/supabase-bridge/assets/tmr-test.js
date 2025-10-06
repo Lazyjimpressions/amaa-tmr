@@ -4,8 +4,20 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Update teaser download link with actual URL
   const teaserLink = document.getElementById('teaser-download');
-  if (teaserLink && window.TMR_SB && window.TMR_SB.teaserUrl) {
-    teaserLink.href = window.TMR_SB.teaserUrl;
+  if (teaserLink) {
+    console.log('[TMR Test] Teaser link found:', teaserLink);
+    console.log('[TMR Test] TMR_SB config:', window.TMR_SB);
+    
+    if (window.TMR_SB && window.TMR_SB.teaserUrl) {
+      teaserLink.href = window.TMR_SB.teaserUrl;
+      console.log('[TMR Test] Teaser URL set to:', window.TMR_SB.teaserUrl);
+    } else {
+      // Fallback to hardcoded URL if config is missing
+      teaserLink.href = 'https://8733520.fs1.hubspotusercontent-na1.net/hubfs/8733520/Market%20Survey/2025-Winter%20Market%20Report%20-%20sample.pdf';
+      console.log('[TMR Test] Using fallback teaser URL');
+    }
+  } else {
+    console.log('[TMR Test] Teaser link not found');
   }
 
   // Update debug info
@@ -29,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <li>Anon Key: ${config.supabaseAnonKey ? 'Set' : 'Missing'}</li>
           <li>EF Base: ${config.efBase ? 'Set' : 'Missing'}</li>
           <li>Teaser URL: ${config.teaserUrl ? 'Set' : 'Missing'}</li>
+          <li>Teaser Link Href: ${document.getElementById('teaser-download')?.href || 'Not set'}</li>
         </ul>
         <p><strong>Cache:</strong></p>
         <ul>
