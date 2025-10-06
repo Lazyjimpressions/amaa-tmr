@@ -1,0 +1,427 @@
+/* AM&AA TMR App Shell - Compact Dashboard (#9) */
+
+/* Import tokens */
+@import url('./design-tokens.css');
+
+/* App Shell Layout */
+.app-shell {
+  min-height: 100vh;
+  background: var(--bg-soft);
+}
+
+.app-header {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-200);
+  padding: var(--space-16) 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-logo {
+  font: 600 var(--h3-size)/var(--h3-line) var(--font-heading);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.app-nav {
+  display: flex;
+  gap: var(--space-24);
+  align-items: center;
+}
+
+.app-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font: 400 var(--text-body)/var(--lh-normal) var(--font-body);
+  transition: color 150ms ease-out;
+}
+
+.app-nav a:hover,
+.app-nav a.active {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.app-main {
+  padding: var(--space-32) 0;
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+}
+
+/* Dashboard Layout - Compact Dashboard (#9) */
+.dashboard-header {
+  margin-bottom: var(--space-32);
+}
+
+.dashboard-title {
+  font: 600 var(--h2-size)/var(--h2-line) var(--font-heading);
+  color: var(--text-strong);
+  margin: 0 0 var(--space-8) 0;
+}
+
+.dashboard-subtitle {
+  font: 400 var(--text-body)/var(--lh-normal) var(--font-body);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* KPI Row */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-24);
+  margin-bottom: var(--space-48);
+}
+
+.kpi-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-16);
+  padding: var(--space-24);
+  box-shadow: var(--shadow-100);
+  text-align: center;
+  transition: all 250ms ease-out;
+}
+
+.kpi-card:hover {
+  box-shadow: var(--shadow-200);
+  transform: translateY(-1px);
+}
+
+.kpi-label {
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--text-muted);
+  margin-bottom: var(--space-8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font: 700 var(--h2-size)/var(--h2-line) var(--font-heading);
+  color: var(--brand);
+  margin: 0;
+  line-height: 1;
+}
+
+.kpi-change {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-16);
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  font-weight: 500;
+}
+
+.kpi-change.positive {
+  background: rgba(17, 122, 91, 0.1);
+  color: var(--success-600);
+}
+
+.kpi-change.negative {
+  background: rgba(179, 38, 30, 0.1);
+  color: var(--danger-600);
+}
+
+.kpi-change.neutral {
+  background: var(--gray-100);
+  color: var(--text-muted);
+}
+
+/* Content Row */
+.content-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-24);
+}
+
+/* Reports Card */
+.reports-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-16);
+  padding: var(--space-24);
+  box-shadow: var(--shadow-100);
+}
+
+.reports-header {
+  margin-bottom: var(--space-16);
+}
+
+.reports-title {
+  font: 600 var(--h3-size)/var(--h3-line) var(--font-heading);
+  color: var(--text-strong);
+  margin: 0;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.reports-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-12);
+  background: var(--bg-soft);
+  border-radius: var(--radius-8);
+  transition: all 150ms ease-out;
+}
+
+.reports-item:hover {
+  background: var(--gray-100);
+}
+
+.reports-info {
+  flex: 1;
+}
+
+.reports-name {
+  font: 500 var(--text-body)/var(--lh-normal) var(--font-body);
+  color: var(--text-strong);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.reports-date {
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.reports-download {
+  padding: var(--space-8) var(--space-12);
+  background: transparent;
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-8);
+  color: var(--text-muted);
+  text-decoration: none;
+  font: 400 var(--text-small)/var(--lh-normal) var(--font-body);
+  transition: all 150ms ease-out;
+}
+
+.reports-download:hover {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
+  text-decoration: none;
+}
+
+.reports-footer {
+  border-top: 1px solid var(--border-200);
+  padding-top: var(--space-16);
+}
+
+/* Survey Progress Card */
+.survey-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-16);
+  padding: var(--space-24);
+  box-shadow: var(--shadow-100);
+}
+
+.survey-header {
+  margin-bottom: var(--space-16);
+}
+
+.survey-title {
+  font: 600 var(--h3-size)/var(--h3-line) var(--font-heading);
+  color: var(--text-strong);
+  margin: 0;
+}
+
+.survey-progress {
+  margin-bottom: var(--space-16);
+}
+
+.survey-progress-item {
+  margin-bottom: var(--space-16);
+}
+
+.survey-progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+}
+
+.survey-progress-label {
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--text-muted);
+}
+
+.survey-progress-percent {
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--text-muted);
+}
+
+.survey-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-16);
+  overflow: hidden;
+}
+
+.survey-progress-fill {
+  height: 100%;
+  background: var(--brand);
+  border-radius: var(--radius-16);
+  transition: width 1s ease-out;
+}
+
+.survey-footer {
+  border-top: 1px solid var(--border-200);
+  padding-top: var(--space-16);
+}
+
+/* Forms - Enterprise Minimal (#12) */
+.form-group {
+  margin-bottom: var(--space-16);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-8);
+  font: 500 var(--text-body)/var(--lh-normal) var(--font-body);
+  color: var(--text-strong);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--space-12) var(--space-16);
+  border: 2px solid var(--border-200);
+  border-radius: var(--radius-8);
+  font: 400 var(--text-body)/var(--lh-normal) var(--font-body);
+  background: var(--bg-surface);
+  transition: border-color 150ms ease-out;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: var(--focus-ring);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-input.error {
+  border-color: var(--danger-600);
+}
+
+.form-input.error:focus {
+  border-color: var(--danger-600);
+  box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.25);
+}
+
+.form-error {
+  margin-top: var(--space-4);
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--danger-600);
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-16);
+  overflow: hidden;
+  margin-bottom: var(--space-16);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--brand);
+  border-radius: var(--radius-16);
+  transition: width 1s ease-out;
+}
+
+.progress-text {
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .kpi-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+  }
+  
+  .content-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+  }
+  
+  .app-header-content {
+    flex-direction: column;
+    gap: var(--space-16);
+  }
+  
+  .app-nav {
+    gap: var(--space-16);
+  }
+}
+
+/* Loading States */
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-text {
+  height: 1em;
+  border-radius: var(--radius-8);
+  margin-bottom: var(--space-8);
+}
+
+.skeleton-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .kpi-card,
+  .reports-card,
+  .survey-card {
+    border: 2px solid var(--text-strong);
+  }
+}

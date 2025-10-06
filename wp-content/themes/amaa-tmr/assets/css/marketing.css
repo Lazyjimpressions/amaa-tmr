@@ -1,0 +1,324 @@
+/* AM&AA TMR Marketing Layout - Modern Editorial + Scrollytelling */
+
+/* Import tokens */
+@import url('./design-tokens.css');
+
+/* Marketing Shell Layout */
+.site {
+  min-height: 100vh;
+  background: var(--bg-surface);
+}
+
+/* Hero Section - Modern Editorial (#1) */
+.hero {
+  padding: var(--space-96) 0;
+  background: var(--bg-surface);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-64);
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+}
+
+.hero-content h1 {
+  margin-bottom: var(--space-24);
+  color: var(--text-strong);
+}
+
+.hero-content p {
+  font-size: var(--text-body);
+  line-height: var(--lh-normal);
+  color: var(--text-muted);
+  margin-bottom: var(--space-32);
+  max-width: 500px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+}
+
+.hero-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Scrollytelling Insights Section (#4) */
+.insights-section {
+  padding: var(--space-64) 0;
+  background: var(--bg-soft);
+}
+
+.scrollytelling-panel {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-48);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+  min-height: 400px;
+}
+
+.scrollytelling-headline {
+  position: sticky;
+  top: var(--space-96);
+  font: 600 var(--h2-size)/var(--h2-line) var(--font-heading);
+  color: var(--text-strong);
+  align-self: start;
+}
+
+.scrollytelling-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+}
+
+/* Insight Cards - Modern Editorial (#1) */
+.insight-card {
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-16);
+  padding: var(--space-24);
+  text-align: center;
+  transition: all 250ms ease-out;
+}
+
+.insight-card:hover {
+  background: var(--brand-100);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-200);
+}
+
+.insight-card-title {
+  font: 500 var(--h4-size)/var(--h4-line) var(--font-heading);
+  color: var(--text-muted);
+  margin-bottom: var(--space-8);
+}
+
+.insight-card-value {
+  font: 700 var(--h1-size)/var(--h1-line) var(--font-heading);
+  color: var(--brand);
+  margin: 0;
+  line-height: 1;
+}
+
+.insight-card-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-16);
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  font-weight: 500;
+}
+
+.insight-card-delta.positive {
+  background: rgba(17, 122, 91, 0.1);
+  color: var(--success-600);
+}
+
+.insight-card-delta.negative {
+  background: rgba(179, 38, 30, 0.1);
+  color: var(--danger-600);
+}
+
+/* Credibility Section */
+.credibility-section {
+  padding: var(--space-64) 0;
+  background: var(--bg-surface);
+}
+
+.credibility-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-24);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+}
+
+.credibility-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-16);
+  padding: var(--space-24);
+  text-align: center;
+  box-shadow: var(--shadow-100);
+  transition: all 250ms ease-out;
+}
+
+.credibility-card:hover {
+  box-shadow: var(--shadow-200);
+  transform: translateY(-1px);
+}
+
+.credibility-value {
+  font: 700 var(--h2-size)/var(--h2-line) var(--font-heading);
+  color: var(--brand);
+  margin: 0;
+  line-height: 1;
+}
+
+.credibility-label {
+  font: 400 var(--text-small)/var(--text-small-line) var(--font-body);
+  color: var(--text-muted);
+  margin-top: var(--space-8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* CTA Section */
+.cta-section {
+  padding: var(--space-64) 0;
+  background: var(--brand);
+  color: white;
+  text-align: center;
+}
+
+.cta-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+}
+
+.cta-content h2 {
+  color: white;
+  margin-bottom: var(--space-16);
+}
+
+.cta-content p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: var(--space-32);
+  font-size: var(--text-body);
+  line-height: var(--lh-normal);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--space-24);
+  border: none;
+  border-radius: var(--radius-8);
+  font: 500 var(--text-body)/var(--lh-tight) var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  box-shadow: var(--focus-ring);
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--brand-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-200);
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--brand);
+  border: 2px solid var(--brand);
+}
+
+.btn-secondary:hover {
+  background: var(--brand);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-200);
+  text-decoration: none;
+}
+
+.btn-white {
+  background: white;
+  color: var(--brand);
+}
+
+.btn-white:hover {
+  background: var(--gray-50);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-200);
+  text-decoration: none;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+}
+
+.container-narrow {
+  max-width: 800px;
+}
+
+.container-wide {
+  max-width: 1400px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-32);
+    text-align: center;
+  }
+  
+  .scrollytelling-panel {
+    grid-template-columns: 1fr;
+    gap: var(--space-24);
+  }
+  
+  .scrollytelling-headline {
+    position: static;
+    margin-bottom: var(--space-16);
+  }
+  
+  .credibility-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+  }
+  
+  .hero-actions {
+    justify-content: center;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: var(--space-8);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .insight-card,
+  .credibility-card {
+    border: 2px solid var(--text-strong);
+  }
+}

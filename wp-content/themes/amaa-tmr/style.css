@@ -10,7 +10,6 @@ Text Domain: amaa-tmr
 
 /* Import design system */
 @import url('assets/css/design-tokens.css');
-@import url('assets/css/components.css');
 
 /* Reset and base styles */
 * {
@@ -21,9 +20,9 @@ Text Domain: amaa-tmr
 
 body {
     font-family: var(--font-body);
-    line-height: var(--leading-normal);
-    color: var(--color-gray-900);
-    background-color: var(--color-gray-50);
+    line-height: var(--lh-normal);
+    color: var(--text-strong);
+    background-color: var(--bg-soft);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -33,72 +32,61 @@ body:not(.admin-bar) .site-header {
     top: 0;
 }
 
-/* Container */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-}
-
-.container-narrow {
-    max-width: 800px;
-}
-
-.container-wide {
-    max-width: 1400px;
-}
-
-/* Header */
+/* Site Header */
 .site-header {
-    background: white;
-    box-shadow: var(--shadow-base);
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-200);
+    padding: var(--space-16) 0;
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: var(--space-4) 0;
 }
 
-/* Main content */
+.site-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-24);
+}
+
+.site-title {
+    font: 600 var(--h3-size)/var(--h3-line) var(--font-heading);
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.site-title:hover {
+    text-decoration: none;
+}
+
+/* Site Main */
 .site-main {
-    min-height: calc(100vh - 200px);
-}
-
-/* Footer */
-.site-footer {
-    background: var(--color-gray-100);
-    padding: var(--space-8) 0;
-    text-align: center;
-    border-top: 1px solid var(--color-gray-200);
-}
-
-/* Utility classes */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-
-.mb-1 { margin-bottom: var(--space-1); }
-.mb-2 { margin-bottom: var(--space-2); }
-.mb-3 { margin-bottom: var(--space-3); }
-.mb-4 { margin-bottom: var(--space-4); }
-.mb-6 { margin-bottom: var(--space-6); }
-.mb-8 { margin-bottom: var(--space-8); }
-
-.mt-1 { margin-top: var(--space-1); }
-.mt-2 { margin-top: var(--space-2); }
-.mt-3 { margin-top: var(--space-3); }
-.mt-4 { margin-top: var(--space-4); }
-.mt-6 { margin-top: var(--space-6); }
-.mt-8 { margin-top: var(--space-8); }
-
-/* Section spacing */
-.section {
-    padding: var(--space-24) 0;
-}
-
-.section-sm {
-    padding: var(--space-16) 0;
-}
-
-.section-lg {
+    min-height: 60vh;
     padding: var(--space-32) 0;
 }
+
+/* Site Footer */
+.site-footer {
+    background-color: var(--gray-800);
+    color: var(--gray-300);
+    padding: var(--space-32) 0;
+    margin-top: var(--space-48);
+}
+
+.site-footer .container {
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-24);
+}
+
+/* Utility Classes */
+.mb-4 { margin-bottom: var(--space-16); }
+.mb-6 { margin-bottom: var(--space-24); }
+.mb-8 { margin-bottom: var(--space-32); }
+.mb-12 { margin-bottom: var(--space-48); }
+
+.section { padding: var(--space-48) 0; }
+.section-lg { padding: var(--space-64) 0; }
