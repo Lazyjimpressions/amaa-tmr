@@ -1,0 +1,219 @@
+/* TMR Public Survey Styles */
+
+.tmr-survey-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Progress Bar */
+.tmr-progress {
+  margin-bottom: 30px;
+}
+
+.tmr-progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.tmr-progress-fill {
+  height: 100%;
+  background-color: #007cba;
+  transition: width 0.3s ease;
+}
+
+.tmr-progress-text {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+}
+
+/* Form Styles */
+.tmr-form {
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tmr-form-group {
+  margin-bottom: 20px;
+}
+
+.tmr-form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+
+.tmr-form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.tmr-form-group input:focus {
+  outline: none;
+  border-color: #007cba;
+}
+
+.tmr-form-group small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Button Styles */
+.tmr-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 120px;
+}
+
+.tmr-btn-primary {
+  background-color: #007cba;
+  color: white;
+}
+
+.tmr-btn-primary:hover {
+  background-color: #005a87;
+}
+
+.tmr-btn-primary:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.tmr-btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.tmr-btn-secondary:hover {
+  background-color: #545b62;
+}
+
+/* Membership Check Styles */
+.tmr-membership-check {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.tmr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.tmr-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007cba;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tmr-membership-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.tmr-membership-card h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 24px;
+}
+
+.tmr-membership-card p {
+  margin: 0 0 15px 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.tmr-membership-card a {
+  color: #007cba;
+  text-decoration: none;
+}
+
+.tmr-membership-card a:hover {
+  text-decoration: underline;
+}
+
+/* Intro Text */
+.tmr-intro {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007cba;
+}
+
+.tmr-intro p {
+  margin: 0 0 10px 0;
+  color: #333;
+  line-height: 1.6;
+}
+
+.tmr-intro p:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tmr-survey-container {
+    padding: 10px;
+  }
+  
+  .tmr-form {
+    padding: 20px;
+  }
+  
+  .tmr-membership-card {
+    padding: 20px;
+  }
+  
+  .tmr-btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+/* Step Transitions */
+.tmr-step {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

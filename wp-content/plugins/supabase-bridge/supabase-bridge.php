@@ -92,11 +92,29 @@ class TMR_Supabase_Bridge {
         ['in_footer' => true]
       );
     }
+
+    // Load survey assets on public survey page
+    if (is_page('public-survey') || strpos($_SERVER['REQUEST_URI'], 'public-survey') !== false) {
+      wp_enqueue_style(
+        'tmr-survey-styles',
+        plugins_url('assets/tmr-survey-styles.css', __FILE__),
+        [],
+        '0.1.0'
+      );
+      
+      wp_enqueue_script(
+        'tmr-survey-contact',
+        plugins_url('assets/tmr-survey-contact.js', __FILE__),
+        [],
+        '0.1.0',
+        ['in_footer' => true]
+      );
+    }
   }
 
   // Mark our script as type="module"
   public function as_module($tag, $handle, $src) {
-    if ($handle === 'tmr-auth' || $handle === 'tmr-test') {
+    if ($handle === 'tmr-auth' || $handle === 'tmr-test' || $handle === 'tmr-survey-contact') {
       $tag = '<script type="module" src="' . esc_url($src) . '"></script>';
     }
     return $tag;
