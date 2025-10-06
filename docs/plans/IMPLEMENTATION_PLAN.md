@@ -26,16 +26,63 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - **Test Survey**: ✅ **CREATED** - 2025-winter survey ready for testing
 
 ### ❌ Critical Frontend Gaps
+- **Design System**: ❌ **NOT DEFINED** - No design tokens, component library, or UX standards
+- **Wireframes**: ❌ **NOT CREATED** - No page layouts or user flow documentation
 - **HubSpot Integration**: ❌ **NOT CONFIGURED** - Webhooks, property setup, teaser hosting
 - **WordPress Plugin**: ❌ **PLACEHOLDER ONLY** - No Supabase connectivity
-- **WordPress Theme**: ❌ **BASIC STRUCTURE** - No functional UI/UX
+- **WordPress Theme**: ❌ **BASIC STRUCTURE** - No functional UI/UX, looks like standard WordPress
 - **Survey UI**: ❌ **NOT IMPLEMENTED** - React components missing
 - **Downloads**: ❌ **NOT IMPLEMENTED** - No gating or file hosting
 - **Analytics**: ❌ **NOT IMPLEMENTED** - No GA or HubSpot tracking
 
 ## 2) Workstreams (Detailed Implementation)
 
-### A. Edge Functions ✅ **COMPLETED**
+### A. Design System & Wireframes (CRITICAL - Week 0) 🔥 **PRIORITY 1**
+**Current State**: No design system, wireframes, or UX standards defined
+**Required Setup**:
+1. **Create wireframes** using AI tools (Uizard, Visily) for all key pages
+2. **Define design system** with tokens, components, and interaction patterns
+3. **Establish UX standards** for accessibility, performance, and user flows
+4. **Create component library** specifications for React islands
+5. **Design user journey maps** for member vs non-member experiences
+
+**AI Tools to Use**:
+- **Uizard**: Convert hand-drawn sketches to digital wireframes
+- **Visily**: Screenshot-to-wireframe conversion + text prompts
+- **Khroma**: AI color palette generation
+- **Figma AI**: Auto-layout and component generation
+- **Cursor AI**: Code generation from design descriptions
+
+**DOD**: Complete wireframes, design system, and component specifications ready for development
+
+#### **Detailed Design Setup Steps:**
+
+**Step 1: Create Wireframes (2-3 days)**
+- Use Uizard to convert sketches to digital wireframes
+- Create wireframes for: Homepage, Survey, Member Portal, Insights, Pricing, Login
+- Define user flows for member vs non-member journeys
+- Document interaction patterns and micro-animations
+
+**Step 2: Design System Foundation (1-2 days)**
+- Use Khroma to generate color palettes
+- Define typography scale and font pairings
+- Create spacing system (4px base grid)
+- Establish shadow and radius tokens
+- Document component specifications
+
+**Step 3: Component Library (2-3 days)**
+- Design core components: Button, Card, Input, Select, Tag, Metric Card
+- Create layout components: Section, Grid, Container
+- Define interaction states and animations
+- Document accessibility requirements
+
+**Step 4: Technical Architecture (1 day)**
+- Plan React island integration points
+- Define CSS custom properties structure
+- Create build system for design tokens
+- Plan WordPress template structure
+
+### B. Edge Functions ✅ **COMPLETED**
 **Status**: All 7 Edge Functions deployed and active
 - ✅ `me` function (user context/membership check)
 - ✅ `survey-submit` function (survey submission)
@@ -47,7 +94,18 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: ✅ **ACHIEVED** - All 7 Edge Functions created and deployed with proper error handling
 
-### B. HubSpot Integration (CRITICAL - Week 1) 🔥 **PRIORITY 1**
+### C. WordPress App Shell Implementation (Week 1) 🔥 **PRIORITY 2**
+**Current State**: Basic WordPress theme with standard look
+**Required Changes**:
+- Strip WordPress "look" - disable Gutenberg styles and admin bar
+- Create custom PHP templates (marketing.php, app.php)
+- Implement design system with CSS custom properties
+- Set up React island mount points
+- Configure clean URLs and routing
+
+**DOD**: WordPress serves as app shell with custom design system, ready for React islands
+
+### D. HubSpot Integration (CRITICAL - Week 1) 🔥 **PRIORITY 3**
 **Current State**: Membership property exists, private app created with scopes
 **Required Setup**:
 1. **Confirm membership property**: Verify `membership_status___amaa` exists with "Active" value
@@ -92,7 +150,18 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - Verify Supabase `members` table updates
 - Confirm `/me` function returns correct `is_member` flag
 
-### C. WordPress Plugin Integration (Week 1-2)
+### E. React Islands Implementation (Week 2) 🔥 **PRIORITY 4**
+**Current State**: No React components or interactive UI
+**Required Implementation**:
+- Build React survey stepper with progress tracking
+- Create member dashboard with real-time data
+- Implement insights grid with hover previews
+- Add micro-interactions and smooth transitions
+- Integrate with Supabase Edge Functions
+
+**DOD**: All interactive components working with design system integration
+
+### F. WordPress Plugin Integration (Week 1-2)
 **Current State**: Plugin has placeholder `tmr_is_member()` function
 **Required Changes**:
 - Replace placeholder with Supabase EF call to `/me`
@@ -103,7 +172,7 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: Plugin successfully calls Supabase and reflects membership status
 
-### C. Survey UI Implementation (Week 2)
+### G. Survey UI Implementation (Week 2)
 **Current State**: Templates have React mount points (`#tmr-survey`, `#tmr-insights`)
 **Required Implementation**:
 - Build React multi-step survey component
@@ -114,7 +183,7 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: Complete survey flow from start to submission
 
-### D. Downloads Implementation (Week 2)
+### H. Downloads Implementation (Week 2)
 **Teaser Downloads (HubSpot)**:
 - Configure HubSpot file hosting
 - Add teaser download buttons (always visible to authenticated users)
@@ -127,7 +196,7 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: Both download types working with proper gating
 
-### E. Analytics Integration (Week 2-3)
+### I. Analytics Integration (Week 2-3)
 **Google Analytics**:
 - Add GA tracking for key events: `auth_login`, `survey_start`, `survey_submit`, `download_full`, `download_teaser`
 - Implement performance monitoring
@@ -138,7 +207,7 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: All key events tracked and visible in analytics
 
-### F. AI Brief Generation (Week 3)
+### J. AI Brief Generation (Week 3)
 **Implementation**:
 - Complete `ai-generate-brief` Edge Function
 - Add OpenAI integration
@@ -148,7 +217,7 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: AI briefs generate within 10 seconds and are clearly labeled
 
-### G. CSV Import (Week 3)
+### K. CSV Import (Week 3)
 **Implementation**:
 - Complete `import-winter-2025` Edge Function
 - Add CSV validation and mapping
@@ -158,7 +227,7 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: CSV import works with proper validation and error reporting
 
-### H. Testing & Polish (Week 4)
+### L. Testing & Polish (Week 4)
 **Testing**:
 - End-to-end testing of complete user flows
 - Performance testing (p95 < 1.5s requirement)
@@ -172,9 +241,16 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 **DOD**: Production-ready with all requirements met
 
-## 3) Milestones (Updated with Current State)
+## 3) Milestones (Updated with Design-First Approach)
 
-### M0: Foundation (D0–D3) - Week 1 ✅ **COMPLETED**
+### M0: Design Foundation (D0–D3) - Week 0 🔥 **CRITICAL**
+- 🔄 **Create wireframes** using AI tools (Uizard, Visily) for all key pages
+- 🔄 **Define design system** with tokens, components, and interaction patterns
+- 🔄 **Establish UX standards** for accessibility, performance, and user flows
+- 🔄 **Create component library** specifications for React islands
+- 🔄 **Design user journey maps** for member vs non-member experiences
+
+### M1: Foundation (D0–D3) - Week 1 ✅ **COMPLETED**
 - ✅ WordPress theme and plugin structure (DONE)
 - ✅ Supabase schema applied (DONE) - **VERIFIED via MCP**
 - ✅ All database tables exist with RLS enabled (DONE) - **VERIFIED via MCP**
@@ -184,19 +260,26 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - ✅ **COMPLETED**: WordPress plugin Supabase integration - **VERIFIED**
 - ✅ **COMPLETED**: Basic authentication flow working - **VERIFIED**
 
-### M1: Core Survey Flow (D4–D7) - Week 2
+### M2: WordPress App Shell (D4–D7) - Week 1
+- 🔄 **Strip WordPress "look"** - disable Gutenberg styles and admin bar
+- 🔄 **Create custom PHP templates** (marketing.php, app.php)
+- 🔄 **Implement design system** with CSS custom properties
+- 🔄 **Set up React island mount points**
+- 🔄 **Configure clean URLs and routing**
+
+### M3: Core Survey Flow (D8–D11) - Week 2
 - 🔄 Build React survey UI components
 - 🔄 Integrate with `survey-submit` Edge Function
 - 🔄 Implement downloads (teaser + full with gating)
 - 🔄 Add basic analytics tracking
 
-### M2: Advanced Features (D8–D10) - Week 3
+### M4: Advanced Features (D12–D15) - Week 3
 - 🔄 AI brief generation working
 - 🔄 CSV import functionality
 - 🔄 Advanced analytics and monitoring
 - 🔄 Performance optimization
 
-### M3: Polish & Launch (D11–D14) - Week 4
+### M5: Polish & Launch (D16–D19) - Week 4
 - 🔄 End-to-end testing
 - 🔄 Security review
 - 🔄 Performance validation (p95 < 1.5s)

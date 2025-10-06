@@ -69,9 +69,57 @@ Members and prospects need a secure portal to complete the AM&AA Market Survey a
 - OpenAI (AI brief)
 - GA (light)
 
-## 7) Risks / Constraints
+## 7) Design Requirements & UX Standards
+
+### Design Philosophy
+- **"Never looks like WordPress"** - Users should experience a premium, product-grade interface
+- **Innovative layout** - Asymmetric grids, scrollytelling, micro-interactions
+- **Performance-first** - CLS < 0.05, LCP < 2.5s, TTI < 2.5s on 4G
+- **Accessibility** - WCAG 2.1 AA compliance, focus management, screen reader support
+
+### Architecture: WordPress App Shell (Option B)
+- **Single deployment** on WP Engine (simpler ops)
+- **React islands** for interactive components (`#survey-root`, `#insights-root`, `#app-root`)
+- **Custom PHP templates** (marketing.php, app.php) with minimal Gutenberg chrome
+- **Design system** with CSS custom properties and component library
+
+### Design System Foundation
+```css
+/* Design Tokens */
+:root {
+  --color-brand-50: #f0f9ff;
+  --color-brand-600: #0B3C5D;
+  --color-brand-900: #1e3a8a;
+  --color-accent-600: #F29F05;
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --space-4: 0.25rem; --space-8: 0.5rem; --space-16: 1rem;
+  --space-32: 2rem; --space-64: 4rem; --space-96: 6rem;
+  --radius-8: 8px;
+  --shadow-100: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-200: 0 4px 12px rgba(0,0,0,0.15);
+}
+```
+
+### Key Pages & Layouts
+- **Homepage**: Asymmetric hero, scrollytelling insights, credibility band
+- **Survey**: Multi-step stepper with progress, autosave, validation
+- **Member Portal**: Dashboard cards, real-time data, seamless transitions
+- **Insights**: Interactive charts, hover previews, data-driven cards
+- **Pricing**: Member vs non-member tiles, FAQ, trust indicators
+
+### AI-Powered Design Tools
+- **Uizard**: Sketch-to-wireframe conversion
+- **Visily**: Screenshot-to-wireframe + text prompts
+- **Khroma**: AI color palette generation
+- **Figma AI**: Auto-layout, component generation
+- **Cursor AI**: Code generation from design descriptions
+
+## 8) Risks / Constraints
 - HubSpot → Supabase membership sync timeliness
 - CSV mapping consistency
 - Clearly labeling any stub data (no silent placeholders)
 - Survey logic complexity deferred to Phase 2 (scaffold in place)
+- **Design complexity**: Balancing innovation with WordPress constraints
+- **Performance**: Maintaining < 1.5s p95 while adding rich interactions
 
