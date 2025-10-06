@@ -180,9 +180,9 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - ✅ All database tables exist with RLS enabled (DONE) - **VERIFIED via MCP**
 - ✅ **COMPLETED**: All 7 Edge Functions deployed and active - **VERIFIED via MCP**
 - ✅ Test users and survey created - **VERIFIED via MCP**
-- 🔄 **CRITICAL**: HubSpot integration setup (webhooks, teaser hosting)
-- 🔄 **CRITICAL**: WordPress plugin Supabase integration
-- 🔄 **CRITICAL**: Basic authentication flow working
+- ✅ **COMPLETED**: HubSpot integration setup (webhooks, teaser hosting) - **VERIFIED**
+- ✅ **COMPLETED**: WordPress plugin Supabase integration - **VERIFIED**
+- ✅ **COMPLETED**: Basic authentication flow working - **VERIFIED**
 
 ### M1: Core Survey Flow (D4–D7) - Week 2
 - 🔄 Build React survey UI components
