@@ -1,0 +1,71 @@
+<!-- wp:group {"tagName":"main","className":"tmr-test-plugin"} -->
+<main class="tmr-test-plugin" id="main">
+  <!-- wp:heading {"level":1} -->Plugin Test Page<!-- /wp:heading -->
+  
+  <!-- wp:paragraph -->
+  <p>This page tests the TMR Supabase Bridge plugin functionality.</p>
+  <!-- /wp:paragraph -->
+
+  <!-- wp:heading {"level":2} -->Authentication<!-- /wp:heading -->
+  
+  <!-- wp:paragraph -->
+  <p>Login form:</p>
+  <!-- /wp:paragraph -->
+  
+  <!-- wp:html -->
+  [tmr_login]
+  <!-- /wp:html -->
+
+  <!-- wp:paragraph -->
+  <p>Logout button:</p>
+  <!-- /wp:paragraph -->
+  
+  <!-- wp:html -->
+  [tmr_logout]
+  <!-- /wp:html -->
+
+  <!-- wp:heading {"level":2} -->Member-Only Content<!-- /wp:heading -->
+  
+  <!-- wp:paragraph -->
+  <p>This content should only be visible to members:</p>
+  <!-- /wp:paragraph -->
+  
+  <!-- wp:html -->
+  [tmr_member_only fallback="Please log in as a member to access this content."]
+  <div style="background: #e8f5e8; padding: 20px; border: 2px solid #4caf50; border-radius: 8px;">
+    <h3>🎉 Member-Only Content</h3>
+    <p>Congratulations! You are a member and can see this content.</p>
+    <p><strong>Full Report Download:</strong></p>
+    <a href="/wp-content/uploads/reports/2025-winter/full.pdf" target="_blank" rel="noopener" style="background: #4caf50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Download Full Report</a>
+  </div>
+  [/tmr_member_only]
+  <!-- /wp:html -->
+
+  <!-- wp:heading {"level":2} -->Teaser Content<!-- /wp:heading -->
+  
+  <!-- wp:paragraph -->
+  <p>This teaser content should be visible to all logged-in users:</p>
+  <!-- /wp:paragraph -->
+  
+  <!-- wp:html -->
+  <div style="background: #fff3cd; padding: 20px; border: 2px solid #ffc107; border-radius: 8px;">
+    <h3>📄 Teaser Report</h3>
+    <p>This is a preview of the full report. Available to all authenticated users.</p>
+    <p><strong>Teaser Download:</strong></p>
+    <a href="#" id="teaser-download" style="background: #ffc107; color: black; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Download Teaser (HubSpot)</a>
+  </div>
+  <!-- /wp:html -->
+
+  <!-- wp:heading {"level":2} -->Debug Info<!-- /wp:heading -->
+  
+  <!-- wp:paragraph -->
+  <p>Current user status (check browser console for details):</p>
+  <!-- /wp:paragraph -->
+  
+  <!-- wp:html -->
+  <div id="debug-info" style="background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; font-family: monospace; font-size: 14px;">
+    <p>Loading user status...</p>
+  </div>
+  <!-- /wp:html -->
+</main>
+<!-- /wp:group -->
