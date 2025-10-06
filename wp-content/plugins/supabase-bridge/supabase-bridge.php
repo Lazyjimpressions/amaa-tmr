@@ -82,8 +82,8 @@ class TMR_Supabase_Bridge {
     wp_localize_script('tmr-auth', 'TMR_SB', $cfg);
     wp_enqueue_script('tmr-auth');
 
-    // Load test script on test pages
-    if (is_page('test-plugin') || (isset($_GET['test']) && $_GET['test'] === 'plugin')) {
+    // Load test script on test pages or when test parameter is present
+    if (is_page('test-plugin') || (isset($_GET['test']) && $_GET['test'] === 'plugin') || strpos($_SERVER['REQUEST_URI'], 'page_id=15') !== false) {
       wp_enqueue_script(
         'tmr-test',
         plugins_url('assets/tmr-test.js', __FILE__),
