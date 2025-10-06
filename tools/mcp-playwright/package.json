@@ -1,0 +1,26 @@
+{
+  "name": "mcp-playwright-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright-based MCP server to drive a browser from Cursor and capture console/network artifacts.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "ts-node --transpile-only src/server.ts"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.5.0",
+    "playwright": "^1.47.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  }
+}
+
