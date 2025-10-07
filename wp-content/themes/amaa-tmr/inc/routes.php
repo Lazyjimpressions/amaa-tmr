@@ -22,6 +22,39 @@ function amaa_tmr_template_hierarchy($templates) {
 }
 add_filter('page_template_hierarchy', 'amaa_tmr_template_hierarchy');
 
+// Override template loading for our custom templates
+function amaa_tmr_template_include($template) {
+    global $wp_query;
+    
+    // Route /app/* to app.php template
+    if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
+        $app_template = get_template_directory() . '/templates/app.php';
+        if (file_exists($app_template)) {
+            return $app_template;
+        }
+    }
+    
+    // Route front page to marketing.php template
+    if (is_front_page()) {
+        $marketing_template = get_template_directory() . '/templates/marketing.php';
+        if (file_exists($marketing_template)) {
+            return $marketing_template;
+        }
+    }
+    
+    // Route marketing pages to marketing.php template
+    $marketing_pages = array('pricing', 'about', 'insights', 'contact');
+    if (is_page($marketing_pages)) {
+        $marketing_template = get_template_directory() . '/templates/marketing.php';
+        if (file_exists($marketing_template)) {
+            return $marketing_template;
+        }
+    }
+    
+    return $template;
+}
+add_filter('template_include', 'amaa_tmr_template_include');
+
 // Add body classes for template identification
 function amaa_tmr_body_classes($classes) {
     if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
