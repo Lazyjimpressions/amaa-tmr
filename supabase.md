@@ -1,10 +1,10 @@
 # Supabase Configuration Reference
 
-**Project:** TMS
+**Project:** AM&AA TMR
 **Project ID:** ffgjqlmulaqtfopgwenf
 **Project URL:** https://ffgjqlmulaqtfopgwenf.supabase.co
 **Dashboard:** https://supabase.com/dashboard/project/ffgjqlmulaqtfopgwenf
-**Last Updated:** October 5, 2025
+**Last Updated:** October 7, 2025
 
 ---
 
@@ -46,7 +46,7 @@ The project uses Supabase's hosted MCP server with OAuth authentication.
 
 **Purpose:** Client-side authentication
 
-**Current Key:** `sb_publishable_1GjjY6ohuULjbeYdww9lNw_Ng48yqPB`
+**Current Key:** <set in environment/Secrets> (do not commit)
 
 **Characteristics:**
 - Safe to expose publicly
@@ -67,7 +67,7 @@ The project uses Supabase's hosted MCP server with OAuth authentication.
 
 **Purpose:** Backend/server-side operations
 
-**Current Key:** `sb_secret_UdqMyxOCrI6yYyuQ0HZhJw_5Dl8pY7u` (Name: "default")
+**Current Key:** <set in environment/Secrets> (Name: "default")
 
 **Characteristics:**
 - Must be kept confidential
@@ -102,7 +102,7 @@ The project uses Supabase's hosted MCP server with OAuth authentication.
 
 ## Database Schema
 
-### Tables
+### Tables (from `/supabase/sql/001_init.sql`)
 
 **Survey System:**
 - `surveys` - Survey definitions (slug, title, year, status)
@@ -173,13 +173,13 @@ All tables have RLS enabled. Policies should enforce:
 
 ## WordPress Integration Architecture
 
-### Current State
+### Current State (2025-10-07)
 
-- ✅ WordPress block theme setup
-- ✅ PHP plugin stub ([supabase-bridge.php](wp-content/plugins/supabase-bridge/supabase-bridge.php))
-- ✅ Survey/Insights page templates
-- ❌ No Supabase JavaScript client yet
-- ❌ No frontend authentication
+- ✅ Basic WordPress theme and plugin stubs exist
+- ✅ Template files present
+- ❌ UX/UI iteration not applied; WP not conformed to design system
+- ❌ Supabase client/auth not wired in frontend
+- ❌ Plugin not calling `/me` yet
 
 ### Planned Architecture
 
@@ -203,12 +203,54 @@ Database Access
 
 ### Implementation Steps
 
-1. Create `wp-content/themes/amaa-tmr/assets/js/app.js`
-2. Install `@supabase/supabase-js` (CDN or NPM)
+1. Create/update `wp-content/themes/amaa-tmr/assets/js/app.js`
+2. Load `@supabase/supabase-js` (CDN or NPM)
 3. Initialize client with publishable key
-4. Implement auth (sign up/sign in/sign out)
-5. Build survey submission UI
-6. Create AI briefs dashboard
+4. Implement auth (magic link)
+5. Wire `/me` check into plugin and frontend
+6. Build survey submission UI
+7. Create AI briefs dashboard (optional MVP-visible)
+
+---
+
+## Edge Functions
+
+### Functions in repo (verify deployment on dashboard)
+
+- `me` — user context + membership
+- `survey-submit` — submit survey
+- `survey-save-draft` — save draft
+- `hubspot-contact-upsert` — HubSpot webhook (no JWT)
+- `data-query-charts` — charts (stub)
+- `ai-generate-brief` — AI brief (stub)
+- `import-winter-2025` — CSV import
+
+Endpoints (once deployed): `https://ffgjqlmulaqtfopgwenf.functions.supabase.co/{function}`
+
+Required secrets before deploy:
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (auto)
+- `OPENAI_API_KEY` (for AI brief)
+- `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_APP_SECRET` (for webhook)
+- `ALLOWED_ORIGIN` (CORS)
+
+### Current Secrets (as of 2025-10-07)
+
+- `SUPABASE_URL` — set (2025-10-06 18:06 UTC)
+- `SUPABASE_ANON_KEY` — set (2025-10-06 18:06 UTC)
+- `SUPABASE_SERVICE_ROLE_KEY` — set (2025-10-06 18:06 UTC)
+- `SUPABASE_DB_URL` — set (2025-10-06 18:06 UTC)
+- `OPENAI_API_KEY` — set (2025-10-05 22:11 UTC)
+- `ADMIN_TOKEN` — set (2025-10-05 22:12 UTC)
+- `HUBSPOT_APP_SECRET` — set (2025-10-05 23:37 UTC)
+- `HUBSPOT_ACCESS_TOKEN` — set (2025-10-06 01:58 UTC)
+- `ALLOWED_ORIGIN` — not present (set required for CORS)
+
+---
+
+## Storage (Buckets)
+
+- No Supabase storage buckets are defined/used in this project as of 2025-10-07.
+- Teaser PDFs are hosted on HubSpot; full/historical PDFs on WP Engine per docs.
 
 ---
 
@@ -222,8 +264,8 @@ SUPABASE_URL=https://ffgjqlmulaqtfopgwenf.supabase.co
 SUPABASE_PROJECT_REF=ffgjqlmulaqtfopgwenf
 
 # API Keys (from Dashboard > Settings > API)
-SUPABASE_PUBLISHABLE_KEY=sb_publishable_1GjjY6ohuULjbeYdww9lNw_Ng48yqPB
-SUPABASE_SECRET_KEY=sb_secret_UdqMyxOCrI6yYyuQ0HZhJw_5Dl8pY7u
+SUPABASE_PUBLISHABLE_KEY=<your_publishable_key>
+SUPABASE_SECRET_KEY=<your_secret_key>
 
 # Database (optional, for direct connections)
 DATABASE_URL=postgresql://postgres:[password]@db.ffgjqlmulaqtfopgwenf.supabase.co:5432/postgres
@@ -312,7 +354,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   'https://ffgjqlmulaqtfopgwenf.supabase.co',
-  'sb_publishable_1GjjY6ohuULjbeYdww9lNw_Ng48yqPB'
+  '<your_publishable_key>'
 )
 
 // Sign up

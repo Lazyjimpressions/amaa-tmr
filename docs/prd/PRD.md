@@ -2,11 +2,11 @@
 
 ## Document Information
 - **Created:** 2025-10-05
-- **Last Updated:** 2025-10-05
+- **Last Updated:** 2025-10-07
 - **Version:** 1.0
 - **Owner:** Jonathan
 
-Owner: Jonathan • Updated: 2025-10-05
+Owner: Jonathan • Updated: 2025-10-07
 
 ## 1) Problem & Goals
 Members and prospects need a secure portal to complete the AM&AA Market Survey and (for members) access the full report. Today the survey runs in Zoho; results are exported and reports built offline.
@@ -122,4 +122,13 @@ Members and prospects need a secure portal to complete the AM&AA Market Survey a
 - Survey logic complexity deferred to Phase 2 (scaffold in place)
 - **Design complexity**: Balancing innovation with WordPress constraints
 - **Performance**: Maintaining < 1.5s p95 while adding rich interactions
+
+---
+
+## 9) Current Reality Check (2025-10-07)
+
+- WordPress: No real pages built out yet beyond test flows for HubSpot email signup validation and the survey form. The intended UX/UI iteration and updated PHP templates were not fully executed, and WordPress has not been conformed to the new design system.
+- Supabase: Schema present; Edge Function code exists in repo but requires verification of deployment and secrets before assuming availability.
+- HubSpot: Property approach defined; webhook and membership sync require validation before claiming production readiness.
+- Analytics: Not implemented.
 

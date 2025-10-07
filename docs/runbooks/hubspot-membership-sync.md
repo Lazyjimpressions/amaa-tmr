@@ -6,22 +6,22 @@
 - **Version:** 1.0
 - **Owner:** Jonathan
 
-## ✅ **CURRENT STATUS: FULLY OPERATIONAL**
+## ⚠️ **CURRENT STATUS (2025-10-07): SETUP REQUIRED**
 
 ### **HubSpot Configuration**
 - **Contact Property**: `membership_status___amaa` (label: "Active if member is active")
 - **Private App**: Created with `crm.objects.contacts.read` scope
-- **Webhook**: Active subscription for `contact.propertyChange` on `membership_status___amaa`
-- **Target URL**: `https://ffgjqlmulaqtfopgwenf.supabase.co/functions/v1/hubspot-contact-upsert`
-- **Security**: X-HubSpot-Signature verification enabled
+- **Webhook**: Subscription for `contact.propertyChange` on `membership_status___amaa` needs to be configured
+- **Target URL**: Should be `https://ffgjqlmulaqtfopgwenf.functions.supabase.co/hubspot-contact-upsert`
+- **Security**: Enable X-HubSpot-Signature verification (requires app secret)
 
 ### **Supabase Configuration**
-- **Edge Function**: `hubspot-contact-upsert` deployed and active
-- **JWT Verification**: Disabled for webhook endpoint
-- **Environment Variables**: 
-  - `HUBSPOT_ACCESS_TOKEN`: Set for contact email lookup
-  - `HUBSPOT_APP_SECRET`: Set for signature verification
-  - `ALLOWED_ORIGIN`: Set for CORS
+- **Edge Function**: `hubspot-contact-upsert` present in repo; deploy with `--no-verify-jwt`
+- **JWT Verification**: Disable for this endpoint when deploying
+- **Environment Variables** (set in Supabase): 
+  - `HUBSPOT_ACCESS_TOKEN`: for contact email lookup
+  - `HUBSPOT_APP_SECRET`: for signature verification
+  - `ALLOWED_ORIGIN`: for CORS
 
 ## **How It Works**
 
@@ -67,10 +67,10 @@
 4. **Test WordPress** - `/me` function returns correct status
 
 ### **Test the Plugin**
-1. **Visit test page**: `https://marketrepstg.wpenginepowered.com/?page_id=15`
-2. **Login with magic link**
-3. **Check debug info** - shows membership status
-4. **Verify content gating** - member-only content shows/hides correctly
+1. Create a temporary test page in WordPress for debugging membership checks
+2. Login with magic link
+3. Display `/me` API result (email, is_member)
+4. Verify content gating once plugin is wired to Supabase
 
 ## **Troubleshooting**
 
