@@ -53,7 +53,30 @@ function amaa_tmr_template_include($template) {
     
     return $template;
 }
-add_filter('template_include', 'amaa_tmr_template_include');
+add_filter('template_include', 'amaa_tmr_template_include', 99); // High priority
+
+// Force template hierarchy for our custom templates
+function amaa_tmr_force_template_hierarchy($templates) {
+    // Route /app/* to app.php template
+    if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
+        return array('templates/app.php');
+    }
+    
+    // Route front page to marketing.php template
+    if (is_front_page()) {
+        return array('templates/marketing.php');
+    }
+    
+    // Route marketing pages to marketing.php template
+    $marketing_pages = array('pricing', 'about', 'insights', 'contact');
+    if (is_page($marketing_pages)) {
+        return array('templates/marketing.php');
+    }
+    
+    return $templates;
+}
+add_filter('page_template_hierarchy', 'amaa_tmr_force_template_hierarchy', 99);
+add_filter('frontpage_template_hierarchy', 'amaa_tmr_force_template_hierarchy', 99);
 
 // Add body classes for template identification
 function amaa_tmr_body_classes($classes) {
