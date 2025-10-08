@@ -3,80 +3,23 @@
  * WordPress Routes - Ensure /app/* resolves to app.php
  */
 
-// Custom template hierarchy for app routes
-function amaa_tmr_template_hierarchy($templates) {
-    global $wp_query;
-    
-    // Route /app/* to app.php template
-    if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
-        return array('templates/app.php');
-    }
-    
-    // Route marketing pages to marketing.php template
-    $marketing_pages = array('pricing', 'about', 'insights', 'contact');
-    if (is_page($marketing_pages) || is_front_page()) {
-        return array('templates/marketing.php');
-    }
-    
-    return $templates;
-}
-add_filter('page_template_hierarchy', 'amaa_tmr_template_hierarchy');
+// NOTE: We rely on explicit page templates (page-app.php, page-marketing.php)
+// and do not override the page template hierarchy for normal pages/front page.
 
-// Override template loading for our custom templates
+// Optional: route /app/* to the App Shell when using pretty URLs
 function amaa_tmr_template_include($template) {
-    global $wp_query;
-    
-    // Route /app/* to app.php template
+    // If using /app/* routes, load the App Shell page template at theme root
     if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
-        $app_template = get_template_directory() . '/templates/app.php';
+        $app_template = get_template_directory() . '/page-app.php';
         if (file_exists($app_template)) {
             return $app_template;
         }
     }
-    
-    // Route front page to marketing.php template
-    if (is_front_page()) {
-        $marketing_template = get_template_directory() . '/templates/marketing.php';
-        if (file_exists($marketing_template)) {
-            return $marketing_template;
-        }
-    }
-    
-    // Route marketing pages to marketing.php template
-    $marketing_pages = array('pricing', 'about', 'insights', 'contact');
-    if (is_page($marketing_pages)) {
-        $marketing_template = get_template_directory() . '/templates/marketing.php';
-        if (file_exists($marketing_template)) {
-            return $marketing_template;
-        }
-    }
-    
     return $template;
 }
-add_filter('template_include', 'amaa_tmr_template_include', 99); // High priority
+add_filter('template_include', 'amaa_tmr_template_include', 20);
 
-// Force template hierarchy for our custom templates
-function amaa_tmr_force_template_hierarchy($templates) {
-    // Route /app/* to app.php template
-    if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
-        return array('templates/app.php');
-    }
-    
-    // Route front page to marketing.php template
-    if (is_front_page()) {
-        return array('templates/marketing.php');
-    }
-    
-    // Route marketing pages to marketing.php template
-    $marketing_pages = array('pricing', 'about', 'insights', 'contact');
-    if (is_page($marketing_pages)) {
-        return array('templates/marketing.php');
-    }
-    
-    return $templates;
-}
-add_filter('page_template_hierarchy', 'amaa_tmr_force_template_hierarchy', 99);
-add_filter('frontpage_template_hierarchy', 'amaa_tmr_force_template_hierarchy', 99);
+// Do not force template hierarchy; page templates selected in WP admin will apply
 
 // Add body classes for template identification
 function amaa_tmr_body_classes($classes) {
