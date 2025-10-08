@@ -56,3 +56,21 @@
 
 ## Output
 - Update `supabase.md` and `supabase/functions/README.md` with verified status and timestamps.
+
+---
+
+## Verification Log
+
+- 2025-10-07:
+  - Auth token: obtained via password grant for `pokercpa05@yahoo.com`
+  - `/me`: HTTP 200 (authorized)
+  - `/data-query-charts`: HTTP 500 (function reachable; server error)
+  - Notes: HubSpot webhook not yet tested with signature; admin token present
+- 2025-10-07 (updated):
+  - HubSpot webhook: HTTP 200 (admin token working)
+  - `/data-query-charts`: still HTTP 500 (needs redeploy from repo)
+  - Next: redeploy data-query-charts function
+- 2025-10-08:
+  - `/data-query-charts`: HTTP 200 (function redeployed successfully)
+  - All core functions verified and working
+  - Supabase MCP tools restored and functional

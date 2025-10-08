@@ -243,7 +243,7 @@ Required secrets before deploy:
 - `ADMIN_TOKEN` — set (2025-10-05 22:12 UTC)
 - `HUBSPOT_APP_SECRET` — set (2025-10-05 23:37 UTC)
 - `HUBSPOT_ACCESS_TOKEN` — set (2025-10-06 01:58 UTC)
-- `ALLOWED_ORIGIN` — not present (set required for CORS)
+- `ALLOWED_ORIGIN` — set
 
 ---
 

@@ -89,3 +89,32 @@ add_action('init', 'amaa_tmr_init');
 add_action('init', function () {
     register_block_pattern_category('pages', ['label' => __('Pages', 'amaa-tmr')]);
 });
+
+// Register custom page templates from templates/ directory
+function amaa_tmr_add_page_templates($templates) {
+    $templates['templates/marketing.php'] = 'Marketing Shell';
+    $templates['templates/app.php'] = 'App Shell';
+    return $templates;
+}
+add_filter('theme_page_templates', 'amaa_tmr_add_page_templates');
+
+// Load custom page templates from templates/ directory
+function amaa_tmr_load_page_template($template) {
+    global $post;
+    
+    if (!$post) {
+        return $template;
+    }
+    
+    $page_template = get_post_meta($post->ID, '_wp_page_template', true);
+    
+    if ($page_template && $page_template !== 'default') {
+        $template_path = get_template_directory() . '/' . $page_template;
+        if (file_exists($template_path)) {
+            return $template_path;
+        }
+    }
+    
+    return $template;
+}
+add_filter('page_template', 'amaa_tmr_load_page_template');
