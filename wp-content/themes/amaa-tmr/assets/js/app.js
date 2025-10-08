@@ -2,6 +2,11 @@
 (function() {
     'use strict';
 
+    // Define no-op notifier to avoid ReferenceError if called before init
+    if (typeof window.showNotification !== 'function') {
+        window.showNotification = function(){ /* no-op */ };
+    }
+
     // Wait for React and Framer Motion to load
     function waitForDependencies() {
         if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof motion === 'undefined') {
