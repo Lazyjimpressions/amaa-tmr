@@ -63,7 +63,7 @@ function amaa_tmr_enqueue_scripts() {
             'amaa-tmr-home-island',
             get_template_directory_uri() . '/assets/js/homepage-island.js',
             array('react', 'react-dom'),
-            '1.0.0',
+            '1.0.1',
             true
         );
     }
