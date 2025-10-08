@@ -6,6 +6,8 @@ Template Post Type: page
 get_header(); ?>
 
 <main id="content" class="site">
+    <!-- template: page-marketing.php -->
+    <div id="homepage-root"></div>
     <div class="container">
         <?php
         while (have_posts()) : the_post();
