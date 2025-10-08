@@ -52,21 +52,51 @@ add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_styles');
 
 // Enqueue app scripts
 function amaa_tmr_enqueue_scripts() {
-    // Main app script
-    wp_enqueue_script(
-        'amaa-tmr-app',
-        get_template_directory_uri() . '/assets/js/app.js',
-        array(),
-        '1.0.0',
-        true
-    );
-    
-    // Localize script for app routes
-    wp_localize_script('amaa-tmr-app', 'amaaTmrApp', array(
-        'apiUrl' => rest_url('wp/v2/'),
-        'nonce' => wp_create_nonce('wp_rest'),
-        'isApp' => strpos($_SERVER['REQUEST_URI'], '/app/') === 0
-    ));
+    // React and Framer Motion (for homepage)
+    if (is_front_page()) {
+        // React
+        wp_enqueue_script(
+            'react',
+            'https://unpkg.com/react@18/umd/react.production.min.js',
+            array(),
+            '18.0.0',
+            true
+        );
+        
+        wp_enqueue_script(
+            'react-dom',
+            'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+            array('react'),
+            '18.0.0',
+            true
+        );
+        
+        
+        // Homepage React components
+        wp_enqueue_script(
+            'amaa-tmr-homepage',
+            get_template_directory_uri() . '/assets/js/app.js',
+            array('react', 'react-dom'),
+            '1.0.0',
+            true
+        );
+    } else {
+        // Main app script for non-homepage pages
+        wp_enqueue_script(
+            'amaa-tmr-app',
+            get_template_directory_uri() . '/assets/js/app.js',
+            array(),
+            '1.0.0',
+            true
+        );
+        
+        // Localize script for app routes
+        wp_localize_script('amaa-tmr-app', 'amaaTmrApp', array(
+            'apiUrl' => rest_url('wp/v2/'),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'isApp' => strpos($_SERVER['REQUEST_URI'], '/app/') === 0
+        ));
+    }
 }
 add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_scripts');
 
