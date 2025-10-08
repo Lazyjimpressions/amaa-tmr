@@ -1,9 +1,11 @@
 // Minimal homepage React island using design tokens and existing buttons
 (function(){
-  if (!document.getElementById('homepage-root')) return;
-  if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') return;
+  function mount(){
+    var mountEl = document.getElementById('homepage-root');
+    if (!mountEl) return;
+    if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') return;
 
-  const h = React.createElement;
+    const h = React.createElement;
 
   function Hero(){
     return h('section', { style: {
@@ -34,7 +36,18 @@
     ]);
   }
 
-  ReactDOM.render(h(Home), document.getElementById('homepage-root'));
+    if (ReactDOM.createRoot) {
+      ReactDOM.createRoot(mountEl).render(h(Home));
+    } else {
+      ReactDOM.render(h(Home), mountEl);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mount);
+  } else {
+    mount();
+  }
 })();
 
 
