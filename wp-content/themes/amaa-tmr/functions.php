@@ -52,8 +52,8 @@ add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_styles');
 
 // Enqueue app scripts
 function amaa_tmr_enqueue_scripts() {
-    // Lightweight React UMD for homepage island (front page only)
-    if (is_front_page()) {
+    // Lightweight React UMD for homepage island (Marketing Shell pages)
+    if (is_page_template('page-marketing.php') || is_front_page()) {
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
         wp_enqueue_script(
