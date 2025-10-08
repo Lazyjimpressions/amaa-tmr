@@ -14,6 +14,9 @@ add_action('after_setup_theme', function () {
     add_theme_support('wp-block-styles');
     add_theme_support('responsive-embeds');
     add_theme_support('post-thumbnails');
+    // Disable block templates so PHP page templates are honored
+    remove_theme_support('block-templates');
+    remove_theme_support('block-template-parts');
 });
 
 // Enqueue theme styles and scripts
@@ -82,6 +85,17 @@ function amaa_tmr_enqueue_scripts() {
     ));
 }
 add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_scripts');
+
+// Debug: expose which template file WP resolved
+add_filter('template_include', function ($template) {
+    $GLOBALS['amaa_tmr_current_template'] = $template;
+    return $template;
+}, 1000);
+add_action('wp_head', function () {
+    if (!empty($GLOBALS['amaa_tmr_current_template'])) {
+        echo "\n<!-- template: " . basename($GLOBALS['amaa_tmr_current_template']) . " -->\n";
+    }
+});
 
 // Register navigation menus
 function amaa_tmr_register_menus() {
