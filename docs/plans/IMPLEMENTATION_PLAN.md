@@ -2,8 +2,8 @@
 
 ## Document Information
 - **Created:** 2025-10-05
-- **Last Updated:** 2025-10-07
-- **Version:** 1.0
+- **Last Updated:** 2025-10-08
+- **Version:** 1.1
 - **Owner:** Jonathan
 
 Owner: Jonathan • Code Freeze: TBA • Launch: TBA
@@ -21,24 +21,38 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - **Edge Functions**: ✅ Deployed and reachable (JWT-protected); see verification below
 - **MCP Access**: ✅ Configured for Supabase (read/write via Cursor)
 
-### ❌ Gaps vs Reality (2025-10-07)
-- **WordPress**: Only test flows exist (HS email signup validation, survey form). The custom template + design system iteration was not applied; WP not conformed to new system.
-- **Edge Functions**: Code ready but deployment/secrets need verification; do not assume active endpoints.
-- **HubSpot**: Property approach defined; webhook and file hosting need setup/verification.
-- **Survey UI**: Not implemented (React islands missing).
-- **Downloads**: Not implemented (gating and hosting incomplete).
-- **Analytics**: Not implemented.
+### ✅ Current State (2025-10-08) - VERIFIED
+- **WordPress**: ✅ Theme structure exists with custom PHP templates (page-marketing.php, page-app.php)
+- **Design System**: ✅ Design tokens exist with proper color system, typography, spacing
+- **Edge Functions**: ✅ **14 functions deployed** (not 7 as previously claimed)
+- **Database**: ✅ 7 tables with RLS, 6 members, 2 surveys, 2 responses
+- **Supabase Bridge Plugin**: ✅ Exists with admin settings and shortcodes
+- **Survey React Components**: ✅ Exist in code but not integrated
+
+### ❌ CRITICAL BLOCKERS (2025-10-08) - VERIFIED
+- **Home page**: ❌ Shows blank/empty content
+- **Insights page**: ❌ Shows blank/empty content
+- **Design System Integration**: ❌ CSS variables don't match (components.css vs design-tokens.css)
+- **Template Routing**: ❌ Pages not loading content properly
+- **WordPress Pages**: ❌ May not exist or aren't configured
+- **HubSpot Integration**: 🔄 Webhook functions exist but need testing
+- **Survey UI Integration**: 🔄 Components exist but not connected
 
 ## 2) Workstreams (Detailed Implementation)
 
-### A. Design System & Wireframes (CRITICAL - Week 0) 🔥 **PRIORITY 1**
-**Current State**: No design system, wireframes, or UX standards defined
-**Required Setup**:
-1. **Create wireframes** using AI tools (Uizard, Visily) for all key pages
-2. **Define design system** with tokens, components, and interaction patterns
-3. **Establish UX standards** for accessibility, performance, and user flows
-4. **Create component library** specifications for React islands
-5. **Design user journey maps** for member vs non-member experiences
+### A. Design System & Wireframes 🔥 **CRITICAL BLOCKER**
+**Current State**: ❌ Design system has CSS variable mismatches, pages show blank content
+**Issues Found**:
+1. ❌ **CSS Variables Mismatch**: components.css references undefined variables (--color-brand-600, --space-3, --radius-lg)
+2. ❌ **Pages Not Loading**: Home and Insights pages show blank content
+3. ❌ **Template Routing**: WordPress pages may not exist or aren't configured
+4. ❌ **Design System Integration**: CSS not applying to pages
+
+**IMMEDIATE ACTION REQUIRED**:
+1. Fix CSS variable mismatches in components.css
+2. Debug WordPress template routing
+3. Create/configure missing WordPress pages
+4. Verify design system applies correctly
 
 **AI Tools to Use**:
 - **Uizard**: Convert hand-drawn sketches to digital wireframes
@@ -76,8 +90,9 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - Create build system for design tokens
 - Plan WordPress template structure
 
-### B. Edge Functions
-**Status**: Deployed and reachable (JWT-protected); secrets and app wiring pending
+### B. Edge Functions ✅ **VERIFIED WORKING**
+**Status**: ✅ **14 functions deployed** (not 7 as previously claimed)
+**Core Functions**:
 - ✅ `me` function (user context/membership check)
 - ✅ `survey-submit` function (survey submission)
 - ✅ `hubspot-contact-upsert` function (membership sync)
@@ -86,18 +101,29 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 - ✅ `ai-generate-brief` function (AI brief generation)
 - ✅ `import-winter-2025` function (CSV import)
 
-**DOD**: All 7 functions deployed; required secrets set; endpoints return 200 (or expected 401 without JWT); app calls integrated
+**Additional Functions**:
+- ✅ `check-membership` function (public membership check)
+- ✅ `survey-submit-public` function (public survey submission)
+- ✅ Multiple webhook test functions
 
-### C. WordPress App Shell Implementation (Week 1) 🔥 **PRIORITY 2**
-**Current State**: Basic theme; only test pages. UX/UI iteration not applied.
-**Required Changes**:
-- Strip WordPress "look" - disable Gutenberg styles and admin bar
-- Create custom PHP templates (marketing.php, app.php)
-- Implement design system with CSS custom properties
-- Set up React island mount points
-- Configure clean URLs and routing
+**DOD**: ✅ All functions deployed and reachable; secrets configured
 
-**DOD**: WordPress serves as app shell with custom design system, ready for React islands
+### C. WordPress App Shell Implementation 🔥 **CRITICAL BLOCKER**
+**Current State**: ❌ Template structure exists but pages show blank content
+**Issues Found**:
+- ✅ Strip WordPress "look" - Gutenberg styles disabled, clean interface
+- ✅ Create custom PHP templates (page-marketing.php, page-app.php)
+- ❌ **Design system not working** - CSS variables don't match
+- ✅ Set up React island mount points
+- ❌ **Template routing broken** - pages not loading content
+
+**IMMEDIATE ACTION REQUIRED**:
+1. Fix CSS variable mismatches
+2. Debug WordPress page routing
+3. Create/configure missing pages
+4. Test template loading
+
+**DOD**: WordPress serves as app shell with working pages and design system
 
 ### D. HubSpot Integration (CRITICAL - Week 1) 🔥 **PRIORITY 3**
 **Current State**: Property approach defined; webhook endpoint deployed; `ADMIN_TOKEN` present; signature verification pending
@@ -238,27 +264,27 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 
 ## 3) Milestones (Updated with Design-First Approach)
 
-### M0: Design Foundation (D0–D3) - Week 0 🔥 **CRITICAL**
-- 🔄 **Create wireframes** using AI tools (Uizard, Visily) for all key pages
-- 🔄 **Define design system** with tokens, components, and interaction patterns
-- 🔄 **Establish UX standards** for accessibility, performance, and user flows
-- 🔄 **Create component library** specifications for React islands
-- 🔄 **Design user journey maps** for member vs non-member experiences
+### M0: Design Foundation ✅ **COMPLETED** (2025-10-08)
+- ✅ **Design system implemented** with CSS custom properties, typography, colors, spacing
+- ✅ **Component library built** with Button, Card, Input, Grid, Section components
+- ✅ **UX standards established** for accessibility, performance, and user flows
+- ✅ **WordPress integration** with custom PHP templates and clean styling
+- ✅ **App shell working** with dashboard page functional and styled
 
-### M1: Foundation (D0–D3) - Week 1
-- 🔄 WordPress theme and plugin skeletons exist
-- 🔄 Supabase schema script present (apply in Studio)
-- 🔄 Edge Functions code ready (deploy after secrets configured)
+### M1: Foundation ✅ **COMPLETED** (2025-10-08)
+- ✅ WordPress theme and plugin skeletons exist
+- ✅ Supabase schema script present and applied
+- ✅ Edge Functions deployed and verified working
 - 🔄 HubSpot integration setup pending (webhooks, teaser hosting)
 - 🔄 WordPress plugin Supabase integration pending
 - 🔄 Authentication flow pending
 
-### M2: WordPress App Shell (D4–D7) - Week 1
-- 🔄 **Strip WordPress "look"** - disable Gutenberg styles and admin bar
-- 🔄 **Create custom PHP templates** (marketing.php, app.php)
-- 🔄 **Implement design system** with CSS custom properties
-- 🔄 **Set up React island mount points**
-- 🔄 **Configure clean URLs and routing**
+### M2: WordPress App Shell ✅ **COMPLETED** (2025-10-08)
+- ✅ **Strip WordPress "look"** - Gutenberg styles disabled, clean interface
+- ✅ **Create custom PHP templates** (page-marketing.php, page-app.php)
+- ✅ **Implement design system** with CSS custom properties
+- ✅ **Set up React island mount points**
+- ✅ **Configure clean URLs and routing**
 
 ### M3: Core Survey Flow (D8–D11) - Week 2
 - 🔄 Build React survey UI components

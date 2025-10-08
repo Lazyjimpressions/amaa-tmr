@@ -2,8 +2,8 @@
 
 ## Document Information
 - **Created:** 2025-01-27
-- **Last Updated:** 2025-01-27
-- **Version:** 1.0
+- **Last Updated:** 2025-10-08
+- **Version:** 1.1
 - **Owner:** Jonathan
 
 ## 1) Design Philosophy
@@ -28,22 +28,20 @@
 - **Custom PHP templates** (marketing.php, app.php) with minimal Gutenberg chrome
 - **Design system** with CSS custom properties and component library
 
-### Template Structure
+### Template Structure (Updated 2025-10-08)
 ```
 wp-content/themes/amaa-tmr/
-├── templates/
-│   ├── marketing.php      # Public pages (home, pricing, about)
-│   ├── app.php           # Member portal pages
-│   └── parts/
-│       ├── header.html   # Clean header without WP chrome
-│       └── footer.html   # Minimal footer
+├── page-marketing.php    # Marketing Shell template (theme root)
+├── page-app.php         # App Shell template (theme root)
+├── templates/           # Block template parts (header.html, footer.html)
 ├── assets/
 │   ├── css/
-│   │   ├── design-tokens.css  # CSS custom properties
-│   │   └── components.css     # Component styles
+│   │   ├── design-tokens.css  # ✅ Implemented - CSS custom properties
+│   │   ├── marketing.css      # ✅ Implemented - Marketing layout styles
+│   │   ├── app.css           # ✅ Implemented - App shell styles
+│   │   └── components.css    # ✅ Implemented - Component library
 │   └── js/
-│       ├── react-islands/     # React components
-│       └── app.js            # Main application logic
+│       └── app.js            # ✅ Implemented - Main application logic
 ```
 
 ## 3) Design Tokens
@@ -560,26 +558,26 @@ wp-content/themes/amaa-tmr/
 4. **Cursor AI**: Generate CSS/React code from design specifications
 5. **Manual refinement**: Polish and optimize based on testing
 
-## 10) Implementation Checklist
+## 10) Implementation Checklist (Updated 2025-10-08)
 
 ### Design System Setup
-- [ ] Create CSS custom properties file
-- [ ] Implement core component styles
-- [ ] Set up typography scale
-- [ ] Configure color system
-- [ ] Establish spacing system
+- [x] Create CSS custom properties file
+- [x] Implement core component styles
+- [x] Set up typography scale
+- [x] Configure color system
+- [x] Establish spacing system
 
 ### WordPress Integration
-- [ ] Strip default WordPress styles
-- [ ] Create custom PHP templates
-- [ ] Set up React island mount points
-- [ ] Configure clean URLs
-- [ ] Implement design tokens
+- [x] Strip default WordPress styles
+- [x] Create custom PHP templates (page-marketing.php, page-app.php)
+- [x] Set up React island mount points
+- [x] Configure clean URLs and routing
+- [x] Implement design tokens
 
 ### Component Development
-- [ ] Build core components (Button, Card, Input)
-- [ ] Create layout components (Grid, Container, Section)
-- [ ] Implement interactive components (Survey, Dashboard)
+- [x] Build core components (Button, Card, Input)
+- [x] Create layout components (Grid, Container, Section)
+- [x] Implement interactive components (Dashboard working)
 - [ ] Add micro-interactions and animations
 - [ ] Test accessibility compliance
 

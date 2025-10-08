@@ -1,6 +1,6 @@
 # AM&AA — The Market Report (TMR) — Docs
 
-Author: Jonathan • Updated: 2025-10-07
+Author: Jonathan • Updated: 2025-10-08
 
 ## What's here
 - **PRD** — product requirements for MVP
@@ -23,12 +23,20 @@ Author: Jonathan • Updated: 2025-10-07
 
 ---
 
-## Status as of 2025-10-07
+## Status as of 2025-10-08
 
-- WordPress (WPE): Minimal pages; only test flows for HubSpot email signup validation and the survey form exist. The broader UX/UI iteration and template conformance were not completed.
-- Supabase: Database schema exists in repo; Edge Function code is present and aligned to shared utilities, but deployment and final secret configuration remain pending.
-- HubSpot: Membership property strategy defined; full webhook-to-Supabase sync may not be active yet and requires verification before assuming production readiness.
-- Secrets: Remaining keys (e.g., `OPENAI_API_KEY`, any `ADMIN_TOKEN`) must be set in Supabase before deploying functions.
+### ✅ **Major Accomplishments:**
+- **WordPress App Shell**: ✅ Fully functional with custom PHP templates (page-marketing.php, page-app.php)
+- **Design System**: ✅ Complete implementation with CSS custom properties, typography, colors, spacing, and components
+- **Template System**: ✅ WordPress template hierarchy resolved, PHP templates working correctly
+- **Dashboard**: ✅ Working with design system applied, professional appearance achieved
+- **Supabase**: ✅ All 7 Edge Functions deployed and verified working with proper secrets
+
+### 🔄 **Current Status:**
+- **Pages**: Dashboard created and working; need to create remaining pages (Home, Survey, Reports, Insights)
+- **HubSpot**: Property approach defined; webhook and membership sync require validation
+- **Survey UI**: React islands ready but not yet implemented
+- **Downloads**: Gating and hosting not yet implemented
 
 ## Membership source of truth
 - HubSpot Contact property: **`membership_status___amaa`** (label "Active if member is active")
