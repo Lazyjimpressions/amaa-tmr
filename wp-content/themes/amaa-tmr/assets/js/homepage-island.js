@@ -39,13 +39,9 @@
 
     function Hero(){
       // Brand gradient band with 2-column grid
-      return h('section', { style: {
-        background: 'linear-gradient(135deg, var(--brand-600, #0B3C5D) 0%, #062C47 100%)',
-        color: '#fff',
-        padding: 'var(--space-80) 0 var(--space-56)'
-      }}, [
-        h('div', { style: { maxWidth: '1200px', margin: '0 auto', padding: '0 var(--space-24)' }}, [
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 'var(--space-40)', alignItems: 'center' }}, [
+      return h('section', { className: 'home-hero' }, [
+        h('div', { className: 'home-container' }, [
+          h('div', { className: 'home-hero-grid' }, [
             // Left: Copy + CTAs
             h('div', null, [
               h('h1', { style: {
@@ -66,12 +62,7 @@
               ])
             ]),
             // Right: Visual stat block
-            h('div', { style: {
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.25)',
-              borderRadius: 'var(--radius-24, 24px)',
-              padding: 'var(--space-24)'
-            }}, [
+            h('div', { style: { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-24, 24px)', padding: 'var(--space-24)' }}, [
               h('div', { style: { display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-16)' }}, [
                 h('div', { style: { display: 'flex', justifyContent: 'space-between' }}, [ h('div', null, '2000+'), h('span', { style: { opacity: .85 }}, 'Advisors') ]),
                 h('div', { style: { display: 'flex', justifyContent: 'space-between' }}, [ h('div', null, '5+'), h('span', { style: { opacity: .85 }}, 'Years of Data') ]),
@@ -193,9 +184,9 @@
           ])
         ]);
       };
-      return h('section', { style: { padding: 'var(--space-64) 0', backgroundColor: 'var(--gray-50)' }}, [
-        h('div', { style: { maxWidth: '1200px', margin: '0 auto', padding: '0 var(--space-24)' }}, [
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--space-40)' }}, [
+      return h('section', { className: 'home-insights' }, [
+        h('div', { className: 'home-container' }, [
+          h('div', { className: 'home-insights-grid' }, [
             h('div', { style: { position: 'sticky', top: 'var(--space-80)' }}, [
               h('h2', { style: { margin: '0 0 var(--space-12) 0' }}, 'Key Market Insights'),
               h('p', { style: { color: 'var(--gray-600)' }}, 'Highlights from the most recent AM&AA Market Survey.')
@@ -208,26 +199,18 @@
 
     function Credibility(){
       const badges = ['500+ Members Contributing', '5+ Years of Historical Data', 'Produced by the Alliance of M&A Advisors'];
-      return h('section', { style: { padding: 'var(--space-56) 0', borderTop: '1px solid var(--border-200, #e5e7eb)', borderBottom: '1px solid var(--border-200, #e5e7eb)' }}, [
+      return h('section', { className: 'home-cred' }, [
         h('div', { style: { maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '0 var(--space-24)' }}, [
           h('blockquote', { style: { fontStyle: 'italic', color: 'var(--gray-700)', margin: '0 0 var(--space-16) 0' }}, '“A must‑read for every middle‑market advisor.”'),
           h('cite', { style: { display: 'block', color: 'var(--gray-600)', fontStyle: 'normal', marginBottom: 'var(--space-24)' }}, 'Managing Director, Investment Bank'),
-          h('div', { style: { display: 'flex', gap: 'var(--space-12)', flexWrap: 'wrap', justifyContent: 'center' }}, badges.map(function(b){ return h('span', { key: b, style: {
-            backgroundColor: 'var(--brand-50, #eef2ff)',
-            color: 'var(--brand-700, #1e3a8a)',
-            border: '1px solid var(--brand-100, #e0e7ff)',
-            borderRadius: '9999px',
-            padding: '6px 12px',
-            fontSize: 'var(--text-sm)'
-          }}, b); }))
+          h('div', { className: 'home-cred-badges' }, badges.map(function(b){ return h('span', { key: b, className: 'home-badge' }, b); }))
         ])
       ]);
     }
 
     function CTA(){
-      return h('section', { style: { position: 'relative', backgroundColor: 'var(--brand-600, #0B3C5D)', color: '#fff', padding: 'var(--space-72) 0' }}, [
-        // subtle pattern
-        h('div', { style: { position: 'absolute', inset: 0, opacity: .15, background: 'radial-gradient(circle at 25% 25%, rgba(255,255,255,.25) 0, transparent 40%)' } }),
+      return h('section', { className: 'home-cta' }, [
+        h('div', { className: 'pattern' }),
         h('div', { style: { position: 'relative', zIndex: 1, maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '0 var(--space-24)' }}, [
           h('h3', { style: { margin: '0 0 var(--space-12) 0', fontSize: 'var(--text-3xl)' }}, 'Unlock Full Access to the AM&AA Market Report'),
           h('p', { style: { margin: '0 0 var(--space-20) 0', color: 'rgba(255,255,255,.9)' }}, 'Members receive full Market Survey access, analytics dashboard, and private community.'),

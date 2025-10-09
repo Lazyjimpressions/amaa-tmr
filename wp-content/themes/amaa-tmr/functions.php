@@ -49,6 +49,16 @@ function amaa_tmr_enqueue_styles() {
             array('amaa-tmr-tokens'),
             '1.0.0'
         );
+
+        // Homepage / Marketing Shell specific styles
+        if (is_front_page() || is_page_template('page-marketing.php')) {
+            wp_enqueue_style(
+                'amaa-tmr-home',
+                get_template_directory_uri() . '/assets/css/home.css',
+                array('amaa-tmr-marketing'),
+                '1.0.0'
+            );
+        }
     }
 }
 add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_styles');
@@ -56,7 +66,7 @@ add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_styles');
 // Enqueue app scripts
 function amaa_tmr_enqueue_scripts() {
     // Lightweight React UMD for homepage island (load on frontend; script no-ops without #homepage-root)
-    if (!is_admin()) {
+    if (!is_admin() && (is_front_page() || is_page_template('page-marketing.php'))) {
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
 
