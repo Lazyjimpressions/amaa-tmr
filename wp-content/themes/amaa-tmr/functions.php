@@ -37,7 +37,7 @@ function amaa_tmr_enqueue_styles() {
         'amaa-tmr-components',
         get_template_directory_uri() . '/assets/css/components.css',
         array('amaa-tmr-tokens'),
-        '1.0.0'
+        filemtime(get_template_directory() . '/assets/css/components.css') // Cache-busting
     );
     
     // Template-specific styles
