@@ -1199,6 +1199,441 @@
             ]);
         }
 
+        // Page 4: Looking Ahead Component
+        function LookingAheadPage({ onNext, onSave }) {
+            const [formData, setFormData] = useState({
+                total_deals_2025: '',
+                dealflow_factors: {
+                    market_conditions: '',
+                    interest_rates: '',
+                    regulatory_changes: '',
+                    economic_uncertainty: '',
+                    buyer_sentiment: '',
+                    seller_motivation: ''
+                },
+                economic_environment: '',
+                ebitda_multiples_prediction: '',
+                deal_activity_prediction: '',
+                challenges: [],
+                tariff_impact_performance: [],
+                tariff_impact_deals: [],
+                tariff_results: [],
+                government_layoffs_results: []
+            });
+            const [errors, setErrors] = useState({});
+            const [isSaving, setIsSaving] = useState(false);
+
+            // Handle multiple selection for challenges
+            const handleChallengeChange = (challenge, checked) => {
+                let newChallenges = [...formData.challenges];
+                if (checked) {
+                    if (!newChallenges.includes(challenge)) {
+                        newChallenges.push(challenge);
+                    }
+                } else {
+                    newChallenges = newChallenges.filter(c => c !== challenge);
+                }
+                setFormData(prev => ({ ...prev, challenges: newChallenges }));
+            };
+
+            // Handle multiple selection for tariff impacts
+            const handleTariffImpactChange = (impact, checked, type) => {
+                let newImpacts = [...formData[type]];
+                if (checked) {
+                    if (!newImpacts.includes(impact)) {
+                        newImpacts.push(impact);
+                    }
+                } else {
+                    newImpacts = newImpacts.filter(i => i !== impact);
+                }
+                setFormData(prev => ({ ...prev, [type]: newImpacts }));
+            };
+
+            // Form validation
+            const validateForm = () => {
+                const newErrors = {};
+                
+                if (!formData.total_deals_2025 || formData.total_deals_2025 === '0') {
+                    newErrors.total_deals_2025 = 'Please enter the number of total deals expected for 2025';
+                }
+                
+                if (!formData.economic_environment) {
+                    newErrors.economic_environment = 'Please select the economic environment prediction';
+                }
+                
+                if (!formData.ebitda_multiples_prediction) {
+                    newErrors.ebitda_multiples_prediction = 'Please select EBITDA multiples prediction';
+                }
+                
+                if (!formData.deal_activity_prediction) {
+                    newErrors.deal_activity_prediction = 'Please select deal activity prediction';
+                }
+                
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            // Handle form submission
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                setIsSaving(true);
+                try {
+                    await onSave(formData);
+                    onNext();
+                } catch (error) {
+                    console.error('Save error:', error);
+                    alert('Failed to save progress. Please try again.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            return h('div', { className: 'survey-page' }, [
+                h('div', { className: 'page-header' }, [
+                    h('h2', { className: 'page-title' }, 'Looking Ahead'),
+                    h('p', { className: 'page-description' }, 
+                        'Share your predictions for the second half of 2025'
+                    )
+                ]),
+                
+                h('form', { 
+                    className: 'survey-form',
+                    onSubmit: handleSubmit
+                }, [
+                    // Total Deals Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Deal Volume Predictions'),
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'total_deals_2025'
+                            }, 'How many total deals do you expect your firm to close for ALL of 2025?'),
+                            h('input', {
+                                type: 'number',
+                                id: 'total_deals_2025',
+                                className: `form-input ${errors.total_deals_2025 ? 'error' : ''}`,
+                                value: formData.total_deals_2025,
+                                onChange: (e) => setFormData(prev => ({
+                                    ...prev,
+                                    total_deals_2025: e.target.value
+                                })),
+                                min: '0',
+                                placeholder: 'Enter total number of deals'
+                            }),
+                            errors.total_deals_2025 && h('div', { 
+                                className: 'form-error' 
+                            }, errors.total_deals_2025)
+                        ])
+                    ]),
+
+                    // Dealflow Factors Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Dealflow Impact Factors'),
+                        h('p', { className: 'section-description' }, 
+                            'How much do you think the following factors will impact dealflow in the second-half of 2025?'
+                        ),
+                        
+                        h('div', { className: 'factors-grid' }, [
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Market Conditions'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.dealflow_factors.market_conditions,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        dealflow_factors: { ...prev.dealflow_factors, market_conditions: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Interest Rates'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.dealflow_factors.interest_rates,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        dealflow_factors: { ...prev.dealflow_factors, interest_rates: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Regulatory Changes'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.dealflow_factors.regulatory_changes,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        dealflow_factors: { ...prev.dealflow_factors, regulatory_changes: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Economic Uncertainty'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.dealflow_factors.economic_uncertainty,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        dealflow_factors: { ...prev.dealflow_factors, economic_uncertainty: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Buyer Sentiment'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.dealflow_factors.buyer_sentiment,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        dealflow_factors: { ...prev.dealflow_factors, buyer_sentiment: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Seller Motivation'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.dealflow_factors.seller_motivation,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        dealflow_factors: { ...prev.dealflow_factors, seller_motivation: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ])
+                        ])
+                    ]),
+
+                    // Economic Environment Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Economic Environment'),
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'economic_environment'
+                            }, 'What will be the upcoming economic environment (impacting the businesses for sale in your deals) for the second half of 2025?'),
+                            h('select', {
+                                id: 'economic_environment',
+                                className: `form-select ${errors.economic_environment ? 'error' : ''}`,
+                                value: formData.economic_environment,
+                                onChange: (e) => setFormData(prev => ({
+                                    ...prev,
+                                    economic_environment: e.target.value
+                                }))
+                            }, [
+                                h('option', { value: '' }, 'Select economic environment'),
+                                h('option', { value: 'very_strong' }, 'Very Strong Growth'),
+                                h('option', { value: 'strong' }, 'Strong Growth'),
+                                h('option', { value: 'moderate' }, 'Moderate Growth'),
+                                h('option', { value: 'slow' }, 'Slow Growth'),
+                                h('option', { value: 'recession' }, 'Recession/Decline')
+                            ]),
+                            errors.economic_environment && h('div', { 
+                                className: 'form-error' 
+                            }, errors.economic_environment)
+                        ])
+                    ]),
+
+                    // Market Predictions Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Market Predictions'),
+                        h('div', { className: 'form-row' }, [
+                            h('div', { className: 'form-group' }, [
+                                h('label', { 
+                                    className: 'form-label',
+                                    htmlFor: 'ebitda_multiples_prediction'
+                                }, 'Where do you think Average EBITDA MULTIPLES will be at the end of 2025 relative to now?'),
+                                h('select', {
+                                    id: 'ebitda_multiples_prediction',
+                                    className: `form-select ${errors.ebitda_multiples_prediction ? 'error' : ''}`,
+                                    value: formData.ebitda_multiples_prediction,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        ebitda_multiples_prediction: e.target.value
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select prediction'),
+                                    h('option', { value: 'significantly_higher' }, 'Significantly Higher (10%+)'),
+                                    h('option', { value: 'moderately_higher' }, 'Moderately Higher (5-10%)'),
+                                    h('option', { value: 'slightly_higher' }, 'Slightly Higher (0-5%)'),
+                                    h('option', { value: 'about_same' }, 'About the Same'),
+                                    h('option', { value: 'slightly_lower' }, 'Slightly Lower (0-5%)'),
+                                    h('option', { value: 'moderately_lower' }, 'Moderately Lower (5-10%)'),
+                                    h('option', { value: 'significantly_lower' }, 'Significantly Lower (10%+)')
+                                ]),
+                                errors.ebitda_multiples_prediction && h('div', { 
+                                    className: 'form-error' 
+                                }, errors.ebitda_multiples_prediction)
+                            ]),
+                            
+                            h('div', { className: 'form-group' }, [
+                                h('label', { 
+                                    className: 'form-label',
+                                    htmlFor: 'deal_activity_prediction'
+                                }, 'Where do you think Deal Activity Volume will be at the end of 2025 relative to now?'),
+                                h('select', {
+                                    id: 'deal_activity_prediction',
+                                    className: `form-select ${errors.deal_activity_prediction ? 'error' : ''}`,
+                                    value: formData.deal_activity_prediction,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        deal_activity_prediction: e.target.value
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select prediction'),
+                                    h('option', { value: 'significantly_higher' }, 'Significantly Higher (25%+)'),
+                                    h('option', { value: 'moderately_higher' }, 'Moderately Higher (10-25%)'),
+                                    h('option', { value: 'slightly_higher' }, 'Slightly Higher (0-10%)'),
+                                    h('option', { value: 'about_same' }, 'About the Same'),
+                                    h('option', { value: 'slightly_lower' }, 'Slightly Lower (0-10%)'),
+                                    h('option', { value: 'moderately_lower' }, 'Moderately Lower (10-25%)'),
+                                    h('option', { value: 'significantly_lower' }, 'Significantly Lower (25%+)')
+                                ]),
+                                errors.deal_activity_prediction && h('div', { 
+                                    className: 'form-error' 
+                                }, errors.deal_activity_prediction)
+                            ])
+                        ])
+                    ]),
+
+                    // Challenges Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Challenges'),
+                        h('p', { className: 'section-description' }, 
+                            'What challenges will your firm face in the second-half of 2025? (Select all that apply)'
+                        ),
+                        
+                        h('div', { className: 'checkbox-group' }, [
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('finding_quality_deals'),
+                                    onChange: (e) => handleChallengeChange('finding_quality_deals', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Finding Quality Deals')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('financing_availability'),
+                                    onChange: (e) => handleChallengeChange('financing_availability', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Financing Availability')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('valuation_gaps'),
+                                    onChange: (e) => handleChallengeChange('valuation_gaps', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Valuation Gaps')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('regulatory_changes'),
+                                    onChange: (e) => handleChallengeChange('regulatory_changes', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Regulatory Changes')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('economic_uncertainty'),
+                                    onChange: (e) => handleChallengeChange('economic_uncertainty', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Economic Uncertainty')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('competition'),
+                                    onChange: (e) => handleChallengeChange('competition', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Increased Competition')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('talent_retention'),
+                                    onChange: (e) => handleChallengeChange('talent_retention', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Talent Retention')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.challenges.includes('technology_integration'),
+                                    onChange: (e) => handleChallengeChange('technology_integration', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Technology Integration')
+                            ])
+                        ])
+                    ]),
+
+                    // Form Actions
+                    h('div', { className: 'form-actions' }, [
+                        h('button', {
+                            type: 'submit',
+                            className: 'btn btn-primary btn-large',
+                            disabled: isSaving
+                        }, isSaving ? 'Saving...' : 'Continue to About You')
+                    ])
+                ])
+            ]);
+        }
+
         // Main Multi-Page Survey Component
         function MultiPageSurvey() {
             const [currentPage, setCurrentPage] = useState(1);
@@ -1269,10 +1704,10 @@
                             onSave: handlePageSave
                         });
                     case 4:
-                        return h('div', { className: 'survey-page' }, [
-                            h('h2', null, 'Page 4: Looking Ahead'),
-                            h('p', null, 'This page will collect your predictions and market outlook.')
-                        ]);
+                        return h(LookingAheadPage, {
+                            onNext: handleNextPage,
+                            onSave: handlePageSave
+                        });
                     case 5:
                         return h('div', { className: 'survey-page' }, [
                             h('h2', null, 'Page 5: About You'),
