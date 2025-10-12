@@ -613,3 +613,194 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Page 2: Closed Deals Styles */
+.form-section {
+    margin-bottom: var(--space-32);
+    padding: var(--space-24);
+    background: var(--gray-50);
+    border-radius: var(--radius-12);
+    border: 1px solid var(--border-200);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-20);
+}
+
+.section-title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    color: var(--brand-600);
+    margin: 0;
+}
+
+.section-description {
+    color: var(--gray-600);
+    margin-bottom: var(--space-20);
+    font-size: var(--text-sm);
+}
+
+/* Deals Table Styles */
+.deals-table-container {
+    overflow-x: auto;
+    margin-top: var(--space-16);
+}
+
+.deals-table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+    border-radius: var(--radius-8);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table-header {
+    display: table-header-group;
+    background: var(--brand-50);
+    border-bottom: 2px solid var(--brand-200);
+}
+
+.table-row {
+    display: table-row;
+    border-bottom: 1px solid var(--border-200);
+    transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+    background: var(--gray-50);
+}
+
+.table-cell {
+    display: table-cell;
+    padding: var(--space-12);
+    vertical-align: middle;
+    border-right: 1px solid var(--border-200);
+}
+
+.table-cell:last-child {
+    border-right: none;
+}
+
+.table-header .table-cell {
+    font-weight: var(--font-semibold);
+    color: var(--brand-700);
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-row .table-cell input,
+.table-row .table-cell select {
+    width: 100%;
+    border: 1px solid var(--border-300);
+    border-radius: var(--radius-6);
+    padding: var(--space-8);
+    font-size: var(--text-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.table-row .table-cell input:focus,
+.table-row .table-cell select:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* Fees Grid Styles */
+.fees-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-16);
+    margin-top: var(--space-12);
+}
+
+.fee-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.fee-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--gray-700);
+    margin-bottom: var(--space-4);
+}
+
+.fee-item input {
+    width: 100%;
+    border: 1px solid var(--border-300);
+    border-radius: var(--radius-6);
+    padding: var(--space-10);
+    font-size: var(--text-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fee-item input:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* Button Styles */
+.btn-sm {
+    padding: var(--space-8) var(--space-12);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-6);
+}
+
+/* Form Error Styles */
+.form-error {
+    color: var(--red-600);
+    font-size: var(--text-sm);
+    margin-top: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.form-error::before {
+    content: '⚠️';
+    font-size: var(--text-xs);
+}
+
+/* Input Error States */
+.form-input.error,
+.form-select.error {
+    border-color: var(--red-500);
+    box-shadow: 0 0 0 3px var(--red-100);
+}
+
+.form-input.error:focus,
+.form-select.error:focus {
+    border-color: var(--red-500);
+    box-shadow: 0 0 0 3px var(--red-100);
+}
+
+/* Additional Mobile Styles for Page 2 */
+@media (max-width: 768px) {
+    .fees-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-12);
+    }
+    
+    .deals-table-container {
+        overflow-x: scroll;
+    }
+    
+    .table-cell {
+        min-width: 120px;
+        padding: var(--space-8);
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-12);
+    }
+}

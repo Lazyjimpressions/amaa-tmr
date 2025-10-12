@@ -336,6 +336,404 @@
             ]);
         }
 
+        // Page 2: Closed Deals Data Component
+        function ClosedDealsPage({ onNext, onSave }) {
+            const [formData, setFormData] = useState({
+                closed_deals_count: '',
+                deals: [],
+                success_fees: {
+                    under_10m: '',
+                    '10m_50m': '',
+                    '50m_100m': '',
+                    over_100m: ''
+                },
+                retainer_fees: {
+                    under_10m: '',
+                    '10m_50m': '',
+                    '50m_100m': '',
+                    over_100m: ''
+                },
+                post_close_compensation: ''
+            });
+            const [errors, setErrors] = useState({});
+            const [isSaving, setIsSaving] = useState(false);
+
+            // Handle deal count change
+            const handleDealCountChange = (count) => {
+                const numDeals = parseInt(count) || 0;
+                const currentDeals = formData.deals || [];
+                
+                // Adjust deals array to match count
+                let newDeals = [...currentDeals];
+                if (numDeals > currentDeals.length) {
+                    // Add new empty deals
+                    for (let i = currentDeals.length; i < numDeals; i++) {
+                        newDeals.push({
+                            id: `deal_${i + 1}`,
+                            deal_size: '',
+                            industry: '',
+                            transaction_type: '',
+                            status: 'closed'
+                        });
+                    }
+                } else if (numDeals < currentDeals.length) {
+                    // Remove excess deals
+                    newDeals = newDeals.slice(0, numDeals);
+                }
+
+                setFormData(prev => ({
+                    ...prev,
+                    closed_deals_count: count,
+                    deals: newDeals
+                }));
+            };
+
+            // Handle individual deal change
+            const handleDealChange = (index, field, value) => {
+                const newDeals = [...formData.deals];
+                newDeals[index] = { ...newDeals[index], [field]: value };
+                setFormData(prev => ({ ...prev, deals: newDeals }));
+            };
+
+            // Add new deal
+            const handleAddDeal = () => {
+                const currentCount = parseInt(formData.closed_deals_count) || 0;
+                const newCount = currentCount + 1;
+                
+                // Show confirmation if adding more than originally stated
+                if (currentCount > 0) {
+                    const confirmed = confirm(
+                        `You originally stated ${currentCount} closed deals. Are you sure you want to add another deal? This will update your total to ${newCount} deals.`
+                    );
+                    if (!confirmed) return;
+                }
+                
+                handleDealCountChange(newCount.toString());
+            };
+
+            // Form validation
+            const validateForm = () => {
+                const newErrors = {};
+                
+                if (!formData.closed_deals_count || formData.closed_deals_count === '0') {
+                    newErrors.closed_deals_count = 'Please enter the number of closed deals';
+                }
+                
+                // Validate individual deals if count > 0
+                if (parseInt(formData.closed_deals_count) > 0) {
+                    formData.deals.forEach((deal, index) => {
+                        if (!deal.deal_size) {
+                            newErrors[`deal_${index}_size`] = 'Deal size is required';
+                        }
+                        if (!deal.industry) {
+                            newErrors[`deal_${index}_industry`] = 'Industry is required';
+                        }
+                        if (!deal.transaction_type) {
+                            newErrors[`deal_${index}_transaction_type`] = 'Transaction type is required';
+                        }
+                    });
+                }
+                
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            // Handle form submission
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                setIsSaving(true);
+                try {
+                    await onSave(formData);
+                    onNext();
+                } catch (error) {
+                    console.error('Save error:', error);
+                    alert('Failed to save progress. Please try again.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            return h('div', { className: 'survey-page' }, [
+                h('div', { className: 'page-header' }, [
+                    h('h2', { className: 'page-title' }, 'Closed Deals Data'),
+                    h('p', { className: 'page-description' }, 
+                        'Tell us about the deals you closed in the first half of 2025'
+                    )
+                ]),
+                
+                h('form', { 
+                    className: 'survey-form',
+                    onSubmit: handleSubmit
+                }, [
+                    // Deal Count Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Deal Count'),
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'closed_deals_count'
+                            }, 'How many deals did you work on that CLOSED or will close by the end of June 2025?'),
+                            h('input', {
+                                type: 'number',
+                                id: 'closed_deals_count',
+                                className: `form-input ${errors.closed_deals_count ? 'error' : ''}`,
+                                value: formData.closed_deals_count,
+                                onChange: (e) => handleDealCountChange(e.target.value),
+                                min: '0',
+                                placeholder: 'Enter number of deals'
+                            }),
+                            errors.closed_deals_count && h('div', { 
+                                className: 'form-error' 
+                            }, errors.closed_deals_count)
+                        ])
+                    ]),
+
+                    // Deal Details Section (only show if count > 0)
+                    parseInt(formData.closed_deals_count) > 0 && h('div', { className: 'form-section' }, [
+                        h('div', { className: 'section-header' }, [
+                            h('h3', { className: 'section-title' }, 'Deal Details'),
+                            h('button', {
+                                type: 'button',
+                                className: 'btn btn-secondary btn-sm',
+                                onClick: handleAddDeal
+                            }, '+ Add Deal')
+                        ]),
+                        
+                        h('div', { className: 'deals-table-container' }, [
+                            h('div', { className: 'deals-table' }, [
+                                // Table Header
+                                h('div', { className: 'table-header' }, [
+                                    h('div', { className: 'table-cell' }, 'Deal #'),
+                                    h('div', { className: 'table-cell' }, 'Deal Size (Millions)'),
+                                    h('div', { className: 'table-cell' }, 'Industry'),
+                                    h('div', { className: 'table-cell' }, 'Transaction Type')
+                                ]),
+                                
+                                // Table Rows
+                                formData.deals.map((deal, index) => 
+                                    h('div', { 
+                                        key: deal.id,
+                                        className: 'table-row'
+                                    }, [
+                                        h('div', { className: 'table-cell' }, `Deal ${index + 1}`),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('input', {
+                                                type: 'number',
+                                                className: `form-input ${errors[`deal_${index}_size`] ? 'error' : ''}`,
+                                                value: deal.deal_size,
+                                                onChange: (e) => handleDealChange(index, 'deal_size', e.target.value),
+                                                placeholder: 'e.g., 10.5',
+                                                step: '0.1'
+                                            })
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('select', {
+                                                className: `form-select ${errors[`deal_${index}_industry`] ? 'error' : ''}`,
+                                                value: deal.industry,
+                                                onChange: (e) => handleDealChange(index, 'industry', e.target.value)
+                                            }, [
+                                                h('option', { value: '' }, 'Select industry'),
+                                                h('option', { value: 'technology' }, 'Technology'),
+                                                h('option', { value: 'healthcare' }, 'Healthcare'),
+                                                h('option', { value: 'manufacturing' }, 'Manufacturing'),
+                                                h('option', { value: 'retail' }, 'Retail'),
+                                                h('option', { value: 'services' }, 'Services'),
+                                                h('option', { value: 'real_estate' }, 'Real Estate'),
+                                                h('option', { value: 'financial_services' }, 'Financial Services'),
+                                                h('option', { value: 'other' }, 'Other')
+                                            ])
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('select', {
+                                                className: `form-select ${errors[`deal_${index}_transaction_type`] ? 'error' : ''}`,
+                                                value: deal.transaction_type,
+                                                onChange: (e) => handleDealChange(index, 'transaction_type', e.target.value)
+                                            }, [
+                                                h('option', { value: '' }, 'Select type'),
+                                                h('option', { value: 'sell_side' }, 'Sell-Side'),
+                                                h('option', { value: 'buy_side' }, 'Buy-Side'),
+                                                h('option', { value: 'recapitalization' }, 'Recapitalization'),
+                                                h('option', { value: 'merger' }, 'Merger'),
+                                                h('option', { value: 'other' }, 'Other')
+                                            ])
+                                        )
+                                    ])
+                                )
+                            ])
+                        ])
+                    ]),
+
+                    // Financial Metrics Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Financial Metrics'),
+                        h('p', { className: 'section-description' }, 
+                            'Please provide average fees for deals closed in the first half of 2025'
+                        ),
+                        
+                        // Success Fees
+                        h('div', { className: 'form-group' }, [
+                            h('label', { className: 'form-label' }, 'Average Success Fee/Commission (%)'),
+                            h('div', { className: 'fees-grid' }, [
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, 'Under $10M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.success_fees.under_10m,
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            success_fees: { ...prev.success_fees, under_10m: e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 3.5',
+                                        step: '0.1'
+                                    })
+                                ]),
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, '$10M - $50M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.success_fees['10m_50m'],
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            success_fees: { ...prev.success_fees, '10m_50m': e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 2.8',
+                                        step: '0.1'
+                                    })
+                                ]),
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, '$50M - $100M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.success_fees['50m_100m'],
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            success_fees: { ...prev.success_fees, '50m_100m': e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 2.2',
+                                        step: '0.1'
+                                    })
+                                ]),
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, 'Over $100M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.success_fees.over_100m,
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            success_fees: { ...prev.success_fees, over_100m: e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 1.8',
+                                        step: '0.1'
+                                    })
+                                ])
+                            ])
+                        ]),
+
+                        // Retainer Fees
+                        h('div', { className: 'form-group' }, [
+                            h('label', { className: 'form-label' }, 'Average Retainer Fee ($)'),
+                            h('div', { className: 'fees-grid' }, [
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, 'Under $10M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.retainer_fees.under_10m,
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            retainer_fees: { ...prev.retainer_fees, under_10m: e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 25000',
+                                        step: '1000'
+                                    })
+                                ]),
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, '$10M - $50M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.retainer_fees['10m_50m'],
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            retainer_fees: { ...prev.retainer_fees, '10m_50m': e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 50000',
+                                        step: '1000'
+                                    })
+                                ]),
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, '$50M - $100M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.retainer_fees['50m_100m'],
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            retainer_fees: { ...prev.retainer_fees, '50m_100m': e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 75000',
+                                        step: '1000'
+                                    })
+                                ]),
+                                h('div', { className: 'fee-item' }, [
+                                    h('label', { className: 'fee-label' }, 'Over $100M'),
+                                    h('input', {
+                                        type: 'number',
+                                        className: 'form-input',
+                                        value: formData.retainer_fees.over_100m,
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            retainer_fees: { ...prev.retainer_fees, over_100m: e.target.value }
+                                        })),
+                                        placeholder: 'e.g., 100000',
+                                        step: '1000'
+                                    })
+                                ])
+                            ])
+                        ]),
+
+                        // Post-Close Compensation
+                        h('div', { className: 'form-group' }, [
+                            h('label', { className: 'form-label' }, 'How often was Post-Close Salary/Compensation included?'),
+                            h('select', {
+                                className: 'form-select',
+                                value: formData.post_close_compensation,
+                                onChange: (e) => setFormData(prev => ({
+                                    ...prev,
+                                    post_close_compensation: e.target.value
+                                }))
+                            }, [
+                                h('option', { value: '' }, 'Select frequency'),
+                                h('option', { value: 'always' }, 'Always (100%)'),
+                                h('option', { value: 'often' }, 'Often (75-99%)'),
+                                h('option', { value: 'sometimes' }, 'Sometimes (50-74%)'),
+                                h('option', { value: 'rarely' }, 'Rarely (25-49%)'),
+                                h('option', { value: 'never' }, 'Never (0-24%)')
+                            ])
+                        ])
+                    ]),
+
+                    // Form Actions
+                    h('div', { className: 'form-actions' }, [
+                        h('button', {
+                            type: 'submit',
+                            className: 'btn btn-primary btn-large',
+                            disabled: isSaving
+                        }, isSaving ? 'Saving...' : 'Continue to Active Deals')
+                    ])
+                ])
+            ]);
+        }
+
         // Main Multi-Page Survey Component
         function MultiPageSurvey() {
             const [currentPage, setCurrentPage] = useState(1);
@@ -396,10 +794,10 @@
                             onSave: handlePageSave
                         });
                     case 2:
-                        return h('div', { className: 'survey-page' }, [
-                            h('h2', null, 'Page 2: Closed Deals Data'),
-                            h('p', null, 'This page will collect information about deals that closed in the first half of 2025.')
-                        ]);
+                        return h(ClosedDealsPage, {
+                            onNext: handleNextPage,
+                            onSave: handleSave
+                        });
                     case 3:
                         return h('div', { className: 'survey-page' }, [
                             h('h2', null, 'Page 3: Current Active Deals'),
