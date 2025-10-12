@@ -169,7 +169,9 @@
             const checkAuthStatus = async () => {
                 try {
                     // Check if user is authenticated
-                    const response = await fetch('/wp-json/amaa/v1/auth/status');
+                    const response = await fetch('/wp-json/amaa/v1/auth/status', {
+                        credentials: 'include' // Include cookies for session persistence
+                    });
                     const data = await response.json();
                     
                     if (data.authenticated) {
@@ -213,6 +215,7 @@
                     const response = await fetch('/wp-json/amaa/v1/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include', // Include cookies for session persistence
                         body: JSON.stringify({ email, password })
                     });
 

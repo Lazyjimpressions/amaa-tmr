@@ -134,13 +134,22 @@ function amaa_tmr_survey_question_details_callback($post) {
     
     <script>
     jQuery(document).ready(function($) {
-        $('#question_type').change(function() {
-            var type = $(this).val();
+        // Show/hide options field based on question type
+        function toggleOptionsField() {
+            var type = $('#question_type').val();
             if (type === 'multiple_choice' || type === 'rating') {
                 $('#question_options_row').show();
             } else {
                 $('#question_options_row').hide();
             }
+        }
+        
+        // Initialize on page load
+        toggleOptionsField();
+        
+        // Toggle on change
+        $('#question_type').change(function() {
+            toggleOptionsField();
         });
     });
     </script>
@@ -386,5 +395,26 @@ function amaa_tmr_handle_login($request) {
             'email' => $user->user_email,
             'name' => $user->display_name,
         )
+    ));
+}
+
+// Logout endpoint
+function amaa_tmr_register_auth_logout_rest_route() {
+    register_rest_route('amaa/v1', '/auth/logout', array(
+        'methods' => 'POST',
+        'callback' => 'amaa_tmr_handle_logout',
+        'permission_callback' => '__return_true',
+    ));
+}
+add_action('rest_api_init', 'amaa_tmr_register_auth_logout_rest_route');
+
+// Handle logout
+function amaa_tmr_handle_logout($request) {
+    // Log the user out
+    wp_logout();
+    
+    return rest_ensure_response(array(
+        'success' => true,
+        'message' => 'Logged out successfully'
     ));
 }
