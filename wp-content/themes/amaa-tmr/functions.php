@@ -46,7 +46,7 @@ function amaa_tmr_enqueue_styles() {
         wp_enqueue_style(
             'amaa-tmr-app',
             get_template_directory_uri() . '/assets/css/app.css',
-            array('amaa-tmr-tokens'),
+            array('amaa-tmr-components'),
             '1.0.0'
         );
     } else {
@@ -54,7 +54,7 @@ function amaa_tmr_enqueue_styles() {
         wp_enqueue_style(
             'amaa-tmr-marketing',
             get_template_directory_uri() . '/assets/css/marketing.css',
-            array('amaa-tmr-tokens'),
+            array('amaa-tmr-components'),
             '1.0.0'
         );
 
