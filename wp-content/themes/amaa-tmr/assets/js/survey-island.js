@@ -1,6 +1,8 @@
-// AMAA TMR Survey React App
+// AMAA TMR Survey React App - Multi-Page Survey
 (function() {
     'use strict';
+
+    console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.0.4');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -13,122 +15,9 @@
 
         const { createElement: h, useState, useEffect, useRef } = React;
 
-        // Survey Question Component
-        function SurveyQuestion({ question, value, onChange, error }) {
-            const renderInput = () => {
-                switch (question.type) {
-                    case 'multiple_choice':
-                        return h('div', { className: 'survey-options' }, 
-                            question.options.map((option, index) => 
-                                h('label', { 
-                                    key: index,
-                                    className: `survey-option ${value === option ? 'selected' : ''}`,
-                                    onClick: () => onChange(option)
-                                }, [
-                                    h('input', {
-                                        type: 'radio',
-                                        name: `question_${question.id}`,
-                                        value: option,
-                                        checked: value === option,
-                                        onChange: () => onChange(option)
-                                    }),
-                                    h('span', null, option)
-                                ])
-                            )
-                        );
-                    
-                    case 'text':
-                        return h('textarea', {
-                            className: 'survey-input survey-textarea',
-                            value: value || '',
-                            onChange: (e) => onChange(e.target.value),
-                            placeholder: 'Enter your response...'
-                        });
-                    
-                    case 'rating':
-                        return h('div', { className: 'survey-rating' },
-                            question.options.map((option, index) => 
-                                h('label', {
-                                    key: index,
-                                    className: `rating-option ${value === option ? 'selected' : ''}`,
-                                    onClick: () => onChange(option)
-                                }, [
-                                    h('input', {
-                                        type: 'radio',
-                                        name: `question_${question.id}`,
-                                        value: option,
-                                        checked: value === option,
-                                        onChange: () => onChange(option)
-                                    }),
-                                    h('span', { className: 'rating-label' }, option)
-                                ])
-                            )
-                        );
-                    
-                    case 'yes_no':
-                        return h('div', { className: 'survey-yes-no' }, [
-                            h('label', {
-                                className: `yes-no-option ${value === 'Yes' ? 'selected' : ''}`,
-                                onClick: () => onChange('Yes')
-                            }, [
-                                h('input', {
-                                    type: 'radio',
-                                    name: `question_${question.id}`,
-                                    value: 'Yes',
-                                    checked: value === 'Yes',
-                                    onChange: () => onChange('Yes')
-                                }),
-                                h('span', null, 'Yes')
-                            ]),
-                            h('label', {
-                                className: `yes-no-option ${value === 'No' ? 'selected' : ''}`,
-                                onClick: () => onChange('No')
-                            }, [
-                                h('input', {
-                                    type: 'radio',
-                                    name: `question_${question.id}`,
-                                    value: 'No',
-                                    checked: value === 'No',
-                                    onChange: () => onChange('No')
-                                }),
-                                h('span', null, 'No')
-                            ])
-                        ]);
-                    
-                    case 'number':
-                        return h('input', {
-                            type: 'number',
-                            className: 'survey-input',
-                            value: value || '',
-                            onChange: (e) => onChange(e.target.value),
-                            placeholder: 'Enter a number...'
-                        });
-                    
-                    default:
-                        return h('input', {
-                            type: 'text',
-                            className: 'survey-input',
-                            value: value || '',
-                            onChange: (e) => onChange(e.target.value),
-                            placeholder: 'Enter your response...'
-                        });
-                }
-            };
-
-            return h('div', { className: 'survey-question' }, [
-                h('h3', { className: 'question-title' }, [
-                    question.title,
-                    question.required && h('span', { className: 'question-required' }, ' *')
-                ]),
-                question.content && h('p', { className: 'question-content' }, question.content),
-                renderInput(),
-                error && h('div', { className: 'survey-error' }, error)
-            ]);
-        }
-
         // Progress Bar Component
-        function ProgressBar({ current, total }) {
-            const percentage = (current / total) * 100;
+        function ProgressBar({ currentPage, totalPages }) {
+            const percentage = (currentPage / totalPages) * 100;
             
             return h('div', { className: 'survey-progress' }, [
                 h('div', { className: 'progress-bar' }, 
@@ -138,350 +27,398 @@
                     })
                 ),
                 h('div', { className: 'progress-text' }, 
-                    `Question ${current} of ${total}`
+                    `Page ${currentPage} of ${totalPages}`
                 )
             ]);
         }
 
-        // Save Draft Component
-        function SaveDraft({ onSave, isSaving, lastSaved }) {
-            return h('div', { className: 'survey-save-draft' }, [
-                h('button', {
-                    className: 'save-draft-button',
-                    onClick: onSave,
-                    disabled: isSaving
-                }, isSaving ? 'Saving...' : 'Save Draft'),
-                lastSaved && h('div', { className: 'save-draft-status' }, 
-                    `Last saved: ${lastSaved}`
-                )
-            ]);
-        }
-
-        // Authentication Check Component
-        function AuthCheck({ onAuthSuccess, onAuthRequired }) {
-            const [isChecking, setIsChecking] = useState(true);
-            const [user, setUser] = useState(null);
-
-            useEffect(() => {
-                checkAuthStatus();
-            }, []);
-
-            const checkAuthStatus = async () => {
-                try {
-                    // Check if user is authenticated
-                    const response = await fetch('/wp-json/amaa/v1/auth/status', {
-                        credentials: 'include' // Include cookies for session persistence
-                    });
-                    const data = await response.json();
-                    
-                    if (data.authenticated) {
-                        setUser(data.user);
-                        onAuthSuccess(data.user);
-                    } else {
-                        onAuthRequired();
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                    onAuthRequired();
-                } finally {
-                    setIsChecking(false);
-                }
-            };
-
-            if (isChecking) {
-                return h('div', { className: 'survey-form' }, 
-                    h('div', { style: { textAlign: 'center', padding: 'var(--space-48)' } }, 
-                        'Checking authentication...'
-                    )
-                );
-            }
-
-            return null;
-        }
-
-        // Login Modal Component
-        function LoginModal({ isOpen, onClose, onLoginSuccess }) {
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
-            const [error, setError] = useState('');
-
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                setIsLoading(true);
-                setError('');
-
-                try {
-                    const response = await fetch('/wp-json/amaa/v1/auth/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include', // Include cookies for session persistence
-                        body: JSON.stringify({ email, password })
-                    });
-
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        onLoginSuccess(data.user);
-                    } else {
-                        setError(data.message || 'Login failed');
-                    }
-                } catch (error) {
-                    setError('Network error. Please try again.');
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-
-            if (!isOpen) return null;
-
-            return h('div', { 
-                className: 'login-modal-overlay',
-                style: {
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000
-                }
-            }, 
-                h('div', {
-                    className: 'login-modal',
-                    style: {
-                        backgroundColor: 'white',
-                        padding: 'var(--space-32)',
-                        borderRadius: 'var(--radius-16)',
-                        maxWidth: '400px',
-                        width: '90%',
-                        maxHeight: '90vh',
-                        overflow: 'auto'
-                    }
-                }, [
-                    h('h2', { style: { marginBottom: 'var(--space-24)' } }, 'Sign In to Continue'),
-                    h('form', { onSubmit: handleLogin }, [
-                        h('div', { style: { marginBottom: 'var(--space-16)' } }, [
-                            h('label', { 
-                                htmlFor: 'email',
-                                style: { display: 'block', marginBottom: 'var(--space-8)' }
-                            }, 'Email'),
-                            h('input', {
-                                type: 'email',
-                                id: 'email',
-                                value: email,
-                                onChange: (e) => setEmail(e.target.value),
-                                required: true,
-                                style: {
-                                    width: '100%',
-                                    padding: 'var(--space-12)',
-                                    border: '1px solid var(--border-300)',
-                                    borderRadius: 'var(--radius-8)'
-                                }
-                            })
-                        ]),
-                        h('div', { style: { marginBottom: 'var(--space-24)' } }, [
-                            h('label', { 
-                                htmlFor: 'password',
-                                style: { display: 'block', marginBottom: 'var(--space-8)' }
-                            }, 'Password'),
-                            h('input', {
-                                type: 'password',
-                                id: 'password',
-                                value: password,
-                                onChange: (e) => setPassword(e.target.value),
-                                required: true,
-                                style: {
-                                    width: '100%',
-                                    padding: 'var(--space-12)',
-                                    border: '1px solid var(--border-300)',
-                                    borderRadius: 'var(--radius-8)'
-                                }
-                            })
-                        ]),
-                        error && h('div', { 
-                            style: { color: 'var(--red-600)', marginBottom: 'var(--space-16)' }
-                        }, error),
-                        h('div', { style: { display: 'flex', gap: 'var(--space-12)' } }, [
-                            h('button', {
-                                type: 'submit',
-                                disabled: isLoading,
-                                style: {
-                                    flex: 1,
-                                    padding: 'var(--space-12) var(--space-24)',
-                                    backgroundColor: 'var(--brand-600)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: 'var(--radius-8)',
-                                    cursor: 'pointer'
-                                }
-                            }, isLoading ? 'Signing In...' : 'Sign In'),
-                            h('button', {
-                                type: 'button',
-                                onClick: onClose,
-                                style: {
-                                    padding: 'var(--space-12) var(--space-24)',
-                                    backgroundColor: 'transparent',
-                                    color: 'var(--gray-600)',
-                                    border: '1px solid var(--border-300)',
-                                    borderRadius: 'var(--radius-8)',
-                                    cursor: 'pointer'
-                                }
-                            }, 'Cancel')
-                        ])
-                    ])
-                ])
-            );
-        }
-
-        // Main Survey Component (Single Page)
-        function SurveyForm() {
-            const [questions, setQuestions] = useState([]);
-            const [responses, setResponses] = useState({});
+        // Page 1: User Profile Component
+        function UserProfilePage({ onNext, onSave }) {
+            const [formData, setFormData] = useState({
+                email: '',
+                first_name: '',
+                last_name: '',
+                us_zip_code: '',
+                country: '',
+                profession: ''
+            });
             const [errors, setErrors] = useState({});
-            const [isLoading, setIsLoading] = useState(true);
-            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [isValidatingEmail, setIsValidatingEmail] = useState(false);
+            const [emailValidationStatus, setEmailValidationStatus] = useState(null);
             const [isSaving, setIsSaving] = useState(false);
-            const [lastSaved, setLastSaved] = useState(null);
-            const [isCompleted, setIsCompleted] = useState(false);
-            const [showLoginModal, setShowLoginModal] = useState(false);
-            const [user, setUser] = useState(null);
 
-            // Load questions from WordPress REST API
-            useEffect(() => {
-                fetch('/wp-json/amaa/v1/survey/questions')
-                    .then(response => response.json())
-                    .then(data => {
-                        setQuestions(data);
-                        setIsLoading(false);
-                    })
-                    .catch(error => {
-                        console.error('Error loading questions:', error);
-                        setIsLoading(false);
-                    });
-            }, []);
-
-            // Auto-save draft every 30 seconds
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    if (Object.keys(responses).length > 0) {
-                        saveDraft();
-                    }
-                }, 30000);
-
-                return () => clearInterval(interval);
-            }, [responses]);
-
-            const saveDraft = async () => {
-                setIsSaving(true);
+            // Email validation with HubSpot lookup
+            const validateEmail = async (email) => {
+                if (!email || !email.includes('@')) return;
+                
+                setIsValidatingEmail(true);
+                setEmailValidationStatus(null);
+                
                 try {
-                    const response = await fetch('/wp-json/amaa/v1/survey/draft', {
-                        method: 'POST',
+                    // Check if email exists in Supabase members table (synced from HubSpot)
+                    const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me`, {
+                        method: 'GET',
                         headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            responses: responses,
-                            current_question: currentQuestion
-                        })
+                            'Authorization': `Bearer ${localStorage.getItem('supabase_token') || ''}`,
+                            'Content-Type': 'application/json'
+                        }
                     });
                     
                     if (response.ok) {
-                        setLastSaved(new Date().toLocaleTimeString());
+                        const data = await response.json();
+                        if (data.email === email.toLowerCase()) {
+                            // Email found in HubSpot, prepopulate fields
+                            setFormData(prev => ({
+                                ...prev,
+                                first_name: data.first_name || '',
+                                last_name: data.last_name || '',
+                                us_zip_code: data.us_zip_code || '',
+                                country: data.country || '',
+                                profession: data.profession || ''
+                            }));
+                            setEmailValidationStatus('found');
+                        } else {
+                            setEmailValidationStatus('not_found');
+                        }
+                    } else {
+                        setEmailValidationStatus('not_found');
                     }
                 } catch (error) {
-                    console.error('Error saving draft:', error);
+                    console.error('Email validation error:', error);
+                    setEmailValidationStatus('error');
+                } finally {
+                    setIsValidatingEmail(false);
+                }
+            };
+
+            // Handle email input with debounced validation
+            useEffect(() => {
+                const timeoutId = setTimeout(() => {
+                    if (formData.email) {
+                        validateEmail(formData.email);
+                    }
+                }, 1000);
+
+                return () => clearTimeout(timeoutId);
+            }, [formData.email]);
+
+            const handleInputChange = (field, value) => {
+                setFormData(prev => ({ ...prev, [field]: value }));
+                
+                // Clear error when user starts typing
+                if (errors[field]) {
+                    setErrors(prev => ({ ...prev, [field]: null }));
+                }
+            };
+
+            const validateForm = () => {
+                const newErrors = {};
+                
+                if (!formData.email) {
+                    newErrors.email = 'Email is required';
+                } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+                    newErrors.email = 'Please enter a valid email address';
+                }
+                
+                if (!formData.first_name) {
+                    newErrors.first_name = 'First name is required';
+                }
+                
+                if (!formData.last_name) {
+                    newErrors.last_name = 'Last name is required';
+                }
+                
+                if (!formData.profession) {
+                    newErrors.profession = 'Profession is required';
+                }
+                
+                // Location validation: either US zip OR country, not both
+                if (!formData.us_zip_code && !formData.country) {
+                    newErrors.location = 'Please provide either US zip code or country';
+                }
+                
+                if (formData.us_zip_code && formData.country) {
+                    newErrors.location = 'Please provide either US zip code OR country, not both';
+                }
+                
+                // US zip code format validation
+                if (formData.us_zip_code && !/^\d{5}(-\d{4})?$/.test(formData.us_zip_code)) {
+                    newErrors.us_zip_code = 'Please enter a valid US zip code (12345 or 12345-6789)';
+                }
+                
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            const handleNext = async () => {
+                if (!validateForm()) return;
+                
+                setIsSaving(true);
+                try {
+                    // Save page 1 data to Supabase
+                    await onSave('user_profile', formData);
+                    onNext();
+                } catch (error) {
+                    console.error('Error saving user profile:', error);
+                    alert('Error saving your information. Please try again.');
                 } finally {
                     setIsSaving(false);
                 }
             };
 
-            const handleResponseChange = (questionId, value) => {
-                setResponses(prev => ({
-                    ...prev,
-                    [questionId]: value
-                }));
+            return h('div', { className: 'survey-page user-profile-page' }, [
+                h('div', { className: 'page-header' }, [
+                    h('h2', { className: 'page-title' }, 'About You'),
+                    h('p', { className: 'page-description' }, 
+                        'Let\'s start with some basic information about you and your firm.'
+                    )
+                ]),
                 
-                // Clear error for this question
-                if (errors[questionId]) {
-                    setErrors(prev => ({
-                        ...prev,
-                        [questionId]: null
-                    }));
-                }
-            };
+                h('div', { className: 'form-section' }, [
+                    h('div', { className: 'form-group' }, [
+                        h('label', { 
+                            htmlFor: 'email',
+                            className: 'form-label required'
+                        }, 'Email Address'),
+                        h('div', { className: 'input-with-status' }, [
+                            h('input', {
+                                type: 'email',
+                                id: 'email',
+                                className: `form-input ${errors.email ? 'error' : ''}`,
+                                value: formData.email,
+                                onChange: (e) => handleInputChange('email', e.target.value),
+                                placeholder: 'Enter your email address',
+                                required: true
+                            }),
+                            isValidatingEmail && h('div', { className: 'validation-spinner' }, 'Checking...'),
+                            emailValidationStatus === 'found' && h('div', { className: 'validation-success' }, '✓ Found in our records'),
+                            emailValidationStatus === 'not_found' && h('div', { className: 'validation-info' }, 'New contact - we\'ll create a record')
+                        ]),
+                        errors.email && h('div', { className: 'form-error' }, errors.email)
+                    ]),
+                    
+                    h('div', { className: 'form-row' }, [
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                htmlFor: 'first_name',
+                                className: 'form-label required'
+                            }, 'First Name'),
+                            h('input', {
+                                type: 'text',
+                                id: 'first_name',
+                                className: `form-input ${errors.first_name ? 'error' : ''}`,
+                                value: formData.first_name,
+                                onChange: (e) => handleInputChange('first_name', e.target.value),
+                                placeholder: 'Enter your first name',
+                                required: true
+                            }),
+                            errors.first_name && h('div', { className: 'form-error' }, errors.first_name)
+                        ]),
+                        
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                htmlFor: 'last_name',
+                                className: 'form-label required'
+                            }, 'Last Name'),
+                            h('input', {
+                                type: 'text',
+                                id: 'last_name',
+                                className: `form-input ${errors.last_name ? 'error' : ''}`,
+                                value: formData.last_name,
+                                onChange: (e) => handleInputChange('last_name', e.target.value),
+                                placeholder: 'Enter your last name',
+                                required: true
+                            }),
+                            errors.last_name && h('div', { className: 'form-error' }, errors.last_name)
+                        ])
+                    ]),
+                    
+                    h('div', { className: 'form-group' }, [
+                        h('label', { 
+                            htmlFor: 'profession',
+                            className: 'form-label required'
+                        }, 'Profession'),
+                        h('select', {
+                            id: 'profession',
+                            className: `form-select ${errors.profession ? 'error' : ''}`,
+                            value: formData.profession,
+                            onChange: (e) => handleInputChange('profession', e.target.value),
+                            required: true
+                        }, [
+                            h('option', { value: '' }, 'Select your profession'),
+                            h('option', { value: 'Investment Banker / M&A Intermediary' }, 'Investment Banker / M&A Intermediary'),
+                            h('option', { value: 'Private Equity Professional' }, 'Private Equity Professional'),
+                            h('option', { value: 'Corporate Development Professional' }, 'Corporate Development Professional'),
+                            h('option', { value: 'Business Broker' }, 'Business Broker'),
+                            h('option', { value: 'M&A Attorney' }, 'M&A Attorney'),
+                            h('option', { value: 'M&A Accountant/CPA' }, 'M&A Accountant/CPA'),
+                            h('option', { value: 'M&A Consultant' }, 'M&A Consultant'),
+                            h('option', { value: 'Valuation Professional' }, 'Valuation Professional'),
+                            h('option', { value: 'Other' }, 'Other')
+                        ]),
+                        errors.profession && h('div', { className: 'form-error' }, errors.profession)
+                    ]),
+                    
+                    h('div', { className: 'form-group' }, [
+                        h('label', { 
+                            className: 'form-label required'
+                        }, 'Firm Location'),
+                        h('div', { className: 'location-inputs' }, [
+                            h('div', { className: 'form-group' }, [
+                                h('label', { 
+                                    htmlFor: 'us_zip_code',
+                                    className: 'form-label'
+                                }, 'US Zip Code'),
+                                h('input', {
+                                    type: 'text',
+                                    id: 'us_zip_code',
+                                    className: `form-input ${errors.us_zip_code ? 'error' : ''}`,
+                                    value: formData.us_zip_code,
+                                    onChange: (e) => {
+                                        const value = e.target.value;
+                                        handleInputChange('us_zip_code', value);
+                                        if (value) {
+                                            handleInputChange('country', 'United States');
+                                        }
+                                    },
+                                    placeholder: '12345 or 12345-6789',
+                                    pattern: '\\d{5}(-\\d{4})?'
+                                }),
+                                errors.us_zip_code && h('div', { className: 'form-error' }, errors.us_zip_code)
+                            ]),
+                            
+                            h('div', { className: 'form-group' }, [
+                                h('label', { 
+                                    htmlFor: 'country',
+                                    className: 'form-label'
+                                }, 'Country (if outside US)'),
+                                h('select', {
+                                    id: 'country',
+                                    className: `form-select ${errors.country ? 'error' : ''}`,
+                                    value: formData.country,
+                                    onChange: (e) => {
+                                        const value = e.target.value;
+                                        handleInputChange('country', value);
+                                        if (value && value !== 'United States') {
+                                            handleInputChange('us_zip_code', '');
+                                        }
+                                    }
+                                }, [
+                                    h('option', { value: '' }, 'Select country'),
+                                    h('option', { value: 'United States' }, 'United States'),
+                                    h('option', { value: 'Canada' }, 'Canada'),
+                                    h('option', { value: 'United Kingdom' }, 'United Kingdom'),
+                                    h('option', { value: 'Germany' }, 'Germany'),
+                                    h('option', { value: 'France' }, 'France'),
+                                    h('option', { value: 'Australia' }, 'Australia'),
+                                    h('option', { value: 'Japan' }, 'Japan'),
+                                    h('option', { value: 'China' }, 'China'),
+                                    h('option', { value: 'India' }, 'India'),
+                                    h('option', { value: 'Brazil' }, 'Brazil'),
+                                    h('option', { value: 'Mexico' }, 'Mexico'),
+                                    h('option', { value: 'Other' }, 'Other')
+                                ]),
+                                errors.country && h('div', { className: 'form-error' }, errors.country)
+                            ])
+                        ]),
+                        errors.location && h('div', { className: 'form-error' }, errors.location)
+                    ])
+                ]),
+                
+                h('div', { className: 'page-navigation' }, [
+                    h('button', {
+                        className: 'btn btn-primary btn-large',
+                        onClick: handleNext,
+                        disabled: isSaving,
+                        style: { width: '100%' }
+                    }, isSaving ? 'Saving...' : 'Continue to Deal Information')
+                ])
+            ]);
+        }
 
-            const validateCurrentQuestion = () => {
-                const question = questions[currentQuestion];
-                if (question.required && !responses[question.id]) {
-                    setErrors(prev => ({
-                        ...prev,
-                        [question.id]: 'This question is required'
-                    }));
-                    return false;
-                }
-                return true;
-            };
+        // Main Multi-Page Survey Component
+        function MultiPageSurvey() {
+            const [currentPage, setCurrentPage] = useState(1);
+            const [surveyData, setSurveyData] = useState({});
+            const [isLoading, setIsLoading] = useState(false);
+            const [isCompleted, setIsCompleted] = useState(false);
 
-            const handleAuthSuccess = (userData) => {
-                setUser(userData);
-                setShowLoginModal(false);
-                loadQuestions();
-            };
+            const totalPages = 5;
 
-            const handleAuthRequired = () => {
-                setShowLoginModal(true);
-            };
-
-            const loadQuestions = async () => {
+            const handlePageSave = async (pageKey, data) => {
+                setIsLoading(true);
                 try {
-                    const response = await fetch('/wp-json/amaa/v1/survey/questions');
-                    const data = await response.json();
-                    setQuestions(data);
-                    setIsLoading(false);
-                } catch (error) {
-                    console.error('Error loading questions:', error);
-                    setIsLoading(false);
-                }
-            };
-
-            const handleSubmit = async () => {
-                setIsSubmitting(true);
-                try {
-                    const response = await fetch('/wp-json/amaa/v1/survey/submit', {
+                    // Save to Supabase via Edge Function
+                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('supabase_token') || ''}`
                         },
                         body: JSON.stringify({
-                            responses: responses,
-                            user_id: 'current_user' // This would come from Supabase auth
+                            page: pageKey,
+                            data: data,
+                            page_number: currentPage
                         })
                     });
                     
-                    if (response.ok) {
-                        setIsCompleted(true);
-                    } else {
-                        throw new Error('Submission failed');
+                    if (!response.ok) {
+                        throw new Error('Failed to save page data');
                     }
+                    
+                    // Update local state
+                    setSurveyData(prev => ({ ...prev, [pageKey]: data }));
                 } catch (error) {
-                    console.error('Error submitting survey:', error);
-                    alert('There was an error submitting your survey. Please try again.');
+                    console.error('Error saving page:', error);
+                    throw error;
                 } finally {
-                    setIsSubmitting(false);
+                    setIsLoading(false);
                 }
             };
 
-            if (isLoading) {
-                return h('div', { className: 'survey-form' }, 
-                    h('div', { style: { textAlign: 'center', padding: 'var(--space-48)' } }, 
-                        'Loading survey...'
-                    )
-                );
-            }
+            const handleNextPage = () => {
+                if (currentPage < totalPages) {
+                    setCurrentPage(prev => prev + 1);
+                }
+            };
+
+            const handlePrevPage = () => {
+                if (currentPage > 1) {
+                    setCurrentPage(prev => prev - 1);
+                }
+            };
+
+            const renderCurrentPage = () => {
+                switch (currentPage) {
+                    case 1:
+                        return h(UserProfilePage, {
+                            onNext: handleNextPage,
+                            onSave: handlePageSave
+                        });
+                    case 2:
+                        return h('div', { className: 'survey-page' }, [
+                            h('h2', null, 'Page 2: Closed Deals Data'),
+                            h('p', null, 'This page will collect information about deals that closed in the first half of 2025.')
+                        ]);
+                    case 3:
+                        return h('div', { className: 'survey-page' }, [
+                            h('h2', null, 'Page 3: Current Active Deals'),
+                            h('p', null, 'This page will collect information about your current active deals.')
+                        ]);
+                    case 4:
+                        return h('div', { className: 'survey-page' }, [
+                            h('h2', null, 'Page 4: Looking Ahead'),
+                            h('p', null, 'This page will collect your predictions and market outlook.')
+                        ]);
+                    case 5:
+                        return h('div', { className: 'survey-page' }, [
+                            h('h2', null, 'Page 5: About You'),
+                            h('p', null, 'This page will collect information about survey value and membership interest.')
+                        ]);
+                    default:
+                        return h('div', null, 'Unknown page');
+                }
+            };
 
             if (isCompleted) {
                 return h('div', { className: 'survey-completion' }, [
@@ -503,80 +440,46 @@
                 ]);
             }
 
-            return h('div', { className: 'survey-form' }, [
+            return h('div', { className: 'multi-page-survey' }, [
                 h('div', { className: 'survey-header' }, [
-                    h('h1', { className: 'survey-title' }, 'AM&AA Market Survey'),
+                    h('h1', { className: 'survey-title' }, 'AM&AA Market Survey - Summer 2025'),
                     h('p', { className: 'survey-description' }, 
                         'Help us understand the current state of the middle market by sharing your insights.'
                     )
                 ]),
                 
-                h('div', { className: 'survey-questions' }, 
-                    questions.map(question => 
-                        h(SurveyQuestion, {
-                            key: question.id,
-                            question: question,
-                            value: responses[question.id] || '',
-                            onChange: (value) => handleResponseChange(question.id, value),
-                            error: errors[question.id]
-                        })
-                    )
-                ),
+                h(ProgressBar, {
+                    currentPage: currentPage,
+                    totalPages: totalPages
+                }),
+                
+                h('div', { className: 'survey-content' }, renderCurrentPage()),
                 
                 h('div', { className: 'survey-navigation' }, [
-                    h('button', {
-                        className: 'survey-nav-button primary',
-                        onClick: handleSubmit,
-                        disabled: isSubmitting,
-                        style: { width: '100%' }
-                    }, isSubmitting ? 'Submitting...' : 'Submit Survey')
-                ]),
-                
-                h(SaveDraft, {
-                    onSave: saveDraft,
-                    isSaving: isSaving,
-                    lastSaved: lastSaved
-                })
+                    currentPage > 1 && h('button', {
+                        className: 'btn btn-secondary',
+                        onClick: handlePrevPage,
+                        disabled: isLoading
+                    }, 'Previous'),
+                    
+                    currentPage < totalPages && h('button', {
+                        className: 'btn btn-primary',
+                        onClick: handleNextPage,
+                        disabled: isLoading
+                    }, 'Next'),
+                    
+                    currentPage === totalPages && h('button', {
+                        className: 'btn btn-primary btn-large',
+                        onClick: () => setIsCompleted(true),
+                        disabled: isLoading
+                    }, 'Complete Survey')
+                ])
             ]);
         }
 
-        // Main App Component with Authentication
+        // Main App Component
         function SurveyApp() {
-            const [showLoginModal, setShowLoginModal] = useState(false);
-            const [user, setUser] = useState(null);
-            const [isAuthChecking, setIsAuthChecking] = useState(true);
-
-            const handleAuthSuccess = (userData) => {
-                setUser(userData);
-                setShowLoginModal(false);
-            };
-
-            const handleAuthRequired = () => {
-                setShowLoginModal(true);
-                setIsAuthChecking(false);
-            };
-
-            const handleLoginSuccess = (userData) => {
-                setUser(userData);
-                setShowLoginModal(false);
-            };
-
-            if (isAuthChecking) {
-                return h(AuthCheck, {
-                    onAuthSuccess: handleAuthSuccess,
-                    onAuthRequired: handleAuthRequired
-                });
-            }
-
-            return h('div', null, [
-                h(SurveyForm, { key: 'survey', user: user }),
-                h(LoginModal, {
-                    key: 'login-modal',
-                    isOpen: showLoginModal,
-                    onClose: () => setShowLoginModal(false),
-                    onLoginSuccess: handleLoginSuccess
-                })
-            ]);
+            return h(MultiPageSurvey);
         }
 
         // Mount the React app

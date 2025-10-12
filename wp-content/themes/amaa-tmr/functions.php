@@ -97,34 +97,55 @@ function amaa_tmr_enqueue_scripts() {
         wp_enqueue_script('amaa-tmr-home-island', $island_url, array('react', 'react-dom'), null, true);
     }
     
-    // Survey page scripts
-    if (is_page_template('page-survey.php')) {
+    // Survey page scripts - use global $post to detect survey page
+    global $post;
+    $is_survey_page = false;
+    
+    if (is_object($post)) {
+        $page_template = get_post_meta($post->ID, '_wp_page_template', true);
+        $page_slug = $post->post_name;
+        $is_survey_page = ($page_template === 'page-survey.php') || ($page_slug === 'survey');
+    }
+    
+    if ($is_survey_page) {
+        // Debug: Add inline script to confirm this condition is met
+        wp_add_inline_script('amaa-tmr-survey-island', 'console.log("SURVEY PAGE DETECTED - LOADING SURVEY SCRIPTS");', 'before');
+        error_log('SURVEY PAGE DETECTED - LOADING SURVEY SCRIPTS');
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
         
-        // Survey React components
+        // Survey React components - force new version
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
         $survey_url  = get_template_directory_uri() . '/assets/js/survey-island.js';
-        $survey_ver  = file_exists($survey_path) ? filemtime($survey_path) : time();
+        $survey_ver  = '1.0.4_' . time() . '_' . rand(10000, 99999);
         $survey_url  = add_query_arg('v', $survey_ver, $survey_url);
         wp_enqueue_script('amaa-tmr-survey-island', $survey_url, array('react', 'react-dom'), null, true);
     }
 
-    // Main app script
-    wp_enqueue_script(
-        'amaa-tmr-app',
-        get_template_directory_uri() . '/assets/js/app.js',
-        array(),
-        '1.0.0',
-        true
-    );
+    // Main app script (temporarily disabled to prevent JS conflicts)
+    // if (!is_page_template('page-survey.php') && !is_page('survey')) {
+    //     $app_path = get_template_directory() . '/assets/js/app.js';
+    //     $app_url = get_template_directory_uri() . '/assets/js/app.js';
+    //     $app_ver = file_exists($app_path) ? filemtime($app_path) : '1.0.3';
+    //     $app_url = add_query_arg('v', $app_ver, $app_url);
+    //     
+    //     wp_enqueue_script(
+    //         'amaa-tmr-app',
+    //         $app_url,
+    //         array(),
+    //         $app_ver,
+    //         true
+    //     );
+    // }
     
-    // Localize script for app routes
-    wp_localize_script('amaa-tmr-app', 'amaaTmrApp', array(
-        'apiUrl' => rest_url('wp/v2/'),
-        'nonce' => wp_create_nonce('wp_rest'),
-        'isApp' => strpos($_SERVER['REQUEST_URI'], '/app/') === 0
-    ));
+    // Localize script for app routes (only when app script is enqueued)
+    if (!is_page_template('page-survey.php') && !is_page('survey')) {
+        wp_localize_script('amaa-tmr-app', 'amaaTmrApp', array(
+            'apiUrl' => rest_url('wp/v2/'),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'isApp' => strpos($_SERVER['REQUEST_URI'], '/app/') === 0
+        ));
+    }
 }
 add_action('wp_enqueue_scripts', 'amaa_tmr_enqueue_scripts');
 

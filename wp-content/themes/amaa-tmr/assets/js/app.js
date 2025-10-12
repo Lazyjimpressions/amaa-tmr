@@ -2,6 +2,11 @@
 (function() {
     'use strict';
 
+    // Don't run on survey page to prevent conflicts
+    if (window.location.pathname.includes('/survey')) {
+        return;
+    }
+
     // Define no-op notifier to avoid ReferenceError if called before init
     if (typeof window.showNotification !== 'function') {
         window.showNotification = function(){ /* no-op */ };
