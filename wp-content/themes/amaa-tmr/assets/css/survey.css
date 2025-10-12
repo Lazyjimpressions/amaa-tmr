@@ -782,6 +782,78 @@
     box-shadow: 0 0 0 3px var(--red-100);
 }
 
+/* Page 3: Active Deals Styles */
+.factors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-16);
+    margin-top: var(--space-12);
+}
+
+.factor-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.factor-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--gray-700);
+    margin-bottom: var(--space-4);
+}
+
+.factor-item select {
+    width: 100%;
+    border: 1px solid var(--border-300);
+    border-radius: var(--radius-6);
+    padding: var(--space-10);
+    font-size: var(--text-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.factor-item select:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* Checkbox Group Styles */
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-12);
+    margin-top: var(--space-12);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    cursor: pointer;
+    padding: var(--space-8);
+    border-radius: var(--radius-6);
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-item:hover {
+    background: var(--gray-50);
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--brand-500);
+    cursor: pointer;
+}
+
+.checkbox-label {
+    font-size: var(--text-sm);
+    color: var(--gray-700);
+    cursor: pointer;
+    user-select: none;
+}
+
 /* Additional Mobile Styles for Page 2 */
 @media (max-width: 768px) {
     .fees-grid {
@@ -802,5 +874,16 @@
         flex-direction: column;
         align-items: flex-start;
         gap: var(--space-12);
+    }
+    
+    /* Page 3 Mobile Styles */
+    .factors-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-12);
+    }
+    
+    .checkbox-group {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
     }
 }

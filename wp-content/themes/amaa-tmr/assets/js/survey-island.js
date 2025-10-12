@@ -734,6 +734,471 @@
             ]);
         }
 
+        // Page 3: Current Active Deals Component
+        function ActiveDealsPage({ onNext, onSave }) {
+            const [formData, setFormData] = useState({
+                active_deals_count: '',
+                prospective_deals_count: '',
+                active_deals: [],
+                deal_factors: {
+                    market_conditions: '',
+                    financing_availability: '',
+                    buyer_sentiment: '',
+                    seller_motivation: '',
+                    regulatory_environment: ''
+                },
+                seller_motivations: [],
+                seller_expectations: {
+                    valuation: '',
+                    timeline: '',
+                    structure: '',
+                    control: ''
+                }
+            });
+            const [errors, setErrors] = useState({});
+            const [isSaving, setIsSaving] = useState(false);
+
+            // Handle active deals count change
+            const handleActiveDealsCountChange = (count) => {
+                const numDeals = parseInt(count) || 0;
+                const currentDeals = formData.active_deals || [];
+                
+                // Adjust deals array to match count
+                let newDeals = [...currentDeals];
+                if (numDeals > currentDeals.length) {
+                    // Add new empty deals
+                    for (let i = currentDeals.length; i < numDeals; i++) {
+                        newDeals.push({
+                            id: `active_deal_${i + 1}`,
+                            deal_size: '',
+                            industry: '',
+                            transaction_type: '',
+                            status: 'active',
+                            expected_close_date: ''
+                        });
+                    }
+                } else if (numDeals < currentDeals.length) {
+                    // Remove excess deals
+                    newDeals = newDeals.slice(0, numDeals);
+                }
+
+                setFormData(prev => ({
+                    ...prev,
+                    active_deals_count: count,
+                    active_deals: newDeals
+                }));
+            };
+
+            // Handle individual active deal change
+            const handleActiveDealChange = (index, field, value) => {
+                const newDeals = [...formData.active_deals];
+                newDeals[index] = { ...newDeals[index], [field]: value };
+                setFormData(prev => ({ ...prev, active_deals: newDeals }));
+            };
+
+            // Add new active deal
+            const handleAddActiveDeal = () => {
+                const currentCount = parseInt(formData.active_deals_count) || 0;
+                const newCount = currentCount + 1;
+                
+                // Show confirmation if adding more than originally stated
+                if (currentCount > 0) {
+                    const confirmed = confirm(
+                        `You originally stated ${currentCount} active deals. Are you sure you want to add another deal? This will update your total to ${newCount} deals.`
+                    );
+                    if (!confirmed) return;
+                }
+                
+                handleActiveDealsCountChange(newCount.toString());
+            };
+
+            // Handle seller motivations (multiple selection)
+            const handleSellerMotivationChange = (motivation, checked) => {
+                let newMotivations = [...formData.seller_motivations];
+                if (checked) {
+                    if (!newMotivations.includes(motivation)) {
+                        newMotivations.push(motivation);
+                    }
+                } else {
+                    newMotivations = newMotivations.filter(m => m !== motivation);
+                }
+                setFormData(prev => ({ ...prev, seller_motivations: newMotivations }));
+            };
+
+            // Form validation
+            const validateForm = () => {
+                const newErrors = {};
+                
+                if (!formData.active_deals_count || formData.active_deals_count === '0') {
+                    newErrors.active_deals_count = 'Please enter the number of active deals';
+                }
+                
+                if (!formData.prospective_deals_count || formData.prospective_deals_count === '0') {
+                    newErrors.prospective_deals_count = 'Please enter the number of prospective deals';
+                }
+                
+                // Validate individual active deals if count > 0
+                if (parseInt(formData.active_deals_count) > 0) {
+                    formData.active_deals.forEach((deal, index) => {
+                        if (!deal.deal_size) {
+                            newErrors[`active_deal_${index}_size`] = 'Deal size is required';
+                        }
+                        if (!deal.industry) {
+                            newErrors[`active_deal_${index}_industry`] = 'Industry is required';
+                        }
+                        if (!deal.transaction_type) {
+                            newErrors[`active_deal_${index}_transaction_type`] = 'Transaction type is required';
+                        }
+                    });
+                }
+                
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            // Handle form submission
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                setIsSaving(true);
+                try {
+                    await onSave(formData);
+                    onNext();
+                } catch (error) {
+                    console.error('Save error:', error);
+                    alert('Failed to save progress. Please try again.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            return h('div', { className: 'survey-page' }, [
+                h('div', { className: 'page-header' }, [
+                    h('h2', { className: 'page-title' }, 'Current Active Deals'),
+                    h('p', { className: 'page-description' }, 
+                        'Tell us about your current active deals and market outlook'
+                    )
+                ]),
+                
+                h('form', { 
+                    className: 'survey-form',
+                    onSubmit: handleSubmit
+                }, [
+                    // Active Deals Count Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Active Deals Count'),
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'active_deals_count'
+                            }, 'How many ACTIVE deals is your firm currently working on?'),
+                            h('input', {
+                                type: 'number',
+                                id: 'active_deals_count',
+                                className: `form-input ${errors.active_deals_count ? 'error' : ''}`,
+                                value: formData.active_deals_count,
+                                onChange: (e) => handleActiveDealsCountChange(e.target.value),
+                                min: '0',
+                                placeholder: 'Enter number of active deals'
+                            }),
+                            errors.active_deals_count && h('div', { 
+                                className: 'form-error' 
+                            }, errors.active_deals_count)
+                        ]),
+                        
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'prospective_deals_count'
+                            }, 'How many tangible prospective, but not yet retained, deal/client opportunities do you currently have?'),
+                            h('input', {
+                                type: 'number',
+                                id: 'prospective_deals_count',
+                                className: `form-input ${errors.prospective_deals_count ? 'error' : ''}`,
+                                value: formData.prospective_deals_count,
+                                onChange: (e) => setFormData(prev => ({
+                                    ...prev,
+                                    prospective_deals_count: e.target.value
+                                })),
+                                min: '0',
+                                placeholder: 'Enter number of prospective deals'
+                            }),
+                            errors.prospective_deals_count && h('div', { 
+                                className: 'form-error' 
+                            }, errors.prospective_deals_count)
+                        ])
+                    ]),
+
+                    // Active Deals Details Section (only show if count > 0)
+                    parseInt(formData.active_deals_count) > 0 && h('div', { className: 'form-section' }, [
+                        h('div', { className: 'section-header' }, [
+                            h('h3', { className: 'section-title' }, 'Active Deals Details'),
+                            h('button', {
+                                type: 'button',
+                                className: 'btn btn-secondary btn-sm',
+                                onClick: handleAddActiveDeal
+                            }, '+ Add Deal')
+                        ]),
+                        
+                        h('div', { className: 'deals-table-container' }, [
+                            h('div', { className: 'deals-table' }, [
+                                // Table Header
+                                h('div', { className: 'table-header' }, [
+                                    h('div', { className: 'table-cell' }, 'Deal #'),
+                                    h('div', { className: 'table-cell' }, 'Deal Size (Millions)'),
+                                    h('div', { className: 'table-cell' }, 'Industry'),
+                                    h('div', { className: 'table-cell' }, 'Transaction Type'),
+                                    h('div', { className: 'table-cell' }, 'Expected Close')
+                                ]),
+                                
+                                // Table Rows
+                                formData.active_deals.map((deal, index) => 
+                                    h('div', { 
+                                        key: deal.id,
+                                        className: 'table-row'
+                                    }, [
+                                        h('div', { className: 'table-cell' }, `Deal ${index + 1}`),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('input', {
+                                                type: 'number',
+                                                className: `form-input ${errors[`active_deal_${index}_size`] ? 'error' : ''}`,
+                                                value: deal.deal_size,
+                                                onChange: (e) => handleActiveDealChange(index, 'deal_size', e.target.value),
+                                                placeholder: 'e.g., 10.5',
+                                                step: '0.1'
+                                            })
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('select', {
+                                                className: `form-select ${errors[`active_deal_${index}_industry`] ? 'error' : ''}`,
+                                                value: deal.industry,
+                                                onChange: (e) => handleActiveDealChange(index, 'industry', e.target.value)
+                                            }, [
+                                                h('option', { value: '' }, 'Select industry'),
+                                                h('option', { value: 'technology' }, 'Technology'),
+                                                h('option', { value: 'healthcare' }, 'Healthcare'),
+                                                h('option', { value: 'manufacturing' }, 'Manufacturing'),
+                                                h('option', { value: 'retail' }, 'Retail'),
+                                                h('option', { value: 'services' }, 'Services'),
+                                                h('option', { value: 'real_estate' }, 'Real Estate'),
+                                                h('option', { value: 'financial_services' }, 'Financial Services'),
+                                                h('option', { value: 'other' }, 'Other')
+                                            ])
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('select', {
+                                                className: `form-select ${errors[`active_deal_${index}_transaction_type`] ? 'error' : ''}`,
+                                                value: deal.transaction_type,
+                                                onChange: (e) => handleActiveDealChange(index, 'transaction_type', e.target.value)
+                                            }, [
+                                                h('option', { value: '' }, 'Select type'),
+                                                h('option', { value: 'sell_side' }, 'Sell-Side'),
+                                                h('option', { value: 'buy_side' }, 'Buy-Side'),
+                                                h('option', { value: 'recapitalization' }, 'Recapitalization'),
+                                                h('option', { value: 'merger' }, 'Merger'),
+                                                h('option', { value: 'other' }, 'Other')
+                                            ])
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('select', {
+                                                className: 'form-select',
+                                                value: deal.expected_close_date,
+                                                onChange: (e) => handleActiveDealChange(index, 'expected_close_date', e.target.value)
+                                            }, [
+                                                h('option', { value: '' }, 'Select timeframe'),
+                                                h('option', { value: 'q3_2025' }, 'Q3 2025'),
+                                                h('option', { value: 'q4_2025' }, 'Q4 2025'),
+                                                h('option', { value: 'q1_2026' }, 'Q1 2026'),
+                                                h('option', { value: 'q2_2026' }, 'Q2 2026'),
+                                                h('option', { value: 'later' }, 'Later than Q2 2026')
+                                            ])
+                                        )
+                                    ])
+                                )
+                            ])
+                        ])
+                    ]),
+
+                    // Market Factors Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Market Factors'),
+                        h('p', { className: 'section-description' }, 
+                            'How are your active deal clients impacted by the following factors?'
+                        ),
+                        
+                        h('div', { className: 'factors-grid' }, [
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Market Conditions'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.deal_factors.market_conditions,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        deal_factors: { ...prev.deal_factors, market_conditions: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Financing Availability'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.deal_factors.financing_availability,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        deal_factors: { ...prev.deal_factors, financing_availability: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Buyer Sentiment'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.deal_factors.buyer_sentiment,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        deal_factors: { ...prev.deal_factors, buyer_sentiment: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Seller Motivation'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.deal_factors.seller_motivation,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        deal_factors: { ...prev.deal_factors, seller_motivation: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ]),
+                            
+                            h('div', { className: 'factor-item' }, [
+                                h('label', { className: 'factor-label' }, 'Regulatory Environment'),
+                                h('select', {
+                                    className: 'form-select',
+                                    value: formData.deal_factors.regulatory_environment,
+                                    onChange: (e) => setFormData(prev => ({
+                                        ...prev,
+                                        deal_factors: { ...prev.deal_factors, regulatory_environment: e.target.value }
+                                    }))
+                                }, [
+                                    h('option', { value: '' }, 'Select impact'),
+                                    h('option', { value: 'very_positive' }, 'Very Positive'),
+                                    h('option', { value: 'positive' }, 'Positive'),
+                                    h('option', { value: 'neutral' }, 'Neutral'),
+                                    h('option', { value: 'negative' }, 'Negative'),
+                                    h('option', { value: 'very_negative' }, 'Very Negative')
+                                ])
+                            ])
+                        ])
+                    ]),
+
+                    // Seller Motivations Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Seller Motivations'),
+                        h('p', { className: 'section-description' }, 
+                            'What is motivating current Sellers to pursue a transaction? (Select all that apply)'
+                        ),
+                        
+                        h('div', { className: 'checkbox-group' }, [
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.seller_motivations.includes('retirement'),
+                                    onChange: (e) => handleSellerMotivationChange('retirement', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Retirement')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.seller_motivations.includes('market_timing'),
+                                    onChange: (e) => handleSellerMotivationChange('market_timing', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Market Timing')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.seller_motivations.includes('growth_capital'),
+                                    onChange: (e) => handleSellerMotivationChange('growth_capital', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Need for Growth Capital')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.seller_motivations.includes('succession'),
+                                    onChange: (e) => handleSellerMotivationChange('succession', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Succession Planning')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.seller_motivations.includes('debt_refinancing'),
+                                    onChange: (e) => handleSellerMotivationChange('debt_refinancing', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Debt Refinancing')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.seller_motivations.includes('other'),
+                                    onChange: (e) => handleSellerMotivationChange('other', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Other')
+                            ])
+                        ])
+                    ]),
+
+                    // Form Actions
+                    h('div', { className: 'form-actions' }, [
+                        h('button', {
+                            type: 'submit',
+                            className: 'btn btn-primary btn-large',
+                            disabled: isSaving
+                        }, isSaving ? 'Saving...' : 'Continue to Looking Ahead')
+                    ])
+                ])
+            ]);
+        }
+
         // Main Multi-Page Survey Component
         function MultiPageSurvey() {
             const [currentPage, setCurrentPage] = useState(1);
@@ -799,10 +1264,10 @@
                             onSave: handlePageSave
                         });
                     case 3:
-                        return h('div', { className: 'survey-page' }, [
-                            h('h2', null, 'Page 3: Current Active Deals'),
-                            h('p', null, 'This page will collect information about your current active deals.')
-                        ]);
+                        return h(ActiveDealsPage, {
+                            onNext: handleNextPage,
+                            onSave: handlePageSave
+                        });
                     case 4:
                         return h('div', { className: 'survey-page' }, [
                             h('h2', null, 'Page 4: Looking Ahead'),
