@@ -796,7 +796,7 @@
                     case 2:
                         return h(ClosedDealsPage, {
                             onNext: handleNextPage,
-                            onSave: handleSave
+                            onSave: handlePageSave
                         });
                     case 3:
                         return h('div', { className: 'survey-page' }, [
