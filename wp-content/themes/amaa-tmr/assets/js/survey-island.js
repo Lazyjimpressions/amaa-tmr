@@ -1634,6 +1634,279 @@
             ]);
         }
 
+        // Page 5: About You Component
+        function AboutYouPage({ onNext, onSave }) {
+            const [formData, setFormData] = useState({
+                survey_value: [],
+                survey_rating: '',
+                membership_interest: ''
+            });
+            const [errors, setErrors] = useState({});
+            const [isSaving, setIsSaving] = useState(false);
+
+            // Handle multiple selection for survey value
+            const handleSurveyValueChange = (value, checked) => {
+                let newValues = [...formData.survey_value];
+                if (checked) {
+                    if (!newValues.includes(value)) {
+                        newValues.push(value);
+                    }
+                } else {
+                    newValues = newValues.filter(v => v !== value);
+                }
+                setFormData(prev => ({ ...prev, survey_value: newValues }));
+            };
+
+            // Form validation
+            const validateForm = () => {
+                const newErrors = {};
+                
+                if (!formData.survey_rating) {
+                    newErrors.survey_rating = 'Please rate the value of the survey';
+                }
+                
+                if (!formData.membership_interest) {
+                    newErrors.membership_interest = 'Please indicate your membership interest';
+                }
+                
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            // Handle form submission
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                setIsSaving(true);
+                try {
+                    await onSave(formData);
+                    onNext();
+                } catch (error) {
+                    console.error('Save error:', error);
+                    alert('Failed to save progress. Please try again.');
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            return h('div', { className: 'survey-page' }, [
+                h('div', { className: 'page-header' }, [
+                    h('h2', { className: 'page-title' }, 'About You'),
+                    h('p', { className: 'page-description' }, 
+                        'Help us understand how valuable this survey is to you'
+                    )
+                ]),
+                
+                h('form', { 
+                    className: 'survey-form',
+                    onSubmit: handleSubmit
+                }, [
+                    // Survey Value Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Survey Value'),
+                        h('p', { className: 'section-description' }, 
+                            'Has the report and survey data provided value to you, and if so, how? (Select all that apply)'
+                        ),
+                        
+                        h('div', { className: 'checkbox-group' }, [
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('benchmarking'),
+                                    onChange: (e) => handleSurveyValueChange('benchmarking', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Benchmarking against peers')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('market_insights'),
+                                    onChange: (e) => handleSurveyValueChange('market_insights', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Market insights and trends')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('client_presentations'),
+                                    onChange: (e) => handleSurveyValueChange('client_presentations', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Client presentations and proposals')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('strategic_planning'),
+                                    onChange: (e) => handleSurveyValueChange('strategic_planning', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Strategic planning')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('fee_guidance'),
+                                    onChange: (e) => handleSurveyValueChange('fee_guidance', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Fee guidance and pricing')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('industry_networking'),
+                                    onChange: (e) => handleSurveyValueChange('industry_networking', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'Industry networking and connections')
+                            ]),
+                            h('label', { className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    checked: formData.survey_value.includes('no_value'),
+                                    onChange: (e) => handleSurveyValueChange('no_value', e.target.checked)
+                                }),
+                                h('span', { className: 'checkbox-label' }, 'No value provided')
+                            ])
+                        ])
+                    ]),
+
+                    // Survey Rating Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Survey Rating'),
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'survey_rating'
+                            }, 'Overall, please rate the value you derive from our semi-annual Market Survey'),
+                            h('div', { className: 'rating-group' }, [
+                                h('label', { className: 'rating-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'survey_rating',
+                                        value: 'excellent',
+                                        checked: formData.survey_rating === 'excellent',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            survey_rating: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'rating-label' }, 'Excellent')
+                                ]),
+                                h('label', { className: 'rating-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'survey_rating',
+                                        value: 'very_good',
+                                        checked: formData.survey_rating === 'very_good',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            survey_rating: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'rating-label' }, 'Very Good')
+                                ]),
+                                h('label', { className: 'rating-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'survey_rating',
+                                        value: 'good',
+                                        checked: formData.survey_rating === 'good',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            survey_rating: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'rating-label' }, 'Good')
+                                ]),
+                                h('label', { className: 'rating-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'survey_rating',
+                                        value: 'fair',
+                                        checked: formData.survey_rating === 'fair',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            survey_rating: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'rating-label' }, 'Fair')
+                                ]),
+                                h('label', { className: 'rating-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'survey_rating',
+                                        value: 'poor',
+                                        checked: formData.survey_rating === 'poor',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            survey_rating: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'rating-label' }, 'Poor')
+                                ])
+                            ]),
+                            errors.survey_rating && h('div', { 
+                                className: 'form-error' 
+                            }, errors.survey_rating)
+                        ])
+                    ]),
+
+                    // Membership Interest Section
+                    h('div', { className: 'form-section' }, [
+                        h('h3', { className: 'section-title' }, 'Membership Interest'),
+                        h('div', { className: 'form-group' }, [
+                            h('label', { 
+                                className: 'form-label',
+                                htmlFor: 'membership_interest'
+                            }, 'Are you interested in learning more about AM&AA membership?'),
+                            h('div', { className: 'yes-no-group' }, [
+                                h('label', { className: 'yes-no-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'membership_interest',
+                                        value: 'yes',
+                                        checked: formData.membership_interest === 'yes',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            membership_interest: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'yes-no-label' }, 'Yes')
+                                ]),
+                                h('label', { className: 'yes-no-option' }, [
+                                    h('input', {
+                                        type: 'radio',
+                                        name: 'membership_interest',
+                                        value: 'no',
+                                        checked: formData.membership_interest === 'no',
+                                        onChange: (e) => setFormData(prev => ({
+                                            ...prev,
+                                            membership_interest: e.target.value
+                                        }))
+                                    }),
+                                    h('span', { className: 'yes-no-label' }, 'No')
+                                ])
+                            ]),
+                            errors.membership_interest && h('div', { 
+                                className: 'form-error' 
+                            }, errors.membership_interest)
+                        ])
+                    ]),
+
+                    // Form Actions
+                    h('div', { className: 'form-actions' }, [
+                        h('button', {
+                            type: 'submit',
+                            className: 'btn btn-primary btn-large',
+                            disabled: isSaving
+                        }, isSaving ? 'Saving...' : 'Complete Survey')
+                    ])
+                ])
+            ]);
+        }
+
         // Main Multi-Page Survey Component
         function MultiPageSurvey() {
             const [currentPage, setCurrentPage] = useState(1);
@@ -1709,10 +1982,10 @@
                             onSave: handlePageSave
                         });
                     case 5:
-                        return h('div', { className: 'survey-page' }, [
-                            h('h2', null, 'Page 5: About You'),
-                            h('p', null, 'This page will collect information about survey value and membership interest.')
-                        ]);
+                        return h(AboutYouPage, {
+                            onNext: handleNextPage,
+                            onSave: handlePageSave
+                        });
                     default:
                         return h('div', null, 'Unknown page');
                 }
