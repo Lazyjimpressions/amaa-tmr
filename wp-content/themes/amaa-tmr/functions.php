@@ -32,6 +32,14 @@ function amaa_tmr_enqueue_styles() {
         '1.0.0'
     );
     
+    // Components (always loaded for header/footer)
+    wp_enqueue_style(
+        'amaa-tmr-components',
+        get_template_directory_uri() . '/assets/css/components.css',
+        array('amaa-tmr-tokens'),
+        '1.0.0'
+    );
+    
     // Template-specific styles
     if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
         // App shell styles
