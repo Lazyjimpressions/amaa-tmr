@@ -640,3 +640,56 @@
         waitForDependencies();
     }
 })();
+
+// Navigation functionality
+(function() {
+    'use strict';
+
+    // Mobile menu functionality
+    function initMobileMenu() {
+        const mobileToggle = document.getElementById('mobile-menu-toggle');
+        const mobileNav = document.getElementById('mobile-navigation');
+        
+        if (mobileToggle && mobileNav) {
+            mobileToggle.addEventListener('click', function() {
+                mobileNav.classList.toggle('show');
+                mobileToggle.classList.toggle('active');
+            });
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!mobileToggle.contains(e.target) && !mobileNav.contains(e.target)) {
+                    mobileNav.classList.remove('show');
+                    mobileToggle.classList.remove('active');
+                }
+            });
+        }
+    }
+
+    // User dropdown functionality
+    function initUserDropdown() {
+        const userAvatar = document.getElementById('user-avatar');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        if (userAvatar && userDropdown) {
+            userAvatar.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!userAvatar.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                }
+            });
+        }
+    }
+
+    // Initialize navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        initMobileMenu();
+        initUserDropdown();
+    });
+
+})();
