@@ -157,10 +157,186 @@
             ]);
         }
 
-        // Main Survey Component
+        // Authentication Check Component
+        function AuthCheck({ onAuthSuccess, onAuthRequired }) {
+            const [isChecking, setIsChecking] = useState(true);
+            const [user, setUser] = useState(null);
+
+            useEffect(() => {
+                checkAuthStatus();
+            }, []);
+
+            const checkAuthStatus = async () => {
+                try {
+                    // Check if user is authenticated
+                    const response = await fetch('/wp-json/amaa/v1/auth/status');
+                    const data = await response.json();
+                    
+                    if (data.authenticated) {
+                        setUser(data.user);
+                        onAuthSuccess(data.user);
+                    } else {
+                        onAuthRequired();
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    onAuthRequired();
+                } finally {
+                    setIsChecking(false);
+                }
+            };
+
+            if (isChecking) {
+                return h('div', { className: 'survey-form' }, 
+                    h('div', { style: { textAlign: 'center', padding: 'var(--space-48)' } }, 
+                        'Checking authentication...'
+                    )
+                );
+            }
+
+            return null;
+        }
+
+        // Login Modal Component
+        function LoginModal({ isOpen, onClose, onLoginSuccess }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setIsLoading(true);
+                setError('');
+
+                try {
+                    const response = await fetch('/wp-json/amaa/v1/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        onLoginSuccess(data.user);
+                    } else {
+                        setError(data.message || 'Login failed');
+                    }
+                } catch (error) {
+                    setError('Network error. Please try again.');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            if (!isOpen) return null;
+
+            return h('div', { 
+                className: 'login-modal-overlay',
+                style: {
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }
+            }, 
+                h('div', {
+                    className: 'login-modal',
+                    style: {
+                        backgroundColor: 'white',
+                        padding: 'var(--space-32)',
+                        borderRadius: 'var(--radius-16)',
+                        maxWidth: '400px',
+                        width: '90%',
+                        maxHeight: '90vh',
+                        overflow: 'auto'
+                    }
+                }, [
+                    h('h2', { style: { marginBottom: 'var(--space-24)' } }, 'Sign In to Continue'),
+                    h('form', { onSubmit: handleLogin }, [
+                        h('div', { style: { marginBottom: 'var(--space-16)' } }, [
+                            h('label', { 
+                                htmlFor: 'email',
+                                style: { display: 'block', marginBottom: 'var(--space-8)' }
+                            }, 'Email'),
+                            h('input', {
+                                type: 'email',
+                                id: 'email',
+                                value: email,
+                                onChange: (e) => setEmail(e.target.value),
+                                required: true,
+                                style: {
+                                    width: '100%',
+                                    padding: 'var(--space-12)',
+                                    border: '1px solid var(--border-300)',
+                                    borderRadius: 'var(--radius-8)'
+                                }
+                            })
+                        ]),
+                        h('div', { style: { marginBottom: 'var(--space-24)' } }, [
+                            h('label', { 
+                                htmlFor: 'password',
+                                style: { display: 'block', marginBottom: 'var(--space-8)' }
+                            }, 'Password'),
+                            h('input', {
+                                type: 'password',
+                                id: 'password',
+                                value: password,
+                                onChange: (e) => setPassword(e.target.value),
+                                required: true,
+                                style: {
+                                    width: '100%',
+                                    padding: 'var(--space-12)',
+                                    border: '1px solid var(--border-300)',
+                                    borderRadius: 'var(--radius-8)'
+                                }
+                            })
+                        ]),
+                        error && h('div', { 
+                            style: { color: 'var(--red-600)', marginBottom: 'var(--space-16)' }
+                        }, error),
+                        h('div', { style: { display: 'flex', gap: 'var(--space-12)' } }, [
+                            h('button', {
+                                type: 'submit',
+                                disabled: isLoading,
+                                style: {
+                                    flex: 1,
+                                    padding: 'var(--space-12) var(--space-24)',
+                                    backgroundColor: 'var(--brand-600)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-8)',
+                                    cursor: 'pointer'
+                                }
+                            }, isLoading ? 'Signing In...' : 'Sign In'),
+                            h('button', {
+                                type: 'button',
+                                onClick: onClose,
+                                style: {
+                                    padding: 'var(--space-12) var(--space-24)',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--gray-600)',
+                                    border: '1px solid var(--border-300)',
+                                    borderRadius: 'var(--radius-8)',
+                                    cursor: 'pointer'
+                                }
+                            }, 'Cancel')
+                        ])
+                    ])
+                ])
+            );
+        }
+
+        // Main Survey Component (Single Page)
         function SurveyForm() {
             const [questions, setQuestions] = useState([]);
-            const [currentQuestion, setCurrentQuestion] = useState(0);
             const [responses, setResponses] = useState({});
             const [errors, setErrors] = useState({});
             const [isLoading, setIsLoading] = useState(true);
@@ -168,6 +344,8 @@
             const [isSaving, setIsSaving] = useState(false);
             const [lastSaved, setLastSaved] = useState(null);
             const [isCompleted, setIsCompleted] = useState(false);
+            const [showLoginModal, setShowLoginModal] = useState(false);
+            const [user, setUser] = useState(null);
 
             // Load questions from WordPress REST API
             useEffect(() => {
@@ -245,19 +423,25 @@
                 return true;
             };
 
-            const handleNext = () => {
-                if (validateCurrentQuestion()) {
-                    if (currentQuestion < questions.length - 1) {
-                        setCurrentQuestion(prev => prev + 1);
-                    } else {
-                        handleSubmit();
-                    }
-                }
+            const handleAuthSuccess = (userData) => {
+                setUser(userData);
+                setShowLoginModal(false);
+                loadQuestions();
             };
 
-            const handlePrevious = () => {
-                if (currentQuestion > 0) {
-                    setCurrentQuestion(prev => prev - 1);
+            const handleAuthRequired = () => {
+                setShowLoginModal(true);
+            };
+
+            const loadQuestions = async () => {
+                try {
+                    const response = await fetch('/wp-json/amaa/v1/survey/questions');
+                    const data = await response.json();
+                    setQuestions(data);
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error('Error loading questions:', error);
+                    setIsLoading(false);
                 }
             };
 
@@ -303,14 +487,18 @@
                     h('p', { className: 'completion-message' }, 
                         'Thank you for completing the AM&AA Market Survey. Your responses have been submitted successfully.'
                     ),
-                    h('a', {
-                        href: '/dashboard',
-                        className: 'btn btn-primary'
-                    }, 'Go to Dashboard')
+                    h('div', { style: { display: 'flex', gap: 'var(--space-16)', justifyContent: 'center' } }, [
+                        h('a', {
+                            href: '/dashboard',
+                            className: 'btn btn-primary'
+                        }, 'Go to Dashboard'),
+                        h('a', {
+                            href: '/insights',
+                            className: 'btn btn-secondary'
+                        }, 'View Insights')
+                    ])
                 ]);
             }
-
-            const currentQ = questions[currentQuestion];
 
             return h('div', { className: 'survey-form' }, [
                 h('div', { className: 'survey-header' }, [
@@ -320,32 +508,25 @@
                     )
                 ]),
                 
-                h(ProgressBar, { 
-                    current: currentQuestion + 1, 
-                    total: questions.length 
-                }),
-                
-                h(SurveyQuestion, {
-                    key: currentQ.id,
-                    question: currentQ,
-                    value: responses[currentQ.id] || '',
-                    onChange: (value) => handleResponseChange(currentQ.id, value),
-                    error: errors[currentQ.id]
-                }),
+                h('div', { className: 'survey-questions' }, 
+                    questions.map(question => 
+                        h(SurveyQuestion, {
+                            key: question.id,
+                            question: question,
+                            value: responses[question.id] || '',
+                            onChange: (value) => handleResponseChange(question.id, value),
+                            error: errors[question.id]
+                        })
+                    )
+                ),
                 
                 h('div', { className: 'survey-navigation' }, [
                     h('button', {
-                        className: 'survey-nav-button secondary',
-                        onClick: handlePrevious,
-                        disabled: currentQuestion === 0
-                    }, 'Previous'),
-                    
-                    h('button', {
                         className: 'survey-nav-button primary',
-                        onClick: handleNext,
-                        disabled: isSubmitting
-                    }, isSubmitting ? 'Submitting...' : 
-                        currentQuestion === questions.length - 1 ? 'Submit Survey' : 'Next')
+                        onClick: handleSubmit,
+                        disabled: isSubmitting,
+                        style: { width: '100%' }
+                    }, isSubmitting ? 'Submitting...' : 'Submit Survey')
                 ]),
                 
                 h(SaveDraft, {
@@ -356,13 +537,52 @@
             ]);
         }
 
+        // Main App Component with Authentication
+        function SurveyApp() {
+            const [showLoginModal, setShowLoginModal] = useState(false);
+            const [user, setUser] = useState(null);
+            const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+            const handleAuthSuccess = (userData) => {
+                setUser(userData);
+                setShowLoginModal(false);
+            };
+
+            const handleAuthRequired = () => {
+                setShowLoginModal(true);
+                setIsAuthChecking(false);
+            };
+
+            const handleLoginSuccess = (userData) => {
+                setUser(userData);
+                setShowLoginModal(false);
+            };
+
+            if (isAuthChecking) {
+                return h(AuthCheck, {
+                    onAuthSuccess: handleAuthSuccess,
+                    onAuthRequired: handleAuthRequired
+                });
+            }
+
+            return h('div', null, [
+                h(SurveyForm, { key: 'survey', user: user }),
+                h(LoginModal, {
+                    key: 'login-modal',
+                    isOpen: showLoginModal,
+                    onClose: () => setShowLoginModal(false),
+                    onLoginSuccess: handleLoginSuccess
+                })
+            ]);
+        }
+
         // Mount the React app
         const container = document.getElementById('survey-root');
         if (container) {
             if (ReactDOM.createRoot) {
-                ReactDOM.createRoot(container).render(h(SurveyForm));
+                ReactDOM.createRoot(container).render(h(SurveyApp));
             } else {
-                ReactDOM.render(h(SurveyForm), container);
+                ReactDOM.render(h(SurveyApp), container);
             }
         }
     }

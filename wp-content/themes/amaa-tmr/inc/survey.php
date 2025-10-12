@@ -317,3 +317,74 @@ function amaa_tmr_submit_survey_response($request) {
         'message' => 'Survey response submitted successfully',
     ));
 }
+
+// Authentication status endpoint
+function amaa_tmr_register_auth_status_rest_route() {
+    register_rest_route('amaa/v1', '/auth/status', array(
+        'methods' => 'GET',
+        'callback' => 'amaa_tmr_get_auth_status',
+        'permission_callback' => '__return_true',
+    ));
+}
+add_action('rest_api_init', 'amaa_tmr_register_auth_status_rest_route');
+
+// Get authentication status
+function amaa_tmr_get_auth_status($request) {
+    // Check if user is logged in via WordPress
+    if (is_user_logged_in()) {
+        $current_user = wp_get_current_user();
+        return rest_ensure_response(array(
+            'authenticated' => true,
+            'user' => array(
+                'id' => $current_user->ID,
+                'email' => $current_user->user_email,
+                'name' => $current_user->display_name,
+            )
+        ));
+    }
+    
+    return rest_ensure_response(array(
+        'authenticated' => false,
+        'user' => null
+    ));
+}
+
+// Login endpoint
+function amaa_tmr_register_auth_login_rest_route() {
+    register_rest_route('amaa/v1', '/auth/login', array(
+        'methods' => 'POST',
+        'callback' => 'amaa_tmr_handle_login',
+        'permission_callback' => '__return_true',
+    ));
+}
+add_action('rest_api_init', 'amaa_tmr_register_auth_login_rest_route');
+
+// Handle login
+function amaa_tmr_handle_login($request) {
+    $email = $request->get_param('email');
+    $password = $request->get_param('password');
+    
+    if (!$email || !$password) {
+        return new WP_Error('missing_credentials', 'Email and password required', array('status' => 400));
+    }
+    
+    // Attempt WordPress login
+    $user = wp_authenticate($email, $password);
+    
+    if (is_wp_error($user)) {
+        return new WP_Error('invalid_credentials', 'Invalid email or password', array('status' => 401));
+    }
+    
+    // Log the user in
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID);
+    
+    return rest_ensure_response(array(
+        'success' => true,
+        'user' => array(
+            'id' => $user->ID,
+            'email' => $user->user_email,
+            'name' => $user->display_name,
+        )
+    ));
+}

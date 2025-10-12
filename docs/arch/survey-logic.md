@@ -2,12 +2,22 @@
 
 ## Document Information
 - **Created:** 2025-10-05
-- **Last Updated:** 2025-10-05
-- **Version:** 1.0
+- **Last Updated:** 2025-10-12
+- **Version:** 1.1
 - **Owner:** Jonathan
 
-Goal
-- Support conditional visibility/validation (branching) without hardcoding UI.
+## Implementation Phases
+
+### Phase 1: Basic Survey (Current)
+- Single-page survey with all questions
+- Authentication integration
+- Auto-save draft functionality
+- Completion flow with download access
+
+### Phase 2: Conditional Logic (Future)
+- Support conditional visibility/validation (branching) without hardcoding UI
+- Advanced question dependencies
+- Dynamic survey flow
 
 Data model (reserved fields)
 - Table: `survey_questions`

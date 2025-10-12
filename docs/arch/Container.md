@@ -2,19 +2,20 @@
 
 ## Document Information
 - **Created:** 2025-10-05
-- **Last Updated:** 2025-10-07
-- **Version:** 1.0
+- **Last Updated:** 2025-10-12
+- **Version:** 1.1
 - **Owner:** Jonathan
 
 1) WP Engine (WordPress)
 - Theme: renders /home, /survey, /insights; mounts React bundles.
 - Plugin: localizes Supabase config + EF endpoints; `[tmr_member_only]` shortcode.
+- **Survey Flow**: Single-page survey with authentication integration
 - Downloads:
-  - Teaser: HubSpot URL, always visible after login.
+  - Teaser: HubSpot URL, always visible after survey completion.
   - Full: WPE URL, visible only if `/me.is_member=true`.
 
 2) React Micro-app (bundled in theme)
-- `/survey`: multi-step form → `survey-submit` EF.
+- `/survey`: **single-page form** → `survey-submit` EF → download access.
 - `/insights`: AI brief button → `ai-generate-brief` EF (visible).
 
 3) Supabase
