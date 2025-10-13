@@ -85,8 +85,8 @@
                         }
                     }
                     
-                    // Check HubSpot first, then send magic link
-                    const hubspotCheckResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/hubspot-email-check`, {
+                    // Check HubSpot membership first, then send magic link
+                    const membershipCheckResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -94,18 +94,15 @@
                         body: JSON.stringify({ email: email.toLowerCase() })
                     });
                     
-                    if (hubspotCheckResponse.ok) {
-                        const checkData = await hubspotCheckResponse.json();
+                    if (membershipCheckResponse.ok) {
+                        const membershipData = await membershipCheckResponse.json();
                         
-                        if (checkData.exists) {
+                        if (membershipData.found) {
                             // HubSpot user found - prepopulate data and send magic link
                             setFormData(prev => ({
                                 ...prev,
-                                first_name: checkData.contact.first_name || '',
-                                last_name: checkData.contact.last_name || '',
-                                us_zip_code: checkData.contact.us_zip_code || '',
-                                country: checkData.contact.country || '',
-                                profession: checkData.contact.profession || ''
+                                first_name: membershipData.first_name || '',
+                                last_name: membershipData.last_name || ''
                             }));
                             
                             // Send magic link for Supabase authentication
