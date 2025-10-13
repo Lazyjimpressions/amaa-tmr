@@ -137,7 +137,8 @@
                     newErrors.location = 'Please provide either US zip code or country';
                 }
                 
-                if (formData.us_zip_code && formData.country) {
+                // Allow US zip code with US country (auto-populated case)
+                if (formData.us_zip_code && formData.country && formData.country !== 'US') {
                     newErrors.location = 'Please provide either US zip code OR country, not both';
                 }
                 
@@ -278,7 +279,11 @@
                                         const value = e.target.value;
                                         handleInputChange('us_zip_code', value);
                                         if (value) {
+                                            // Auto-populate country to US when zip code is entered
                                             handleInputChange('country', 'United States');
+                                        } else {
+                                            // Clear country when zip code is cleared
+                                            handleInputChange('country', '');
                                         }
                                     },
                                     placeholder: '12345 or 12345-6789',
