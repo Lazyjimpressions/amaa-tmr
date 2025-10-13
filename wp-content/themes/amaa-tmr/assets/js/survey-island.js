@@ -138,7 +138,7 @@
                 }
                 
                 // Allow US zip code with US country (auto-populated case)
-                if (formData.us_zip_code && formData.country && formData.country !== 'US') {
+                if (formData.us_zip_code && formData.country && formData.country !== 'United States') {
                     newErrors.location = 'Please provide either US zip code OR country, not both';
                 }
                 
