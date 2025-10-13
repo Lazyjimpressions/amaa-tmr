@@ -2106,7 +2106,7 @@
                     const surveyData = {
                         email: userEmail,
                         hubspot_contact_id: hubspotContactId,
-                        survey_id: '2025-summer', // Default survey ID
+                        survey_id: '4ef0a17b-0309-4e95-ba37-abd71a3bbe87', // Correct UUID for 2025-summer survey
                         answers: Object.entries(data).map(([key, value]) => ({
                             question_id: key,
                             value_text: typeof value === 'string' ? value : null,
