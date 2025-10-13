@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.0.8');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.0.9');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -2082,16 +2082,41 @@
             const handlePageSave = async (pageKey, data) => {
                 setIsLoading(true);
                 try {
-                    // For testing: simulate successful save without actual API call
-                    console.log('Simulating save for:', pageKey, data);
-                    
-                    // Simulate API delay
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const token = localStorage.getItem('supabase_token');
+                    if (!token) {
+                        throw new Error('No authentication token found');
+                    }
+
+                    // Prepare data for Supabase
+                    const surveyData = {
+                        survey_id: '2025-summer', // Default survey ID
+                        answers: Object.entries(data).map(([key, value]) => ({
+                            question_id: key,
+                            value_text: typeof value === 'string' ? value : null,
+                            value_num: typeof value === 'number' ? value : null,
+                            value_options: Array.isArray(value) ? value : null
+                        }))
+                    };
+
+                    const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(surveyData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to save survey data');
+                    }
+
+                    const result = await response.json();
+                    console.log('Page saved successfully:', pageKey, result);
                     
                     // Update local state
                     setSurveyData(prev => ({ ...prev, [pageKey]: data }));
-                    
-                    console.log('Page saved successfully:', pageKey);
                 } catch (error) {
                     console.error('Error saving page:', error);
                     throw error;
