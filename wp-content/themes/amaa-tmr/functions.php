@@ -114,12 +114,27 @@ function amaa_tmr_enqueue_scripts() {
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
         
-        // Survey React components - force new version
+        // Survey React components - use dynamic version endpoint to bypass WP Engine caching
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
         $survey_url  = get_template_directory_uri() . '/assets/js/survey-island.js';
-        $survey_ver  = '1.0.8_' . md5(microtime(true) . wp_rand(10000, 99999));
-        $survey_url  = add_query_arg('v', $survey_ver, $survey_url);
+        $version_url = get_template_directory_uri() . '/get-survey-version.php';
+        $survey_url  = add_query_arg('v', 'dynamic', $survey_url);
         wp_enqueue_script('amaa-tmr-survey-island', $survey_url, array('react', 'react-dom'), null, true);
+        
+        // Add dynamic version loading script
+        wp_add_inline_script('amaa-tmr-survey-island', "
+            fetch('$version_url')
+                .then(response => response.json())
+                .then(data => {
+                    const script = document.querySelector('script[src*=\"survey-island.js\"]');
+                    if (script) {
+                        const newSrc = script.src.replace('v=dynamic', 'v=' + data.version);
+                        script.src = newSrc;
+                        console.log('DYNAMIC VERSION LOADED:', data.version);
+                    }
+                })
+                .catch(error => console.error('Version fetch error:', error));
+        ", 'before');
     }
 
     // Main app script (temporarily disabled to prevent JS conflicts)
