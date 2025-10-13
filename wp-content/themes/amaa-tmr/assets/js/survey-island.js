@@ -47,7 +47,7 @@
             const [emailValidationStatus, setEmailValidationStatus] = useState(null);
             const [isSaving, setIsSaving] = useState(false);
 
-            // Email validation with HubSpot lookup
+            // Email validation with HubSpot lookup and authentication
             const validateEmail = async (email) => {
                 if (!email || !email.includes('@')) return;
                 
@@ -55,33 +55,55 @@
                 setEmailValidationStatus(null);
                 
                 try {
-                    // Check if email exists in Supabase members table (synced from HubSpot)
-                    const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('supabase_token') || ''}`,
-                            'Content-Type': 'application/json'
+                    // Check if user is already authenticated
+                    const existingToken = localStorage.getItem('supabase_token');
+                    if (existingToken) {
+                        // Verify token is still valid
+                        const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${existingToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.email === email.toLowerCase()) {
+                                // User is authenticated and email matches
+                                setFormData(prev => ({
+                                    ...prev,
+                                    first_name: data.first_name || '',
+                                    last_name: data.last_name || '',
+                                    us_zip_code: data.us_zip_code || '',
+                                    country: data.country || '',
+                                    profession: data.profession || ''
+                                }));
+                                setEmailValidationStatus('authenticated');
+                                return;
+                            }
                         }
+                    }
+                    
+                    // User not authenticated, send magic link
+                    const authResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbHVsYXF0Zm9wZ3dlbmYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc1OTcwMDE3NiwiZXhwIjoyMDc1MjY2MTc2fQ.8QZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQ'
+                        },
+                        body: JSON.stringify({
+                            email: email.toLowerCase(),
+                            options: {
+                                redirectTo: `${window.location.origin}/survey`
+                            }
+                        })
                     });
                     
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.email === email.toLowerCase()) {
-                            // Email found in HubSpot, prepopulate fields
-                            setFormData(prev => ({
-                                ...prev,
-                                first_name: data.first_name || '',
-                                last_name: data.last_name || '',
-                                us_zip_code: data.us_zip_code || '',
-                                country: data.country || '',
-                                profession: data.profession || ''
-                            }));
-                            setEmailValidationStatus('found');
-                        } else {
-                            setEmailValidationStatus('not_found');
-                        }
+                    if (authResponse.ok) {
+                        setEmailValidationStatus('magic_link_sent');
                     } else {
-                        setEmailValidationStatus('not_found');
+                        setEmailValidationStatus('error');
                     }
                 } catch (error) {
                     console.error('Email validation error:', error);
@@ -192,8 +214,9 @@
                                 required: true
                             }),
                             isValidatingEmail && h('div', { className: 'validation-spinner' }, 'Checking...'),
-                            emailValidationStatus === 'found' && h('div', { className: 'validation-success' }, '✓ Found in our records'),
-                            emailValidationStatus === 'not_found' && h('div', { className: 'validation-info' }, 'New contact - we\'ll create a record')
+                            emailValidationStatus === 'authenticated' && h('div', { className: 'validation-success' }, '✓ Authenticated'),
+                            emailValidationStatus === 'magic_link_sent' && h('div', { className: 'validation-info' }, '📧 Magic link sent! Check your email and click the link to continue.'),
+                            emailValidationStatus === 'error' && h('div', { className: 'validation-error' }, '❌ Authentication failed. Please try again.')
                         ]),
                         errors.email && h('div', { className: 'form-error' }, errors.email)
                     ]),
