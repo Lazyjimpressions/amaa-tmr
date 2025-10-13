@@ -85,23 +85,71 @@
                         }
                     }
                     
-                    // Send magic link for all users (simplified approach)
-                    const magicLinkResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
+                    // Check HubSpot first, then send magic link
+                    const hubspotCheckResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/hubspot-email-check`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            email: email.toLowerCase(),
-                            options: {
-                                redirectTo: `${window.location.origin}/survey`
-                            }
-                        })
+                        body: JSON.stringify({ email: email.toLowerCase() })
                     });
                     
-                    if (magicLinkResponse.ok) {
-                        setEmailValidationStatus('magic_link_sent');
+                    if (hubspotCheckResponse.ok) {
+                        const checkData = await hubspotCheckResponse.json();
+                        
+                        if (checkData.exists) {
+                            // HubSpot user found - prepopulate data and send magic link
+                            setFormData(prev => ({
+                                ...prev,
+                                first_name: checkData.contact.first_name || '',
+                                last_name: checkData.contact.last_name || '',
+                                us_zip_code: checkData.contact.us_zip_code || '',
+                                country: checkData.contact.country || '',
+                                profession: checkData.contact.profession || ''
+                            }));
+                            
+                            // Send magic link for Supabase authentication
+                            const magicLinkResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                                },
+                                body: JSON.stringify({
+                                    email: email.toLowerCase(),
+                                    options: {
+                                        redirectTo: `${window.location.origin}/survey`
+                                    }
+                                })
+                            });
+                            
+                            if (magicLinkResponse.ok) {
+                                setEmailValidationStatus('hubspot_user_magic_link_sent');
+                            } else {
+                                setEmailValidationStatus('error');
+                            }
+                        } else {
+                            // Email not in HubSpot - send magic link for new user
+                            const magicLinkResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                                },
+                                body: JSON.stringify({
+                                    email: email.toLowerCase(),
+                                    options: {
+                                        redirectTo: `${window.location.origin}/survey`
+                                    }
+                                })
+                            });
+                            
+                            if (magicLinkResponse.ok) {
+                                setEmailValidationStatus('magic_link_sent');
+                            } else {
+                                setEmailValidationStatus('error');
+                            }
+                        }
                     } else {
                         setEmailValidationStatus('error');
                     }
