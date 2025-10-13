@@ -85,8 +85,8 @@
                         }
                     }
                     
-                    // Single HubSpot API call to get all contact data
-                    const hubspotResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/hubspot-contact-lookup`, {
+                    // Use working check-membership function (has verify_jwt: false)
+                    const membershipResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -94,31 +94,25 @@
                         body: JSON.stringify({ email: email.toLowerCase() })
                     });
                     
-                    if (hubspotResponse.ok) {
-                        const hubspotData = await hubspotResponse.json();
+                    if (membershipResponse.ok) {
+                        const membershipData = await membershipResponse.json();
                         
-                        if (hubspotData.exists && hubspotData.found) {
-                            // HubSpot user found - prepopulate all data and auto-authenticate
+                        if (membershipData.found) {
+                            // HubSpot user found - prepopulate data and auto-authenticate
                             setFormData(prev => ({
                                 ...prev,
-                                first_name: hubspotData.contact.first_name || '',
-                                last_name: hubspotData.contact.last_name || '',
-                                us_zip_code: hubspotData.contact.us_zip_code || '',
-                                country: hubspotData.contact.country || '',
-                                profession: hubspotData.contact.profession || ''
+                                first_name: membershipData.first_name || '',
+                                last_name: membershipData.last_name || ''
                             }));
                             
                             // Auto-authenticate HubSpot users (since email validation is off)
                             localStorage.setItem('supabase_user_email', email.toLowerCase());
                             localStorage.setItem('supabase_user_data', JSON.stringify({
                                 email: email.toLowerCase(),
-                                first_name: hubspotData.contact.first_name,
-                                last_name: hubspotData.contact.last_name,
-                                us_zip_code: hubspotData.contact.us_zip_code,
-                                country: hubspotData.contact.country,
-                                profession: hubspotData.contact.profession,
-                                is_member: hubspotData.contact.is_member,
-                                company: hubspotData.contact.company
+                                first_name: membershipData.first_name,
+                                last_name: membershipData.last_name,
+                                is_member: membershipData.is_member,
+                                hubspot_contact_id: membershipData.hubspot_contact_id
                             }));
                             
                             setEmailValidationStatus('authenticated');
