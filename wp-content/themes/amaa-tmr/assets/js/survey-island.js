@@ -453,7 +453,7 @@
                 
                 setIsSaving(true);
                 try {
-                    await onSave(formData);
+                    await onSave('closed_deals', formData);
                     onNext();
                 } catch (error) {
                     console.error('Save error:', error);
@@ -871,7 +871,7 @@
                 
                 setIsSaving(true);
                 try {
-                    await onSave(formData);
+                    await onSave('active_deals', formData);
                     onNext();
                 } catch (error) {
                     console.error('Save error:', error);
@@ -1288,7 +1288,7 @@
                 
                 setIsSaving(true);
                 try {
-                    await onSave(formData);
+                    await onSave('looking_ahead', formData);
                     onNext();
                 } catch (error) {
                     console.error('Save error:', error);
@@ -1688,7 +1688,7 @@
                 
                 setIsSaving(true);
                 try {
-                    await onSave(formData);
+                    await onSave('about_you', formData);
                     onNext();
                 } catch (error) {
                     console.error('Save error:', error);
