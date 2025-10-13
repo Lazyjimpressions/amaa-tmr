@@ -1925,7 +1925,7 @@
                 setIsLoading(true);
                 try {
                     // Save to Supabase via Edge Function
-                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft', {
+                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft-test', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
