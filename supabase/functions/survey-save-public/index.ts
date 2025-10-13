@@ -40,8 +40,7 @@ serve(async (req) => {
         email: email.toLowerCase(),
         hubspot_contact_id: hubspot_contact_id || null,
         survey_id: survey_id,
-        source: "web",
-        updated_at: new Date().toISOString()
+        source: "web"
       }, {
         onConflict: 'email,survey_id'
       })
