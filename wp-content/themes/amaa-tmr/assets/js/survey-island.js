@@ -398,10 +398,21 @@
                     for (let i = currentDeals.length; i < numDeals; i++) {
                         newDeals.push({
                             id: `deal_${i + 1}`,
-                            deal_size: '',
+                            deal_index: i + 1,
+                            total_consideration_ev_usd_m: '',
                             industry: '',
-                            transaction_type: '',
-                            status: 'closed'
+                            sub_industry: '',
+                            buyer_type: '',
+                            sell_side_success_fee_pct: '',
+                            sell_side_retainer_fee_usd_m: '',
+                            deal_period: 'closed_first_half_2025',
+                            deal_status: 'closed',
+                            annual_revenue_usd_m: '',
+                            adjusted_ebitda_usd_m: '',
+                            revenue_growth_rate_pct: '',
+                            number_employees: '',
+                            tariff_impact: '',
+                            month_close: ''
                         });
                     }
                 } else if (numDeals < currentDeals.length) {
@@ -450,14 +461,14 @@
                 // Validate individual deals if count > 0
                 if (parseInt(formData.closed_deals_count) > 0) {
                     formData.deals.forEach((deal, index) => {
-                        if (!deal.deal_size) {
+                        if (!deal.total_consideration_ev_usd_m) {
                             newErrors[`deal_${index}_size`] = 'Deal size is required';
                         }
                         if (!deal.industry) {
                             newErrors[`deal_${index}_industry`] = 'Industry is required';
                         }
-                        if (!deal.transaction_type) {
-                            newErrors[`deal_${index}_transaction_type`] = 'Transaction type is required';
+                        if (!deal.buyer_type) {
+                            newErrors[`deal_${index}_buyer_type`] = 'Buyer type is required';
                         }
                     });
                 }
@@ -539,7 +550,9 @@
                                     h('div', { className: 'table-cell' }, 'Deal #'),
                                     h('div', { className: 'table-cell' }, 'Deal Size (Millions)'),
                                     h('div', { className: 'table-cell' }, 'Industry'),
-                                    h('div', { className: 'table-cell' }, 'Transaction Type')
+                                    h('div', { className: 'table-cell' }, 'Buyer Type'),
+                                    h('div', { className: 'table-cell' }, 'Success Fee (%)'),
+                                    h('div', { className: 'table-cell' }, 'Retainer Fee ($M)')
                                 ]),
                                 
                                 // Table Rows
@@ -553,8 +566,8 @@
                                             h('input', {
                                                 type: 'number',
                                                 className: `form-input ${errors[`deal_${index}_size`] ? 'error' : ''}`,
-                                                value: deal.deal_size,
-                                                onChange: (e) => handleDealChange(index, 'deal_size', e.target.value),
+                                                value: deal.total_consideration_ev_usd_m,
+                                                onChange: (e) => handleDealChange(index, 'total_consideration_ev_usd_m', e.target.value),
                                                 placeholder: 'e.g., 10.5',
                                                 step: '0.1'
                                             })
@@ -578,17 +591,43 @@
                                         ),
                                         h('div', { className: 'table-cell' }, 
                                             h('select', {
-                                                className: `form-select ${errors[`deal_${index}_transaction_type`] ? 'error' : ''}`,
-                                                value: deal.transaction_type,
-                                                onChange: (e) => handleDealChange(index, 'transaction_type', e.target.value)
+                                                className: `form-select ${errors[`deal_${index}_buyer_type`] ? 'error' : ''}`,
+                                                value: deal.buyer_type,
+                                                onChange: (e) => handleDealChange(index, 'buyer_type', e.target.value)
                                             }, [
-                                                h('option', { value: '' }, 'Select type'),
-                                                h('option', { value: 'sell_side' }, 'Sell-Side'),
-                                                h('option', { value: 'buy_side' }, 'Buy-Side'),
-                                                h('option', { value: 'recapitalization' }, 'Recapitalization'),
-                                                h('option', { value: 'merger' }, 'Merger'),
-                                                h('option', { value: 'other' }, 'Other')
+                                                h('option', { value: '' }, 'Select buyer type'),
+                                                h('option', { value: 'Corporate - Strategic, Competitor, Synergistic' }, 'Corporate - Strategic'),
+                                                h('option', { value: 'Private Equity - Platform' }, 'PE - Platform'),
+                                                h('option', { value: 'Private Equity - Add-on' }, 'PE - Add-on'),
+                                                h('option', { value: 'Independent (Fundless) - Sponsor' }, 'Independent Sponsor'),
+                                                h('option', { value: 'Family Office' }, 'Family Office'),
+                                                h('option', { value: 'Internal - Co-Owner(s)' }, 'Internal - Co-Owner'),
+                                                h('option', { value: 'Internal-Management Group' }, 'Internal - Management'),
+                                                h('option', { value: 'Individual' }, 'Individual'),
+                                                h('option', { value: 'None/ Not applicable' }, 'None/Not applicable')
                                             ])
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('input', {
+                                                type: 'number',
+                                                className: `form-input ${errors[`deal_${index}_success_fee`] ? 'error' : ''}`,
+                                                value: deal.sell_side_success_fee_pct,
+                                                onChange: (e) => handleDealChange(index, 'sell_side_success_fee_pct', e.target.value),
+                                                placeholder: 'e.g., 2.5',
+                                                step: '0.1',
+                                                max: '10'
+                                            })
+                                        ),
+                                        h('div', { className: 'table-cell' }, 
+                                            h('input', {
+                                                type: 'number',
+                                                className: `form-input ${errors[`deal_${index}_retainer_fee`] ? 'error' : ''}`,
+                                                value: deal.sell_side_retainer_fee_usd_m,
+                                                onChange: (e) => handleDealChange(index, 'sell_side_retainer_fee_usd_m', e.target.value),
+                                                placeholder: 'e.g., 0.05',
+                                                step: '0.01',
+                                                max: '100'
+                                            })
                                         )
                                     ])
                                 )

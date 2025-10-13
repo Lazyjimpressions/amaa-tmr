@@ -3,13 +3,13 @@
 ## Document Information
 - **Created:** 2025-10-12
 - **Last Updated:** 2025-10-12
-- **Version:** 1.0
+- **Version:** 2.0
 - **Owner:** Jonathan
 
 ## 1) Overview
 
 ### Objective
-Develop a comprehensive survey page that allows users to complete the AM&AA Market Survey with WordPress content management, Supabase integration, and user authentication.
+Develop a comprehensive multi-page survey that captures AM&AA Market Survey data with proper Supabase integration, user authentication, and specialized deal data tables.
 
 ### Current State
 - ✅ **Home Page**: Fully functional with React island and unified header/footer
@@ -17,36 +17,42 @@ Develop a comprehensive survey page that allows users to complete the AM&AA Mark
 - ✅ **Design System**: CSS properly integrated
 - ✅ **WordPress Theme**: Custom templates with proper routing
 - ✅ **Supabase**: 14 Edge Functions deployed and functional
-- ✅ **Database**: 7 tables with RLS, survey structure ready
+- ✅ **Database**: 7 tables with RLS, specialized survey response tables
+- ✅ **Multi-Page Survey**: 5-page survey with progress tracking implemented
+- ✅ **Authentication**: Magic link integration with Supabase
+- ✅ **Deal Tables**: Dynamic inline editing for individual deal data
+- 🔄 **Save Functionality**: CORS issues with Edge Functions
 
-### Next Priority
-**Survey Page Development** - The primary conversion goal of the platform
+### Current Priority
+**Fix CORS Issues** - Enable proper data saving to Supabase tables
 
 ## 2) Survey Page Requirements
 
 ### Core Functionality
-1. **WordPress Content Management**
-   - Admin can create/edit survey questions
-   - Question types: multiple choice, text, rating scales
-   - Conditional logic for question flow
-   - Progress tracking and save draft functionality
+1. **Multi-Page Survey Structure**
+   - **Page 1: User Profile** → `survey_non_deal_responses`
+   - **Page 2: Closed Deals** → `survey_deal_responses` (up to 5 deals)
+   - **Page 3: Active Deals** → `survey_deal_responses` (up to 5 deals)
+   - **Page 4: Looking Ahead** → `survey_non_deal_responses`
+   - **Page 5: About You** → `survey_non_deal_responses`
 
 2. **User Authentication**
-   - Supabase authentication integration
+   - Magic link authentication via Supabase
    - User session management
    - Progress persistence across sessions
+   - HubSpot data prepopulation for members
 
-3. **Survey Experience**
-   - Clean, professional interface
-   - Mobile-responsive design
-   - Progress indicators
-   - Save draft and resume functionality
-   - Form validation and error handling
+3. **Deal Data Management**
+   - Dynamic table generation based on deal count
+   - Inline editing for individual deal details
+   - Financial metrics capture (success fees, retainer fees)
+   - Market factors and seller motivations
 
 4. **Data Integration**
-   - Submit responses to Supabase
+   - Submit responses to specialized Supabase tables
    - HubSpot contact sync
    - Analytics tracking
+   - CORS-enabled Edge Functions
 
 ## 3) Technical Implementation
 
