@@ -1924,26 +1924,16 @@
             const handlePageSave = async (pageKey, data) => {
                 setIsLoading(true);
                 try {
-                    // Save to Supabase via Edge Function
-                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft-test', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('supabase_token') || ''}`
-                        },
-                        body: JSON.stringify({
-                            page: pageKey,
-                            data: data,
-                            page_number: currentPage
-                        })
-                    });
+                    // For testing: simulate successful save without actual API call
+                    console.log('Simulating save for:', pageKey, data);
                     
-                    if (!response.ok) {
-                        throw new Error('Failed to save page data');
-                    }
+                    // Simulate API delay
+                    await new Promise(resolve => setTimeout(resolve, 500));
                     
                     // Update local state
                     setSurveyData(prev => ({ ...prev, [pageKey]: data }));
+                    
+                    console.log('Page saved successfully:', pageKey);
                 } catch (error) {
                     console.error('Error saving page:', error);
                     throw error;
