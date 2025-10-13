@@ -2093,13 +2093,19 @@
             const handlePageSave = async (pageKey, data) => {
                 setIsLoading(true);
                 try {
-                    const token = localStorage.getItem('supabase_token');
-                    if (!token) {
-                        throw new Error('No authentication token found');
+                    // Get user email and HubSpot contact ID from localStorage
+                    const userEmail = localStorage.getItem('supabase_user_email');
+                    const userData = localStorage.getItem('supabase_user_data');
+                    const hubspotContactId = userData ? JSON.parse(userData).hubspot_contact_id : null;
+
+                    if (!userEmail) {
+                        throw new Error('No user email found');
                     }
 
-                    // Prepare data for Supabase
+                    // Prepare data for public save function
                     const surveyData = {
+                        email: userEmail,
+                        hubspot_contact_id: hubspotContactId,
                         survey_id: '2025-summer', // Default survey ID
                         answers: Object.entries(data).map(([key, value]) => ({
                             question_id: key,
@@ -2109,10 +2115,9 @@
                         }))
                     };
 
-                    const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft`, {
+                    const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-public`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(surveyData)
