@@ -98,7 +98,7 @@
                         const hubspotData = await hubspotResponse.json();
                         
                         if (hubspotData.exists) {
-                            // Email exists in HubSpot - auto-authenticate
+                            // Email exists in HubSpot - prepopulate data and send magic link
                             setFormData(prev => ({
                                 ...prev,
                                 first_name: hubspotData.contact.first_name || '',
@@ -108,7 +108,7 @@
                                 profession: hubspotData.contact.profession || ''
                             }));
                             
-                            // Create Supabase user session
+                            // Send magic link for Supabase authentication
                             const authResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
                                 method: 'POST',
                                 headers: {
@@ -124,7 +124,7 @@
                             });
                             
                             if (authResponse.ok) {
-                                setEmailValidationStatus('hubspot_member_authenticated');
+                                setEmailValidationStatus('hubspot_user_magic_link_sent');
                             } else {
                                 setEmailValidationStatus('error');
                             }
@@ -263,7 +263,7 @@
                             }),
                             isValidatingEmail && h('div', { className: 'validation-spinner' }, 'Checking...'),
                             emailValidationStatus === 'authenticated' && h('div', { className: 'validation-success' }, '✓ Authenticated'),
-                            emailValidationStatus === 'hubspot_member_authenticated' && h('div', { className: 'validation-success' }, '✓ Member authenticated - data pre-populated'),
+                            emailValidationStatus === 'hubspot_user_magic_link_sent' && h('div', { className: 'validation-info' }, '📧 Magic link sent! Your data has been pre-populated. Check your email and click the link to continue.'),
                             emailValidationStatus === 'magic_link_sent' && h('div', { className: 'validation-info' }, '📧 Magic link sent! Check your email and click the link to continue.'),
                             emailValidationStatus === 'error' && h('div', { className: 'validation-error' }, '❌ Authentication failed. Please try again.')
                         ]),
@@ -2029,8 +2029,53 @@
             const [surveyData, setSurveyData] = useState({});
             const [isLoading, setIsLoading] = useState(false);
             const [isCompleted, setIsCompleted] = useState(false);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [userInfo, setUserInfo] = useState(null);
 
             const totalPages = 5;
+
+            // Check authentication status on component mount
+            useEffect(() => {
+                const checkAuthStatus = async () => {
+                    try {
+                        const token = localStorage.getItem('supabase_token');
+                        if (token) {
+                            const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                const userData = await response.json();
+                                setUserInfo(userData);
+                                setIsAuthenticated(true);
+                                
+                                // If user is authenticated, prepopulate form data
+                                if (userData.email) {
+                                    setSurveyData(prev => ({
+                                        ...prev,
+                                        user_profile: {
+                                            email: userData.email,
+                                            first_name: userData.first_name || '',
+                                            last_name: userData.last_name || '',
+                                            us_zip_code: userData.us_zip_code || '',
+                                            country: userData.country || '',
+                                            profession: userData.profession || ''
+                                        }
+                                    }));
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Auth check error:', error);
+                    }
+                };
+
+                checkAuthStatus();
+            }, []);
 
             const handlePageSave = async (pageKey, data) => {
                 setIsLoading(true);
