@@ -85,8 +85,8 @@
                         }
                     }
                     
-                    // Check if email exists in HubSpot
-                    const hubspotResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/hubspot-email-lookup`, {
+                    // Try direct HubSpot authentication first
+                    const hubspotAuthResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/hubspot-auth`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -94,43 +94,46 @@
                         body: JSON.stringify({ email: email.toLowerCase() })
                     });
                     
-                    if (hubspotResponse.ok) {
-                        const hubspotData = await hubspotResponse.json();
+                    if (hubspotAuthResponse.ok) {
+                        const authData = await hubspotAuthResponse.json();
                         
-                        if (hubspotData.exists) {
-                            // Email exists in HubSpot - prepopulate data and send magic link
+                        if (authData.exists) {
+                            // HubSpot user found - direct authentication
                             setFormData(prev => ({
                                 ...prev,
-                                first_name: hubspotData.contact.first_name || '',
-                                last_name: hubspotData.contact.last_name || '',
-                                us_zip_code: hubspotData.contact.us_zip_code || '',
-                                country: hubspotData.contact.country || '',
-                                profession: hubspotData.contact.profession || ''
+                                first_name: authData.user.first_name || '',
+                                last_name: authData.user.last_name || '',
+                                us_zip_code: authData.user.us_zip_code || '',
+                                country: authData.user.country || '',
+                                profession: authData.user.profession || ''
                             }));
                             
-                            // Send magic link for Supabase authentication
-                            const authResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbHVsYXF0Zm9wZ3dlbmYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc1OTcwMDE3NiwiZXhwIjoyMDc1MjY2MTc2fQ.8QZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQ'
-                                },
-                                body: JSON.stringify({
-                                    email: email.toLowerCase(),
-                                    options: {
-                                        redirectTo: `${window.location.origin}/survey`
+                            // Store the session tokens
+                            if (authData.session.access_token) {
+                                localStorage.setItem('supabase_token', authData.session.access_token);
+                                localStorage.setItem('supabase_refresh_token', authData.session.refresh_token);
+                                
+                                // Set user as authenticated
+                                setEmailValidationStatus('authenticated');
+                                
+                                // Update survey data with user info
+                                setSurveyData(prev => ({
+                                    ...prev,
+                                    user_profile: {
+                                        email: authData.user.email,
+                                        first_name: authData.user.first_name || '',
+                                        last_name: authData.user.last_name || '',
+                                        us_zip_code: authData.user.us_zip_code || '',
+                                        country: authData.user.country || '',
+                                        profession: authData.user.profession || ''
                                     }
-                                })
-                            });
-                            
-                            if (authResponse.ok) {
-                                setEmailValidationStatus('hubspot_user_magic_link_sent');
+                                }));
                             } else {
                                 setEmailValidationStatus('error');
                             }
                         } else {
                             // Email not in HubSpot - send magic link for new user
-                            const authResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
+                            const magicLinkResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -144,7 +147,7 @@
                                 })
                             });
                             
-                            if (authResponse.ok) {
+                            if (magicLinkResponse.ok) {
                                 setEmailValidationStatus('magic_link_sent');
                             } else {
                                 setEmailValidationStatus('error');
@@ -262,8 +265,7 @@
                                 required: true
                             }),
                             isValidatingEmail && h('div', { className: 'validation-spinner' }, 'Checking...'),
-                            emailValidationStatus === 'authenticated' && h('div', { className: 'validation-success' }, '✓ Authenticated'),
-                            emailValidationStatus === 'hubspot_user_magic_link_sent' && h('div', { className: 'validation-info' }, '📧 Magic link sent! Your data has been pre-populated. Check your email and click the link to continue.'),
+                            emailValidationStatus === 'authenticated' && h('div', { className: 'validation-success' }, '✓ Authenticated - Your data has been pre-populated'),
                             emailValidationStatus === 'magic_link_sent' && h('div', { className: 'validation-info' }, '📧 Magic link sent! Check your email and click the link to continue.'),
                             emailValidationStatus === 'error' && h('div', { className: 'validation-error' }, '❌ Authentication failed. Please try again.')
                         ]),
