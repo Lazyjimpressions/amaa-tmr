@@ -2,7 +2,7 @@
 // Accepts: { email, hubspot_contact_id?, survey_id, answers }
 // Creates survey response with email and HubSpot contact ID
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { ok, bad, cors, json, service } from "../_shared/utils.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.46.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,20 +18,29 @@ serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return bad("method_not_allowed", req.headers.get("origin") || undefined, 405);
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 
   const origin = req.headers.get("origin") || undefined;
   
   try {
-    const body = await json(req);
+    const body = await req.json();
     const { email, hubspot_contact_id, survey_id, answers } = body;
 
     if (!email || !survey_id) {
-      return bad("missing_required_fields", origin, 400);
+      return new Response(JSON.stringify({ error: "Missing required fields: email and survey_id" }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    const supa = service();
+    // Create Supabase client with service role key
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supa = createClient(supabaseUrl, supabaseKey);
 
     // Create or update survey response with email and HubSpot contact ID
     const { data: response, error: responseError } = await supa
@@ -49,7 +58,10 @@ serve(async (req) => {
 
     if (responseError) {
       console.error('Survey response error:', responseError);
-      return bad(responseError.message, origin, 500);
+      return new Response(JSON.stringify({ error: responseError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     // Store user profile data in survey_non_deal_responses if provided
@@ -96,18 +108,27 @@ serve(async (req) => {
 
       if (profileError) {
         console.error('Survey profile data error:', profileError);
-        return bad(profileError.message, origin, 500);
+        return new Response(JSON.stringify({ error: profileError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
     }
 
-    return ok({ 
+    return new Response(JSON.stringify({ 
       ok: true, 
       response_id: response.id, 
       message: "Survey data saved successfully" 
-    }, origin);
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
     console.error('Survey save error:', error);
-    return bad('Internal server error', origin, 500);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });
