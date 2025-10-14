@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.9');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.0');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -53,6 +53,21 @@
                 const isAuth = !!token;
                 setIsAuthenticated(isAuth);
                 console.log('Auth status check:', { token: !!token, isAuth });
+            }, []);
+
+            // Listen for authentication success to preserve form data
+            useEffect(() => {
+                const handleAuthSuccess = (event) => {
+                    console.log('Authentication success event received:', event.detail);
+                    setIsAuthenticated(true);
+                    // Form data is already preserved, no need to clear it
+                };
+
+                window.addEventListener('supabase-auth-success', handleAuthSuccess);
+                
+                return () => {
+                    window.removeEventListener('supabase-auth-success', handleAuthSuccess);
+                };
             }, []);
 
     // Use the working Edge Function - no JWT issues!
@@ -2404,8 +2419,19 @@
             
             console.log('Authentication successful:', authState);
             
-            // Trigger a page reload to update the UI
-            window.location.reload();
+            // Store authentication state in localStorage for React components
+            localStorage.setItem('supabase_auth_state', JSON.stringify(authState));
+            
+            // Clear the URL hash to clean up the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Update the UI without reloading the page
+            updateHeaderLoginState();
+            
+            // Trigger React component re-render by dispatching a custom event
+            window.dispatchEvent(new CustomEvent('supabase-auth-success', { 
+                detail: authState 
+            }));
             
             return true;
         }
