@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.1');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.2');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -47,12 +47,24 @@
             const [isSaving, setIsSaving] = useState(false);
             const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-            // Check auth status on mount
+            // Check auth status and restore form data on mount
             useEffect(() => {
                 const token = localStorage.getItem('supabase_token');
                 const isAuth = !!token;
                 setIsAuthenticated(isAuth);
                 console.log('Auth status check:', { token: !!token, isAuth });
+                
+                // Restore form data from localStorage if available
+                const savedFormData = localStorage.getItem('survey_form_data');
+                if (savedFormData) {
+                    try {
+                        const parsedData = JSON.parse(savedFormData);
+                        console.log('Restoring form data from localStorage:', parsedData);
+                        setFormData(parsedData);
+                    } catch (error) {
+                        console.error('Error parsing saved form data:', error);
+                    }
+                }
             }, []);
 
             // Check authentication status periodically to update button
@@ -105,6 +117,9 @@
                 console.log('Prepopulating form with:', newFormData);
                 setFormData(newFormData);
                 
+                // Store form data in localStorage for magic link preservation
+                localStorage.setItem('survey_form_data', JSON.stringify(newFormData));
+                
                 // Store HubSpot data for later use
                 localStorage.setItem('hubspot_contact_data', JSON.stringify({
                     hubspot_contact_id: data.hubspot_contact_id,
@@ -133,7 +148,11 @@
             }, [formData.email]);
 
             const handleInputChange = (field, value) => {
-                setFormData(prev => ({ ...prev, [field]: value }));
+                const newFormData = { ...formData, [field]: value };
+                setFormData(newFormData);
+                
+                // Store updated form data in localStorage
+                localStorage.setItem('survey_form_data', JSON.stringify(newFormData));
                 
                 // Clear error when user starts typing
                 if (errors[field]) {
