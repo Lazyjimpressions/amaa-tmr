@@ -52,23 +52,51 @@ serve(async (req) => {
       return bad(responseError.message, origin, 500);
     }
 
-    // Store answers if provided
+    // Store user profile data in survey_non_deal_responses if provided
     if (answers && Array.isArray(answers) && answers.length > 0) {
-      const answerRows = answers.map((answer: any) => ({
+      // Extract user profile data from answers
+      const profileData: any = {
         response_id: response.id,
-        question_id: answer.question_id,
-        value_text: answer.value_text || null,
-        value_num: answer.value_num || null,
-        value_options: answer.value_options ? JSON.stringify(answer.value_options) : null,
-      }));
+        question_code: 'user_profile',
+        response_type: 'user_profile'
+      };
 
-      const { error: answersError } = await supa
-        .from("survey_answers")
-        .insert(answerRows);
+      // Map form fields to database columns
+      answers.forEach((answer: any) => {
+        const fieldName = answer.question_id;
+        const value = answer.value_text || answer.value_num || answer.value_options;
+        
+        switch (fieldName) {
+          case 'email':
+            profileData.email = value;
+            break;
+          case 'first_name':
+            profileData.first_name = value;
+            break;
+          case 'last_name':
+            profileData.last_name = value;
+            break;
+          case 'profession':
+            profileData.profession = value;
+            break;
+          case 'us_zip_code':
+            profileData.us_zip_code = value;
+            break;
+          case 'country':
+            profileData.country = value;
+            break;
+        }
+      });
 
-      if (answersError) {
-        console.error('Survey answers error:', answersError);
-        return bad(answersError.message, origin, 500);
+      const { error: profileError } = await supa
+        .from("survey_non_deal_responses")
+        .upsert(profileData, {
+          onConflict: 'response_id,question_code'
+        });
+
+      if (profileError) {
+        console.error('Survey profile data error:', profileError);
+        return bad(profileError.message, origin, 500);
       }
     }
 
