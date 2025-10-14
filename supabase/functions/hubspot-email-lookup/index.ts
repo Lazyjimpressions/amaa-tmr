@@ -42,7 +42,7 @@ serve(async (req) => {
               value: email.toLowerCase()
             }]
           }],
-          properties: ['email', 'firstname', 'lastname', 'membership_status___amaa', 'zip', 'country', 'profession'],
+          properties: ['email', 'firstname', 'lastname', 'membership_status___amaa', 'zip', 'country', 'profession_am_aa'],
           limit: 1
         })
       }
@@ -69,7 +69,7 @@ serve(async (req) => {
             last_name: contact.properties.lastname,
             us_zip_code: contact.properties.zip,
             country: contact.properties.country,
-            profession: contact.properties.profession,
+            profession: contact.properties.profession_am_aa,
             membership_status: contact.properties.membership_status___amaa
           }
         }),

@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.0.9');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.0');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -44,106 +44,53 @@
             });
             const [errors, setErrors] = useState({});
             const [isValidatingEmail, setIsValidatingEmail] = useState(false);
-            const [emailValidationStatus, setEmailValidationStatus] = useState(null);
             const [isSaving, setIsSaving] = useState(false);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-            // Email validation with HubSpot lookup and authentication
+            // Check auth status on mount
+            useEffect(() => {
+                const token = localStorage.getItem('supabase_token');
+                setIsAuthenticated(!!token);
+            }, []);
+
+            // Simplified email validation with HubSpot lookup
             const validateEmail = async (email) => {
                 if (!email || !email.includes('@')) return;
                 
                 setIsValidatingEmail(true);
-                setEmailValidationStatus(null);
                 
                 try {
-                    // Check if user is already authenticated
-                    const existingToken = localStorage.getItem('supabase_token');
-                    if (existingToken) {
-                        // Verify token is still valid
-                        const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${existingToken}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.email === email.toLowerCase()) {
-                                // User is authenticated and email matches
-                                setFormData(prev => ({
-                                    ...prev,
-                                    first_name: data.first_name || '',
-                                    last_name: data.last_name || '',
-                                    us_zip_code: data.us_zip_code || '',
-                                    country: data.country || '',
-                                    profession: data.profession || ''
-                                }));
-                                setEmailValidationStatus('authenticated');
-                                return;
-                            }
-                        }
-                    }
-                    
-                    // Use working check-membership function (has verify_jwt: false)
-                    const membershipResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership`, {
+                    // 1. Check HubSpot for existing contact
+                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: email.toLowerCase() })
                     });
                     
-                    if (membershipResponse.ok) {
-                        const membershipData = await membershipResponse.json();
+                    const data = await response.json();
+                    
+                    if (data.found) {
+                        // Prepopulate from HubSpot
+                        setFormData(prev => ({
+                            ...prev,
+                            first_name: data.first_name || '',
+                            last_name: data.last_name || '',
+                            profession: data.profession || '',
+                            us_zip_code: data.us_zip_code || '',
+                            country: data.country || ''
+                        }));
                         
-                        if (membershipData.found) {
-                            // HubSpot user found - prepopulate data and auto-authenticate
-                            setFormData(prev => ({
-                                ...prev,
-                                first_name: membershipData.first_name || '',
-                                last_name: membershipData.last_name || ''
-                            }));
-                            
-                            // Auto-authenticate HubSpot users (since email validation is off)
-                            localStorage.setItem('supabase_user_email', email.toLowerCase());
-                            localStorage.setItem('supabase_user_data', JSON.stringify({
-                                email: email.toLowerCase(),
-                                first_name: membershipData.first_name,
-                                last_name: membershipData.last_name,
-                                is_member: membershipData.is_member,
-                                hubspot_contact_id: membershipData.hubspot_contact_id
-                            }));
-                            
-                            setEmailValidationStatus('authenticated');
-                        } else {
-                            // Email not in HubSpot - send magic link for new user
-                            const magicLinkResponse = await fetch(`https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-                                },
-                                body: JSON.stringify({
-                                    email: email.toLowerCase(),
-                                    options: {
-                                        redirectTo: `${window.location.origin}/survey`
-                                    }
-                                })
-                            });
-                            
-                            if (magicLinkResponse.ok) {
-                                setEmailValidationStatus('magic_link_sent');
-                            } else {
-                                setEmailValidationStatus('error');
-                            }
-                        }
-                    } else {
-                        setEmailValidationStatus('error');
+                        // Store HubSpot data for later use
+                        localStorage.setItem('hubspot_contact_data', JSON.stringify({
+                            hubspot_contact_id: data.hubspot_contact_id,
+                            is_member: data.is_member
+                        }));
                     }
+                    // If not found, no action - user fills form manually
+                    
                 } catch (error) {
                     console.error('Email validation error:', error);
-                    setEmailValidationStatus('error');
+                    // Silent fail - user can still proceed
                 } finally {
                     setIsValidatingEmail(false);
                 }
@@ -209,19 +156,57 @@
                 return Object.keys(newErrors).length === 0;
             };
 
-            const handleNext = async () => {
+            const handleButtonClick = async () => {
                 if (!validateForm()) return;
                 
-                setIsSaving(true);
-                try {
-                    // Save page 1 data to Supabase
-                    await onSave('user_profile', formData);
-                    onNext();
-                } catch (error) {
-                    console.error('Error saving user profile:', error);
-                    alert('Error saving your information. Please try again.');
-                } finally {
-                    setIsSaving(false);
+                const token = localStorage.getItem('supabase_token');
+                
+                if (token) {
+                    // Already authenticated - save and proceed to next page
+                    setIsSaving(true);
+                    try {
+                        await onSave('user_profile', formData);
+                        onNext();
+                    } catch (error) {
+                        alert('Error saving your information. Please try again.');
+                    } finally {
+                        setIsSaving(false);
+                    }
+                } else {
+                    // Not authenticated - send magic link
+                    setIsSaving(true);
+                    try {
+                        const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                            },
+                            body: JSON.stringify({
+                                email: formData.email.toLowerCase(),
+                                options: {
+                                    redirectTo: `${window.location.origin}/survey`,
+                                    data: {
+                                        first_name: formData.first_name,
+                                        last_name: formData.last_name,
+                                        profession: formData.profession,
+                                        us_zip_code: formData.us_zip_code,
+                                        country: formData.country
+                                    }
+                                }
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            alert('Magic link sent! Check your email and click the link to continue.');
+                        } else {
+                            alert('Failed to send magic link. Please try again.');
+                        }
+                    } catch (error) {
+                        alert('Error sending magic link. Please try again.');
+                    } finally {
+                        setIsSaving(false);
+                    }
                 }
             };
 
@@ -229,7 +214,7 @@
                 h('div', { className: 'page-header' }, [
                     h('h2', { className: 'page-title' }, 'About You'),
                     h('p', { className: 'page-description' }, 
-                        'Let\'s start with some basic information about you and your firm.'
+                        'Welcome! Please complete your profile to continue.'
                     )
                 ]),
                 
@@ -239,22 +224,15 @@
                             htmlFor: 'email',
                             className: 'form-label required'
                         }, 'Email Address'),
-                        h('div', { className: 'input-with-status' }, [
-                            h('input', {
-                                type: 'email',
-                                id: 'email',
-                                className: `form-input ${errors.email ? 'error' : ''}`,
-                                value: formData.email,
-                                onChange: (e) => handleInputChange('email', e.target.value),
-                                placeholder: 'Enter your email address',
-                                required: true
-                            }),
-                            isValidatingEmail && h('div', { className: 'validation-spinner' }, 'Checking...'),
-                            emailValidationStatus === 'authenticated' && h('div', { className: 'validation-success', style: { marginTop: '10px', padding: '10px', backgroundColor: '#d4edda', border: '1px solid #c3e6cb', borderRadius: '4px', color: '#155724' } }, '✓ Authenticated - Your data has been pre-populated from HubSpot'),
-                            emailValidationStatus === 'hubspot_user_magic_link_sent' && h('div', { className: 'validation-info', style: { marginTop: '10px', padding: '10px', backgroundColor: '#d1ecf1', border: '1px solid #bee5eb', borderRadius: '4px', color: '#0c5460' } }, '📧 Magic link sent! Your data has been pre-populated. Check your email and click the link to continue.'),
-                            emailValidationStatus === 'magic_link_sent' && h('div', { className: 'validation-info', style: { marginTop: '10px', padding: '10px', backgroundColor: '#d1ecf1', border: '1px solid #bee5eb', borderRadius: '4px', color: '#0c5460' } }, '📧 Magic link sent! Check your email and click the link to continue.'),
-                            emailValidationStatus === 'error' && h('div', { className: 'validation-error', style: { marginTop: '10px', padding: '10px', backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', borderRadius: '4px', color: '#721c24' } }, '❌ Authentication failed. Please try again.')
-                        ]),
+                        h('input', {
+                            type: 'email',
+                            id: 'email',
+                            className: `form-input ${errors.email ? 'error' : ''}`,
+                            value: formData.email,
+                            onChange: (e) => handleInputChange('email', e.target.value),
+                            placeholder: 'Enter your email address',
+                            required: true
+                        }),
                         errors.email && h('div', { className: 'form-error' }, errors.email)
                     ]),
                     
@@ -393,10 +371,10 @@
                 h('div', { className: 'page-navigation' }, [
                     h('button', {
                         className: 'btn btn-primary btn-large',
-                        onClick: handleNext,
-                        disabled: isSaving,
+                        onClick: handleButtonClick,
+                        disabled: isSaving || isValidatingEmail,
                         style: { width: '100%' }
-                    }, isSaving ? 'Saving...' : 'Continue to Deal Information')
+                    }, isSaving ? 'Saving...' : (isAuthenticated ? 'Next' : 'Send Magic Link'))
                 ])
             ]);
         }
@@ -2026,59 +2004,68 @@
         useEffect(() => {
             const checkAuthStatus = async () => {
                 try {
-                    // Check for stored user data (auto-authenticated HubSpot users)
-                    const storedUserData = localStorage.getItem('supabase_user_data');
-                    const storedEmail = localStorage.getItem('supabase_user_email');
+                    // Check for Supabase auth callback (magic link)
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    const accessToken = hashParams.get('access_token');
+                    const refreshToken = hashParams.get('refresh_token');
                     
-                    if (storedUserData && storedEmail) {
-                        const userData = JSON.parse(storedUserData);
-                        setUserInfo(userData);
-                        setIsAuthenticated(true);
+                    if (accessToken) {
+                        // Store tokens
+                        localStorage.setItem('supabase_token', accessToken);
+                        if (refreshToken) {
+                            localStorage.setItem('supabase_refresh_token', refreshToken);
+                        }
                         
-                        // Prepopulate form data
-                        setSurveyData(prev => ({
-                            ...prev,
-                            user_profile: {
-                                email: userData.email,
-                                first_name: userData.first_name || '',
-                                last_name: userData.last_name || '',
-                                us_zip_code: userData.us_zip_code || '',
-                                country: userData.country || '',
-                                profession: userData.profession || ''
-                            }
-                        }));
-                        return;
-                    }
-                    
-                    // Fallback to Supabase token check
-                    const token = localStorage.getItem('supabase_token');
-                    if (token) {
-                        const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                            }
+                        // Fetch user data from Supabase
+                        const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me', {
+                            headers: { 'Authorization': `Bearer ${accessToken}` }
                         });
                         
                         if (response.ok) {
                             const userData = await response.json();
-                            setUserInfo(userData);
-                            setIsAuthenticated(true);
+                            localStorage.setItem('supabase_user_data', JSON.stringify(userData));
                             
-                            // If user is authenticated, prepopulate form data
-                            if (userData.email) {
-                                setSurveyData(prev => ({
-                                    ...prev,
-                                    user_profile: {
-                                        email: userData.email,
-                                        first_name: userData.first_name || '',
-                                        last_name: userData.last_name || '',
-                                        us_zip_code: userData.us_zip_code || '',
-                                        country: userData.country || '',
-                                        profession: userData.profession || ''
-                                    }
-                                }));
+                            // Update header to show logged in state
+                            updateHeaderLoginState(userData);
+                            
+                            // If user came from magic link with form data, save it
+                            if (userData.user_metadata) {
+                                await handlePageSave('user_profile', {
+                                    email: userData.email,
+                                    first_name: userData.user_metadata.first_name || '',
+                                    last_name: userData.user_metadata.last_name || '',
+                                    profession: userData.user_metadata.profession || '',
+                                    us_zip_code: userData.user_metadata.us_zip_code || '',
+                                    country: userData.user_metadata.country || ''
+                                });
+                            }
+                            
+                            // Auto-advance to page 2
+                            setTimeout(() => {
+                                setCurrentPage(2);
+                                // Clean up URL
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            }, 500);
+                        }
+                    } else {
+                        // Check for existing stored token
+                        const storedToken = localStorage.getItem('supabase_token');
+                        
+                        if (storedToken) {
+                            // Verify token is still valid
+                            const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/me', {
+                                headers: { 'Authorization': `Bearer ${storedToken}` }
+                            });
+                            
+                            if (response.ok) {
+                                const userData = await response.json();
+                                localStorage.setItem('supabase_user_data', JSON.stringify(userData));
+                                updateHeaderLoginState(userData);
+                                setIsAuthenticated(true);
+                            } else {
+                                // Token expired, clear it
+                                localStorage.removeItem('supabase_token');
+                                localStorage.removeItem('supabase_user_data');
                             }
                         }
                     }
@@ -2086,27 +2073,26 @@
                     console.error('Auth check error:', error);
                 }
             };
-
+            
             checkAuthStatus();
         }, []);
 
             const handlePageSave = async (pageKey, data) => {
                 setIsLoading(true);
                 try {
-                    // Get user email and HubSpot contact ID from localStorage
-                    const userEmail = localStorage.getItem('supabase_user_email');
-                    const userData = localStorage.getItem('supabase_user_data');
-                    const hubspotContactId = userData ? JSON.parse(userData).hubspot_contact_id : null;
-
-                    if (!userEmail) {
-                        throw new Error('No user email found');
+                    const token = localStorage.getItem('supabase_token');
+                    
+                    if (!token) {
+                        throw new Error('Not authenticated. Please log in first.');
                     }
 
-                    // Prepare data for public save function
+                    // Get HubSpot contact data if available
+                    const hubspotData = localStorage.getItem('hubspot_contact_data');
+                    const hubspotContactId = hubspotData ? JSON.parse(hubspotData).hubspot_contact_id : null;
+
+                    // Prepare survey data
                     const surveyData = {
-                        email: userEmail,
-                        hubspot_contact_id: hubspotContactId,
-                        survey_id: '4ef0a17b-0309-4e95-ba37-abd71a3bbe87', // Correct UUID for 2025-summer survey
+                        survey_id: '4ef0a17b-0309-4e95-ba37-abd71a3bbe87',
                         answers: Object.entries(data).map(([key, value]) => ({
                             question_id: key,
                             value_text: typeof value === 'string' ? value : null,
@@ -2115,12 +2101,12 @@
                         }))
                     };
 
-                    const response = await fetch(`https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-public`, {
+                    // Use authenticated save function
+                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/survey-save-draft', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g',
-                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify(surveyData)
                     });
@@ -2131,10 +2117,14 @@
                     }
 
                     const result = await response.json();
-                    console.log('Page saved successfully:', pageKey, result);
-                    
-                    // Update local state
-                    setSurveyData(prev => ({ ...prev, [pageKey]: data }));
+                    console.log('Survey saved:', result);
+
+                    // Update survey data state
+                    setSurveyData(prev => ({
+                        ...prev,
+                        [pageKey]: data
+                    }));
+
                 } catch (error) {
                     console.error('Error saving page:', error);
                     throw error;
@@ -2247,6 +2237,42 @@
         // Main App Component
         function SurveyApp() {
             return h(MultiPageSurvey);
+        }
+
+        // Update header login state
+        function updateHeaderLoginState(userData) {
+            const headerActions = document.querySelector('.header-actions .user-state');
+            if (!headerActions) return;
+            
+            const email = userData.email || '';
+            const firstName = userData.user_metadata?.first_name || userData.first_name || '';
+            const lastName = userData.user_metadata?.last_name || userData.last_name || '';
+            
+            let initials = 'U';
+            if (firstName && lastName) {
+                initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+            } else if (email) {
+                initials = email.substring(0, 2).toUpperCase();
+            }
+            
+            headerActions.innerHTML = `
+                <div class="user-avatar" id="user-avatar">
+                    <div class="avatar-circle">${initials}</div>
+                    <div class="user-dropdown" id="user-dropdown" style="display: none;">
+                        <a href="/survey">Survey</a>
+                        <a href="#" onclick="localStorage.clear(); window.location.reload();">Logout</a>
+                    </div>
+                </div>
+            `;
+            
+            // Add click handler for dropdown
+            const avatar = document.querySelector('#user-avatar');
+            const dropdown = document.querySelector('#user-dropdown');
+            if (avatar && dropdown) {
+                avatar.addEventListener('click', () => {
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                });
+            }
         }
 
         // Mount the React app
