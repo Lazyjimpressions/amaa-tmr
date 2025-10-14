@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.7');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.8');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -81,7 +81,7 @@
                     last_name: data.last_name || '',
                     profession: data.profession || '',
                     us_zip_code: data.us_zip_code || '',
-                    country: data.country || ''
+                    country: data.country || (data.us_zip_code ? 'United States' : '')
                 };
                 console.log('Prepopulating form with:', newFormData);
                 setFormData(newFormData);
