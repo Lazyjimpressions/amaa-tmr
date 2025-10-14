@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.1');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.2');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -374,18 +374,7 @@
                     ])
                 ]),
                 
-                h('div', { className: 'page-navigation' }, [
-                    h('button', {
-                        className: 'btn btn-primary btn-large',
-                        onClick: handleButtonClick,
-                        disabled: isSaving || isValidatingEmail,
-                        style: { width: '100%' }
-                    }, (() => {
-                        const buttonText = isSaving ? 'Saving...' : (isAuthenticated ? 'Next' : 'Send Magic Link');
-                        console.log('Button text logic:', { isSaving, isAuthenticated, buttonText });
-                        return buttonText;
-                    })())
-                ])
+                // Page-specific navigation removed - handled by global survey navigation
             ]);
         }
 
@@ -2143,7 +2132,82 @@
                 }
             };
 
-            const handleNextPage = () => {
+            const handleNextPage = async () => {
+                if (currentPage === 1) {
+                    // Special handling for Page 1 - check authentication
+                    const token = localStorage.getItem('supabase_token');
+                    
+                    if (!token) {
+                        // Not authenticated - send magic link
+                        try {
+                            // Get form data from Page 1
+                            const email = document.querySelector('#email')?.value;
+                            const firstName = document.querySelector('#first_name')?.value;
+                            const lastName = document.querySelector('#last_name')?.value;
+                            const profession = document.querySelector('#profession')?.value;
+                            const usZipCode = document.querySelector('#us_zip_code')?.value;
+                            const country = document.querySelector('#country')?.value;
+                            
+                            if (!email) {
+                                alert('Please enter your email address.');
+                                return;
+                            }
+                            
+                            setIsLoading(true);
+                            
+                            const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                                },
+                                body: JSON.stringify({
+                                    email: email.toLowerCase(),
+                                    options: {
+                                        redirectTo: `${window.location.origin}/survey`,
+                                        data: {
+                                            first_name: firstName,
+                                            last_name: lastName,
+                                            profession: profession,
+                                            us_zip_code: usZipCode,
+                                            country: country
+                                        }
+                                    }
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                alert('Magic link sent! Check your email and click the link to continue.');
+                            } else {
+                                alert('Failed to send magic link. Please try again.');
+                            }
+                        } catch (error) {
+                            alert('Error sending magic link. Please try again.');
+                        } finally {
+                            setIsLoading(false);
+                        }
+                        return;
+                    } else {
+                        // Already authenticated - save and proceed
+                        try {
+                            // Get form data and save it
+                            const formData = {
+                                email: document.querySelector('#email')?.value,
+                                first_name: document.querySelector('#first_name')?.value,
+                                last_name: document.querySelector('#last_name')?.value,
+                                profession: document.querySelector('#profession')?.value,
+                                us_zip_code: document.querySelector('#us_zip_code')?.value,
+                                country: document.querySelector('#country')?.value
+                            };
+                            
+                            await handlePageSave('user_profile', formData);
+                        } catch (error) {
+                            alert('Error saving your information. Please try again.');
+                            return;
+                        }
+                    }
+                }
+                
                 if (currentPage < totalPages) {
                     setCurrentPage(prev => prev + 1);
                 }
@@ -2233,7 +2297,13 @@
                         className: 'btn btn-primary',
                         onClick: handleNextPage,
                         disabled: isLoading
-                    }, 'Next'),
+                    }, (() => {
+                        if (currentPage === 1) {
+                            const token = localStorage.getItem('supabase_token');
+                            return token ? 'Next' : 'Send Magic Link';
+                        }
+                        return 'Next';
+                    })()),
                     
                     currentPage === totalPages && h('button', {
                         className: 'btn btn-primary btn-large',
