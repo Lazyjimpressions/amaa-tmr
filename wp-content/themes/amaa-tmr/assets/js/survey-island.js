@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.5');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.6');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -2361,8 +2361,63 @@
         }
     }
 
-        // Initialize header authentication
-        initializeHeaderAuth();
+    // Handle magic link callback
+    function handleMagicLinkCallback() {
+        console.log('=== CHECKING FOR MAGIC LINK CALLBACK ===');
+        
+        // Check if we have tokens in the URL hash
+        const hash = window.location.hash.substring(1);
+        if (!hash) {
+            console.log('No hash found in URL');
+            return false;
+        }
+        
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const tokenType = params.get('token_type');
+        const type = params.get('type');
+        
+        console.log('Magic link callback detected:', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken,
+            tokenType: tokenType,
+            type: type
+        });
+        
+        if (accessToken && type === 'magiclink') {
+            console.log('Processing magic link authentication...');
+            
+            // Store the tokens
+            localStorage.setItem('supabase_token', accessToken);
+            localStorage.setItem('supabase_refresh_token', refreshToken);
+            
+            // Clear the URL hash to clean up the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Update authentication state
+            const authState = {
+                token: accessToken,
+                refreshToken: refreshToken,
+                type: 'magiclink'
+            };
+            
+            console.log('Authentication successful:', authState);
+            
+            // Trigger a page reload to update the UI
+            window.location.reload();
+            
+            return true;
+        }
+        
+        return false;
+    }
+
+    // Initialize header authentication
+    initializeHeaderAuth();
+    
+    // Check for magic link callback on page load
+    handleMagicLinkCallback();
         
         // Mount the React app
         const container = document.getElementById('survey-root');
