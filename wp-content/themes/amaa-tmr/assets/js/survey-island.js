@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.3');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.4');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -55,52 +55,52 @@
                 console.log('Auth status check:', { token: !!token, isAuth });
             }, []);
 
-            // Simplified email validation with HubSpot lookup
-            const validateEmail = async (email) => {
-                if (!email || !email.includes('@')) return;
+    // Use the working Edge Function - no JWT issues!
+    const validateEmail = async (email) => {
+        if (!email || !email.includes('@')) return;
+        
+        console.log('Email validation triggered for:', email);
+        setIsValidatingEmail(true);
+        
+        try {
+            // Use the working check-membership function
+            const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.toLowerCase() })
+            });
+            
+            const data = await response.json();
+            console.log('HubSpot lookup result:', data);
+            
+            if (data.found) {
+                // Prepopulate from HubSpot
+                const newFormData = {
+                    ...formData,
+                    first_name: data.first_name || '',
+                    last_name: data.last_name || '',
+                    profession: data.profession || '',
+                    us_zip_code: data.us_zip_code || '',
+                    country: data.country || ''
+                };
+                console.log('Prepopulating form with:', newFormData);
+                setFormData(newFormData);
                 
-                console.log('Email validation triggered for:', email);
-                setIsValidatingEmail(true);
-                
-                try {
-                    // 1. Check HubSpot for existing contact
-                    const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email.toLowerCase() })
-                    });
-                    
-                    const data = await response.json();
-                    console.log('HubSpot lookup result:', data);
-                    
-                    if (data.found) {
-                        // Prepopulate from HubSpot
-                        const newFormData = {
-                            ...formData,
-                            first_name: data.first_name || '',
-                            last_name: data.last_name || '',
-                            profession: data.profession || '',
-                            us_zip_code: data.us_zip_code || '',
-                            country: data.country || ''
-                        };
-                        console.log('Prepopulating form with:', newFormData);
-                        setFormData(newFormData);
-                        
-                        // Store HubSpot data for later use
-                        localStorage.setItem('hubspot_contact_data', JSON.stringify({
-                            hubspot_contact_id: data.hubspot_contact_id,
-                            is_member: data.is_member
-                        }));
-                    }
-                    // If not found, no action - user fills form manually
-                    
-                } catch (error) {
-                    console.error('Email validation error:', error);
-                    // Silent fail - user can still proceed
-                } finally {
-                    setIsValidatingEmail(false);
-                }
-            };
+                // Store HubSpot data for later use
+                localStorage.setItem('hubspot_contact_data', JSON.stringify({
+                    hubspot_contact_id: data.hubspot_contact_id,
+                    is_member: data.is_member
+                }));
+            }
+            // If not found, no action - user fills form manually
+            
+        } catch (error) {
+            console.error('Email validation error:', error);
+            // Silent fail - user can still proceed
+        } finally {
+            setIsValidatingEmail(false);
+        }
+    };
 
             // Handle email input with debounced validation
             useEffect(() => {
@@ -191,7 +191,7 @@
                             body: JSON.stringify({
                                 email: formData.email.toLowerCase(),
                                 options: {
-                                    redirectTo: `${window.location.origin}/survey`,
+                                    redirectTo: 'https://marketrepstg.wpengine.com/survey',
                                     data: {
                                         first_name: formData.first_name,
                                         last_name: formData.last_name,
