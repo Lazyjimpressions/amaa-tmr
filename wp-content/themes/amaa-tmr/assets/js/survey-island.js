@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.2');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.3');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -2435,8 +2435,8 @@
             
             console.log('Authentication successful - tokens stored');
             
-            // Update the header
-            updateHeaderLoginState();
+            // Update the header with basic user data
+            updateHeaderLoginState({ email: 'authenticated@user.com' });
             
             return true;
         }
