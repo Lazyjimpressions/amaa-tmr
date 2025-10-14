@@ -117,7 +117,7 @@ function amaa_tmr_enqueue_scripts() {
         // Survey React components - use simple cache busting
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
         $survey_url  = get_template_directory_uri() . '/assets/js/survey-island.js';
-        $survey_ver = '1.1.6_' . time() . '_' . wp_rand(10000, 99999);
+        $survey_ver = '1.1.7_' . time() . '_' . wp_rand(10000, 99999);
         $survey_url  = add_query_arg('v', $survey_ver, $survey_url);
         wp_enqueue_script('amaa-tmr-survey-island', $survey_url, array('react', 'react-dom'), $survey_ver, true);
     }

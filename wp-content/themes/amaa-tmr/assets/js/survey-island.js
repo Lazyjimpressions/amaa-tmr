@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.6');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.7');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -2418,8 +2418,8 @@
     
     // Check for magic link callback on page load
     handleMagicLinkCallback();
-        
-        // Mount the React app
+    
+    // Mount the React app
         const container = document.getElementById('survey-root');
         if (container) {
             if (ReactDOM.createRoot) {
