@@ -39,29 +39,11 @@
                 
                 <!-- User State -->
                 <div class="user-state">
-                    <?php if (is_user_logged_in()) : ?>
-                        <!-- Logged In: Avatar + Dropdown -->
-                        <div class="user-avatar" id="user-avatar">
-                            <div class="avatar-circle">
-                                <?php 
-                                $current_user = wp_get_current_user();
-                                $initials = strtoupper(substr($current_user->first_name, 0, 1) . substr($current_user->last_name, 0, 1));
-                                if (empty($initials)) {
-                                    $initials = strtoupper(substr($current_user->user_login, 0, 2));
-                                }
-                                echo $initials;
-                                ?>
-                            </div>
-                            <div class="user-dropdown" id="user-dropdown">
-                                <a href="<?php echo esc_url(home_url('/dashboard')); ?>">Dashboard</a>
-                                <a href="<?php echo esc_url(home_url('/profile')); ?>">Profile</a>
-                                <a href="<?php echo wp_logout_url(home_url()); ?>">Logout</a>
-                            </div>
-                        </div>
-                    <?php else : ?>
-                        <!-- Logged Out: Login Button -->
-                        <a href="<?php echo esc_url(home_url('/login')); ?>" class="btn btn-secondary">Log In</a>
-                    <?php endif; ?>
+                    <!-- Supabase Authentication State (managed by JavaScript) -->
+                    <div id="supabase-auth-state">
+                        <!-- Logged Out: Magic Link Login -->
+                        <button id="magic-link-login" class="btn btn-secondary">Log In</button>
+                    </div>
                 </div>
             </div>
             

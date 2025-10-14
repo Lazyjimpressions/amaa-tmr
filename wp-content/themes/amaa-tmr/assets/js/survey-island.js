@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.2');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.3');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -2164,7 +2164,7 @@
                                 body: JSON.stringify({
                                     email: email.toLowerCase(),
                                     options: {
-                                        redirectTo: `${window.location.origin}/survey`,
+                                        redirectTo: 'https://marketrepstg.wpengine.com/survey',
                                         data: {
                                             first_name: firstName,
                                             last_name: lastName,
@@ -2321,8 +2321,8 @@
 
         // Update header login state
         function updateHeaderLoginState(userData) {
-            const headerActions = document.querySelector('.header-actions .user-state');
-            if (!headerActions) return;
+            const supabaseAuthState = document.querySelector('#supabase-auth-state');
+            if (!supabaseAuthState) return;
             
             const email = userData.email || '';
             const firstName = userData.user_metadata?.first_name || userData.first_name || '';
@@ -2335,7 +2335,7 @@
                 initials = email.substring(0, 2).toUpperCase();
             }
             
-            headerActions.innerHTML = `
+            supabaseAuthState.innerHTML = `
                 <div class="user-avatar" id="user-avatar">
                     <div class="avatar-circle">${initials}</div>
                     <div class="user-dropdown" id="user-dropdown" style="display: none;">
@@ -2355,6 +2355,48 @@
             }
         }
 
+        // Initialize header magic link login
+        function initializeHeaderAuth() {
+            const magicLinkButton = document.querySelector('#magic-link-login');
+            if (magicLinkButton) {
+                magicLinkButton.addEventListener('click', async () => {
+                    const email = prompt('Enter your email address:');
+                    if (!email || !email.includes('@')) {
+                        alert('Please enter a valid email address.');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                            },
+                            body: JSON.stringify({
+                                email: email.toLowerCase(),
+                                options: {
+                                    redirectTo: 'https://marketrepstg.wpengine.com/survey'
+                                }
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            alert('Magic link sent! Check your email and click the link to continue.');
+                        } else {
+                            const errorData = await response.json();
+                            alert(`Failed to send magic link: ${errorData.msg || 'Please try again.'}`);
+                        }
+                    } catch (error) {
+                        alert('Error sending magic link. Please try again.');
+                    }
+                });
+            }
+        }
+
+        // Initialize header authentication
+        initializeHeaderAuth();
+        
         // Mount the React app
         const container = document.getElementById('survey-root');
         if (container) {
