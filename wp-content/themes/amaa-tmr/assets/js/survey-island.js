@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.4');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.5');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -181,38 +181,14 @@
                 } else {
                     // Not authenticated - send magic link
                     setIsSaving(true);
-                    try {
-                        const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-                            },
-                            body: JSON.stringify({
-                                email: formData.email.toLowerCase(),
-                                options: {
-                                    redirectTo: 'https://marketrepstg.wpengine.com/survey',
-                                    data: {
-                                        first_name: formData.first_name,
-                                        last_name: formData.last_name,
-                                        profession: formData.profession,
-                                        us_zip_code: formData.us_zip_code,
-                                        country: formData.country
-                                    }
-                                }
-                            })
-                        });
-                        
-                        if (response.ok) {
-                            alert('Magic link sent! Check your email and click the link to continue.');
-                        } else {
-                            alert('Failed to send magic link. Please try again.');
-                        }
-                    } catch (error) {
-                        alert('Error sending magic link. Please try again.');
-                    } finally {
-                        setIsSaving(false);
-                    }
+                    const success = await sendMagicLink(formData.email, {
+                        first_name: formData.first_name,
+                        last_name: formData.last_name,
+                        profession: formData.profession,
+                        us_zip_code: formData.us_zip_code,
+                        country: formData.country
+                    });
+                    setIsSaving(false);
                 }
             };
 
@@ -2139,53 +2115,35 @@
                     
                     if (!token) {
                         // Not authenticated - send magic link
-                        try {
-                            // Get form data from Page 1
-                            const email = document.querySelector('#email')?.value;
-                            const firstName = document.querySelector('#first_name')?.value;
-                            const lastName = document.querySelector('#last_name')?.value;
-                            const profession = document.querySelector('#profession')?.value;
-                            const usZipCode = document.querySelector('#us_zip_code')?.value;
-                            const country = document.querySelector('#country')?.value;
-                            
-                            if (!email) {
-                                alert('Please enter your email address.');
-                                return;
-                            }
-                            
-                            setIsLoading(true);
-                            
-                            const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-                                },
-                                body: JSON.stringify({
-                                    email: email.toLowerCase(),
-                                    options: {
-                                        redirectTo: 'https://marketrepstg.wpengine.com/survey',
-                                        data: {
-                                            first_name: firstName,
-                                            last_name: lastName,
-                                            profession: profession,
-                                            us_zip_code: usZipCode,
-                                            country: country
-                                        }
-                                    }
-                                })
-                            });
-                            
-                            if (response.ok) {
-                                alert('Magic link sent! Check your email and click the link to continue.');
-                            } else {
-                                alert('Failed to send magic link. Please try again.');
-                            }
-                        } catch (error) {
-                            alert('Error sending magic link. Please try again.');
-                        } finally {
-                            setIsLoading(false);
-                        }
+                try {
+                    // Get form data from Page 1
+                    const email = document.querySelector('#email')?.value;
+                    const firstName = document.querySelector('#first_name')?.value;
+                    const lastName = document.querySelector('#last_name')?.value;
+                    const profession = document.querySelector('#profession')?.value;
+                    const usZipCode = document.querySelector('#us_zip_code')?.value;
+                    const country = document.querySelector('#country')?.value;
+                    
+                    if (!email) {
+                        alert('Please enter your email address.');
+                        return;
+                    }
+                    
+                    setIsLoading(true);
+                    
+                    const success = await sendMagicLink(email, {
+                        first_name: firstName,
+                        last_name: lastName,
+                        profession: profession,
+                        us_zip_code: usZipCode,
+                        country: country
+                    });
+                    
+                } catch (error) {
+                    alert('Error sending magic link. Please try again.');
+                } finally {
+                    setIsLoading(false);
+                }
                         return;
                     } else {
                         // Already authenticated - save and proceed
@@ -2355,44 +2313,53 @@
             }
         }
 
-        // Initialize header magic link login
-        function initializeHeaderAuth() {
-            const magicLinkButton = document.querySelector('#magic-link-login');
-            if (magicLinkButton) {
-                magicLinkButton.addEventListener('click', async () => {
-                    const email = prompt('Enter your email address:');
-                    if (!email || !email.includes('@')) {
-                        alert('Please enter a valid email address.');
-                        return;
+    // Single magic link function - no duplication!
+    async function sendMagicLink(email, userData = {}) {
+        try {
+            const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+                },
+                body: JSON.stringify({
+                    email: email.toLowerCase(),
+                    options: {
+                        redirectTo: 'https://marketrepstg.wpengine.com/survey',
+                        data: userData
                     }
-                    
-                    try {
-                        const response = await fetch('https://ffgjqlmulaqtfopgwenf.supabase.co/auth/v1/magiclink', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-                            },
-                            body: JSON.stringify({
-                                email: email.toLowerCase(),
-                                options: {
-                                    redirectTo: 'https://marketrepstg.wpengine.com/survey'
-                                }
-                            })
-                        });
-                        
-                        if (response.ok) {
-                            alert('Magic link sent! Check your email and click the link to continue.');
-                        } else {
-                            const errorData = await response.json();
-                            alert(`Failed to send magic link: ${errorData.msg || 'Please try again.'}`);
-                        }
-                    } catch (error) {
-                        alert('Error sending magic link. Please try again.');
-                    }
-                });
+                })
+            });
+            
+            if (response.ok) {
+                alert('Magic link sent! Check your email and click the link to continue.');
+                return true;
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to send magic link: ${errorData.msg || 'Please try again.'}`);
+                return false;
             }
+        } catch (error) {
+            alert('Error sending magic link. Please try again.');
+            return false;
         }
+    }
+
+    // Initialize header magic link login
+    function initializeHeaderAuth() {
+        const magicLinkButton = document.querySelector('#magic-link-login');
+        if (magicLinkButton) {
+            magicLinkButton.addEventListener('click', async () => {
+                const email = prompt('Enter your email address:');
+                if (!email || !email.includes('@')) {
+                    alert('Please enter a valid email address.');
+                    return;
+                }
+                
+                await sendMagicLink(email);
+            });
+        }
+    }
 
         // Initialize header authentication
         initializeHeaderAuth();
