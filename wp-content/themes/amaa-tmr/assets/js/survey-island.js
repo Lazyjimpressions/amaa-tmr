@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.0');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.1');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -50,13 +50,16 @@
             // Check auth status on mount
             useEffect(() => {
                 const token = localStorage.getItem('supabase_token');
-                setIsAuthenticated(!!token);
+                const isAuth = !!token;
+                setIsAuthenticated(isAuth);
+                console.log('Auth status check:', { token: !!token, isAuth });
             }, []);
 
             // Simplified email validation with HubSpot lookup
             const validateEmail = async (email) => {
                 if (!email || !email.includes('@')) return;
                 
+                console.log('Email validation triggered for:', email);
                 setIsValidatingEmail(true);
                 
                 try {
@@ -68,17 +71,20 @@
                     });
                     
                     const data = await response.json();
+                    console.log('HubSpot lookup result:', data);
                     
                     if (data.found) {
                         // Prepopulate from HubSpot
-                        setFormData(prev => ({
-                            ...prev,
+                        const newFormData = {
+                            ...formData,
                             first_name: data.first_name || '',
                             last_name: data.last_name || '',
                             profession: data.profession || '',
                             us_zip_code: data.us_zip_code || '',
                             country: data.country || ''
-                        }));
+                        };
+                        console.log('Prepopulating form with:', newFormData);
+                        setFormData(newFormData);
                         
                         // Store HubSpot data for later use
                         localStorage.setItem('hubspot_contact_data', JSON.stringify({
@@ -374,7 +380,11 @@
                         onClick: handleButtonClick,
                         disabled: isSaving || isValidatingEmail,
                         style: { width: '100%' }
-                    }, isSaving ? 'Saving...' : (isAuthenticated ? 'Next' : 'Send Magic Link'))
+                    }, (() => {
+                        const buttonText = isSaving ? 'Saving...' : (isAuthenticated ? 'Next' : 'Send Magic Link');
+                        console.log('Button text logic:', { isSaving, isAuthenticated, buttonText });
+                        return buttonText;
+                    })())
                 ])
             ]);
         }
