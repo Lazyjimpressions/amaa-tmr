@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.0');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.2.1');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
@@ -55,20 +55,24 @@
                 console.log('Auth status check:', { token: !!token, isAuth });
             }, []);
 
-            // Listen for authentication success to preserve form data
+            // Check authentication status periodically to update button
             useEffect(() => {
-                const handleAuthSuccess = (event) => {
-                    console.log('Authentication success event received:', event.detail);
-                    setIsAuthenticated(true);
-                    // Form data is already preserved, no need to clear it
+                const checkAuth = () => {
+                    const token = localStorage.getItem('supabase_token');
+                    const isAuth = !!token;
+                    if (isAuth !== isAuthenticated) {
+                        setIsAuthenticated(isAuth);
+                    }
                 };
-
-                window.addEventListener('supabase-auth-success', handleAuthSuccess);
                 
-                return () => {
-                    window.removeEventListener('supabase-auth-success', handleAuthSuccess);
-                };
-            }, []);
+                // Check immediately
+                checkAuth();
+                
+                // Check every 500ms to catch magic link authentication
+                const interval = setInterval(checkAuth, 500);
+                
+                return () => clearInterval(interval);
+            }, [isAuthenticated]);
 
     // Use the working Edge Function - no JWT issues!
     const validateEmail = async (email) => {
@@ -2410,28 +2414,10 @@
             // Clear the URL hash to clean up the URL
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            // Update authentication state
-            const authState = {
-                token: accessToken,
-                refreshToken: refreshToken,
-                type: 'magiclink'
-            };
+            console.log('Authentication successful - tokens stored');
             
-            console.log('Authentication successful:', authState);
-            
-            // Store authentication state in localStorage for React components
-            localStorage.setItem('supabase_auth_state', JSON.stringify(authState));
-            
-            // Clear the URL hash to clean up the URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            // Update the UI without reloading the page
+            // Update the header
             updateHeaderLoginState();
-            
-            // Trigger React component re-render by dispatching a custom event
-            window.dispatchEvent(new CustomEvent('supabase-auth-success', { 
-                detail: authState 
-            }));
             
             return true;
         }
