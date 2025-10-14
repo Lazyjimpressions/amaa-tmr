@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.8');
+        console.log('NEW MULTI-PAGE SURVEY LOADING - VERSION 1.1.9');
 
     // Global no-op for showNotification to prevent errors
     window.showNotification = window.showNotification || function() {};
