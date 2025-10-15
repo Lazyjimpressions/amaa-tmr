@@ -6,7 +6,7 @@ type Json = Record<string, any>;
 
 export const cors = (origin?: string) => {
   const allowedOrigins = [
-    "https://marketrepstg.wpengine.com",
+    "https://marketrepstg.wpenginepowered.com",
     "https://thereport.wpenginepowered.com",
   ];
   const requestOrigin = origin || "";
