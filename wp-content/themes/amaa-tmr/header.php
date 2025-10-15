@@ -39,11 +39,29 @@
                 
                 <!-- User State -->
                 <div class="user-state">
-                    <!-- Supabase Authentication State (managed by JavaScript) -->
-                    <div id="supabase-auth-state">
-                        <!-- Logged Out: Magic Link Login -->
-                        <button id="magic-link-login" class="btn btn-secondary">Log In</button>
-                    </div>
+                    <?php if (is_user_logged_in()) : ?>
+                        <!-- Logged In: Avatar + Dropdown -->
+                        <div class="user-avatar" id="user-avatar">
+                            <div class="avatar-circle">
+                                <?php 
+                                $current_user = wp_get_current_user();
+                                $initials = strtoupper(substr($current_user->first_name, 0, 1) . substr($current_user->last_name, 0, 1));
+                                if (empty($initials)) {
+                                    $initials = strtoupper(substr($current_user->user_login, 0, 2));
+                                }
+                                echo $initials;
+                                ?>
+                            </div>
+                            <div class="user-dropdown" id="user-dropdown">
+                                <a href="<?php echo esc_url(home_url('/dashboard')); ?>">Dashboard</a>
+                                <a href="<?php echo esc_url(home_url('/profile')); ?>">Profile</a>
+                                <a href="<?php echo wp_logout_url(home_url()); ?>">Logout</a>
+                            </div>
+                        </div>
+                    <?php else : ?>
+                        <!-- Logged Out: Login Button -->
+                        <a href="<?php echo esc_url(home_url('/login')); ?>" class="btn btn-secondary">Log In</a>
+                    <?php endif; ?>
                 </div>
             </div>
             
@@ -71,50 +89,52 @@
             </ul>
         </nav>
     </header>
+
+    <!-- Supabase Auth State Script -->
     <script>
-    (function(){
-        'use strict';
-        var authStateEl = document.getElementById('supabase-auth-state');
-        if (!authStateEl) return;
-        var token = localStorage.getItem('supabase_token');
-        if (token) {
-            var userRaw = localStorage.getItem('supabase_user_data');
-            var initials = 'U';
-            if (userRaw) {
-                try {
-                    var user = JSON.parse(userRaw);
-                    var fn = (user.first_name||'');
-                    var ln = (user.last_name||'');
-                    var em = (user.email||'');
-                    if (fn && ln) initials = (fn.charAt(0)+ln.charAt(0)).toUpperCase();
-                    else if (em) initials = em.substring(0,2).toUpperCase();
-                } catch(e) {}
+    // Update header login state based on localStorage tokens
+    function updateHeaderLoginState() {
+        const token = localStorage.getItem('supabase_token');
+        const userData = localStorage.getItem('supabase_user_data');
+        
+        if (token && userData) {
+            try {
+                const user = JSON.parse(userData);
+                const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
+                
+                // Find the user state container and replace with avatar
+                const userStateContainer = document.querySelector('.user-state');
+                if (userStateContainer) {
+                    userStateContainer.innerHTML = `
+                        <div class="user-avatar" onclick="toggleUserDropdown()">
+                            <span class="avatar-initials">${initials}</span>
+                        </div>
+                        <div class="user-dropdown" id="user-dropdown" style="display: none;">
+                            <div class="dropdown-item" onclick="handleLogout()">Logout</div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error('Error parsing user data:', e);
             }
-            authStateEl.innerHTML = '<div class="user-avatar" onclick="toggleUserDropdown()">\
-                <div class="avatar-circle">'+initials+'</div>\
-                <div class="user-dropdown" id="user-dropdown" style="display: none;">\
-                    <a href="/survey">Survey</a>\
-                    <a href="/dashboard">Dashboard</a>\
-                    <a href="/insights">Insights</a>\
-                    <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid #e5e7eb;">\
-                    <a href="#" onclick="handleLogout(); return false;">Logout</a>\
-                </div>\
-            </div>';
         }
-        window.toggleUserDropdown = function(){
-            var d = document.getElementById('user-dropdown');
-            if (d) d.style.display = (d.style.display === 'none' ? 'block' : 'none');
-        };
-        window.handleLogout = function(){
-            if (confirm('Are you sure you want to log out?')) {
-                localStorage.clear();
-                window.location.href = '/';
-            }
-        };
-        document.addEventListener('click', function(evt){
-            var a = document.querySelector('.user-avatar');
-            var d = document.getElementById('user-dropdown');
-            if (a && d && !a.contains(evt.target)) d.style.display = 'none';
-        });
-    })();
+    }
+
+    // Global dropdown functions
+    window.toggleUserDropdown = function() {
+        const dropdown = document.getElementById('user-dropdown');
+        if (dropdown) {
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+    };
+
+    window.handleLogout = function() {
+        localStorage.removeItem('supabase_token');
+        localStorage.removeItem('supabase_refresh_token');
+        localStorage.removeItem('supabase_user_data');
+        location.reload();
+    };
+
+    // Update header on page load
+    document.addEventListener('DOMContentLoaded', updateHeaderLoginState);
     </script>
