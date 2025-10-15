@@ -400,13 +400,15 @@
             fetchQuestions();
         }, []);
 
-        // Load Page 1 data for recap
+        // Load Page 1 data for recap and populate form
         useEffect(() => {
             const savedFormData = localStorage.getItem('survey_form_data');
             if (savedFormData) {
                 try {
                     const parsed = JSON.parse(savedFormData);
                     setPage1Data(parsed);
+                    // Populate form fields with saved data
+                    setFormData(prev => ({ ...prev, ...parsed }));
                 } catch (e) {
                     console.error('Error parsing saved form data:', e);
                 }
@@ -453,8 +455,25 @@
 
         // Render questions for a section
         const renderSectionQuestions = (sectionQuestions) => {
-            return sectionQuestions.map((question, index) => 
-                h('div', { 
+            return sectionQuestions.map((question, index) => {
+                // Get current value from formData or page1Data
+                const currentValue = formData[question.code] || (page1Data && page1Data[question.code]) || '';
+                
+                // Get appropriate placeholder based on question type and content
+                const getPlaceholder = (question) => {
+                    if (question.code === 'email') return 'john.doe@example.com';
+                    if (question.code === 'first_name') return 'John';
+                    if (question.code === 'last_name') return 'Doe';
+                    if (question.code === 'us_zip_code') return '90210';
+                    if (question.code.includes('success_fee') || question.code.includes('retainer_fee')) return '2.5';
+                    if (question.code.includes('deal') && question.code.includes('count')) return '3';
+                    if (question.code.includes('total_consideration') || question.code.includes('deal_size')) return '10.5';
+                    if (question.type === 'number') return 'Enter a number...';
+                    if (question.type === 'text') return 'Enter your answer...';
+                    return 'Select an option...';
+                };
+                
+                return h('div', { 
                     key: question.id,
                     className: 'form-group' 
                 }, [
@@ -465,22 +484,29 @@
                     
                     // Render different input types based on question.type
                     question.type === 'text' && h('input', {
-                        type: 'text',
+                        type: question.code === 'email' ? 'email' : 'text',
                         id: `question_${question.code}`,
                         className: 'form-input',
-                        placeholder: 'Enter your answer...'
+                        value: currentValue,
+                        placeholder: getPlaceholder(question),
+                        onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
                     }),
                     
                     question.type === 'number' && h('input', {
                         type: 'number',
                         id: `question_${question.code}`,
                         className: 'form-input',
-                        placeholder: 'Enter a number...'
+                        value: currentValue,
+                        placeholder: getPlaceholder(question),
+                        step: question.code.includes('fee') ? '0.1' : '1',
+                        onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
                     }),
                     
                     question.type === 'select' && h('select', {
                         id: `question_${question.code}`,
-                        className: 'form-select'
+                        className: 'form-select',
+                        value: currentValue,
+                        onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
                     }, [
                         h('option', { value: '' }, 'Select an option...'),
                         ...(question.options?.choices || []).map(option => 
@@ -497,7 +523,15 @@
                                 h('input', {
                                     type: 'checkbox',
                                     name: `question_${question.code}`,
-                                    value: option.value
+                                    value: option.value,
+                                    checked: formData[question.code] && formData[question.code].includes(option.value),
+                                    onChange: (e) => {
+                                        const currentValues = formData[question.code] || [];
+                                        const newValues = e.target.checked 
+                                            ? [...currentValues, option.value]
+                                            : currentValues.filter(v => v !== option.value);
+                                        setFormData(prev => ({ ...prev, [question.code]: newValues }));
+                                    }
                                 }),
                                 h('span', { className: 'checkbox-label' }, option.label || option.value)
                             ])
@@ -510,7 +544,9 @@
                                 h('input', {
                                     type: 'radio',
                                     name: `question_${question.code}`,
-                                    value: option.value
+                                    value: option.value,
+                                    checked: currentValue === option.value,
+                                    onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
                                 }),
                                 h('span', { className: 'radio-label' }, option.label || option.value)
                             ])
@@ -521,7 +557,21 @@
                         id: `question_${question.code}`,
                         className: 'form-textarea',
                         rows: 4,
-                        placeholder: 'Enter your answer...'
+                        value: currentValue,
+                        placeholder: question.code.includes('deal') && question.code.includes('details') 
+                            ? 'Describe the deals you worked on...' 
+                            : 'Enter your answer...',
+                        onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
+                    }),
+                    
+                    // Special handling for deal description questions that should be textareas
+                    question.code.includes('deal') && question.code.includes('details') && question.type !== 'textarea' && h('textarea', {
+                        id: `question_${question.code}`,
+                        className: 'form-textarea',
+                        rows: 4,
+                        value: currentValue,
+                        placeholder: 'Describe the deals you worked on...',
+                        onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
                     })
                 ])
             );
