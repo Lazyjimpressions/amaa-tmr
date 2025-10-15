@@ -111,6 +111,9 @@ function amaa_tmr_enqueue_scripts() {
         // Debug: Add inline script to confirm this condition is met
         wp_add_inline_script('amaa-tmr-survey-island', 'console.log("SURVEY PAGE DETECTED - LOADING SURVEY SCRIPTS");', 'before');
         error_log('SURVEY PAGE DETECTED - LOADING SURVEY SCRIPTS');
+        
+        // Debug: Add inline script to check if React is loaded
+        wp_add_inline_script('amaa-tmr-survey-island', 'console.log("React available:", typeof React !== "undefined"); console.log("ReactDOM available:", typeof ReactDOM !== "undefined");', 'before');
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
         

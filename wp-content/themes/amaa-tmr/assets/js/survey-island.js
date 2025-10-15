@@ -5,12 +5,16 @@
 
 (function() {
     'use strict';
+    
+    console.log('🚀 Survey Island Script Loading...');
 
     // Global configuration from WordPress
     const supabaseConfig = window.supabaseConfig || {
         url: 'https://ffgjqlmulaqtfopgwenf.supabase.co',
         anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGdlbmYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczOTU2NzQwMCwiZXhwIjoyMDU1MTQzNDAwfQ.example'
     };
+    
+    console.log('🔧 Supabase Config:', supabaseConfig);
 
     // Global functions for magic link authentication
     window.sendMagicLink = async function(email, userData) {

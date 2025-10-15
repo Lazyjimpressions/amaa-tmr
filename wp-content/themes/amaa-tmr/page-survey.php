@@ -8,7 +8,7 @@ get_header(); ?>
 <!-- template: page-survey.php -->
 <main id="content" class="site">
     <div class="survey-container">
-        <div id="survey-root"></div>
+        <div id="survey-container"></div>
         
         <!-- Fallback content for non-JS users -->
         <noscript>
