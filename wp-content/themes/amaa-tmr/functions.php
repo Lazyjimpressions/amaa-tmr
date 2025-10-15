@@ -125,8 +125,8 @@ function amaa_tmr_enqueue_scripts() {
         wp_enqueue_script('amaa-tmr-survey-island', $survey_url, array('react', 'react-dom'), $survey_ver, true);
 
         // Localize Supabase configuration (avoid hardcoding in JS)
-        $supabase_url = defined('WP_SUPABASE_URL') ? WP_SUPABASE_URL : '';
-        $supabase_anon = defined('WP_SUPABASE_ANON_KEY') ? WP_SUPABASE_ANON_KEY : '';
+        $supabase_url = defined('WP_SUPABASE_URL') ? WP_SUPABASE_URL : 'https://ffgjqlmulaqtfopgwenf.supabase.co';
+        $supabase_anon = defined('WP_SUPABASE_ANON_KEY') ? WP_SUPABASE_ANON_KEY : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g';
         wp_localize_script('amaa-tmr-survey-island', 'supabaseConfig', array(
             'url' => $supabase_url,
             'anonKey' => $supabase_anon,
