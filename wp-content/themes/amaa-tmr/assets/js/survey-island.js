@@ -88,19 +88,45 @@
 
             // Email validation on blur (Progressive Trust)
             useEffect(() => {
-                const emailInput = document.querySelector('#email');
-                if (emailInput) {
-                    const handleEmailBlur = () => {
-                        const email = emailInput.value;
-                        if (email && email.includes('@')) {
-                            console.log('Email blur triggered - validating with HubSpot:', email);
-                            validateEmailWithHubSpot(email);
+                let cleanup = null;
+                
+                const setupEmailValidation = () => {
+                    const emailInput = document.querySelector('#email');
+                    if (emailInput) {
+                        console.log('✅ Email input found - setting up blur validation');
+                        const handleEmailBlur = () => {
+                            const email = emailInput.value;
+                            if (email && email.includes('@')) {
+                                console.log('📧 Email blur triggered - validating with HubSpot:', email);
+                                validateEmailWithHubSpot(email);
+                            }
+                        };
+                        
+                        emailInput.addEventListener('blur', handleEmailBlur);
+                        cleanup = () => emailInput.removeEventListener('blur', handleEmailBlur);
+                        return true; // Found and set up
+                    }
+                    return false; // Not found
+                };
+                
+                // Try immediately
+                if (!setupEmailValidation()) {
+                    // If not found, use MutationObserver to watch for when it appears
+                    const observer = new MutationObserver(() => {
+                        if (setupEmailValidation()) {
+                            observer.disconnect(); // Stop watching once we find it
                         }
-                    };
+                    });
                     
-                    emailInput.addEventListener('blur', handleEmailBlur);
-                    return () => emailInput.removeEventListener('blur', handleEmailBlur);
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                    
+                    cleanup = () => observer.disconnect();
                 }
+                
+                return cleanup;
             }, []);
 
     // HubSpot email validation function (Progressive Trust)
