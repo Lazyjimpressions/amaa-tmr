@@ -117,9 +117,17 @@ function amaa_tmr_enqueue_scripts() {
         // Survey React components - use simple cache busting
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
         $survey_url  = get_template_directory_uri() . '/assets/js/survey-island.js';
-        $survey_ver = '1.2.3_' . time() . '_' . wp_rand(10000, 99999);
+        $survey_ver = '2.1.0_anonymous_start'; // Progressive Trust: Anonymous start
         $survey_url  = add_query_arg('v', $survey_ver, $survey_url);
         wp_enqueue_script('amaa-tmr-survey-island', $survey_url, array('react', 'react-dom'), $survey_ver, true);
+
+        // Localize Supabase configuration (avoid hardcoding in JS)
+        $supabase_url = defined('WP_SUPABASE_URL') ? WP_SUPABASE_URL : '';
+        $supabase_anon = defined('WP_SUPABASE_ANON_KEY') ? WP_SUPABASE_ANON_KEY : '';
+        wp_localize_script('amaa-tmr-survey-island', 'supabaseConfig', array(
+            'url' => $supabase_url,
+            'anonKey' => $supabase_anon,
+        ));
     }
 
     // Main app script (temporarily disabled to prevent JS conflicts)

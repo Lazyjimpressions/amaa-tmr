@@ -86,6 +86,98 @@
                 return () => clearInterval(interval);
             }, [isAuthenticated]);
 
+            // Email validation on blur (Progressive Trust)
+            useEffect(() => {
+                const emailInput = document.querySelector('#email');
+                if (emailInput) {
+                    const handleEmailBlur = () => {
+                        const email = emailInput.value;
+                        if (email && email.includes('@')) {
+                            console.log('Email blur triggered - validating with HubSpot:', email);
+                            validateEmailWithHubSpot(email);
+                        }
+                    };
+                    
+                    emailInput.addEventListener('blur', handleEmailBlur);
+                    return () => emailInput.removeEventListener('blur', handleEmailBlur);
+                }
+            }, []);
+
+    // HubSpot email validation function (Progressive Trust)
+    const validateEmailWithHubSpot = async (email) => {
+        if (!email || !email.includes('@')) return;
+        
+        console.log('🔍 Validating email with HubSpot:', email);
+        setIsValidatingEmail(true);
+        
+        try {
+            const response = await fetch('https://ffgjqlmulaqtfopgwenf.functions.supabase.co/check-membership', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.toLowerCase() })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HubSpot lookup failed: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ HubSpot lookup result:', data);
+            
+            if (data.found) {
+                // Prepopulate form with HubSpot data
+                console.log('✅ Contact found - prepopulating form');
+                const newFormData = {
+                    ...formData,
+                    email: email,
+                    first_name: data.first_name || '',
+                    last_name: data.last_name || '',
+                    profession: data.profession || '',
+                    us_zip_code: data.us_zip_code || '',
+                    country: data.country || (data.us_zip_code ? 'United States' : '')
+                };
+                
+                setFormData(newFormData);
+                localStorage.setItem('survey_form_data', JSON.stringify(newFormData));
+                
+                // Store HubSpot contact data
+                localStorage.setItem('hubspot_contact_data', JSON.stringify({
+                    hubspot_contact_id: data.hubspot_contact_id,
+                    is_member: data.is_member,
+                    membership_level: data.membership_level
+                }));
+                
+                // Update form fields in DOM
+                const firstNameInput = document.querySelector('#first_name');
+                const lastNameInput = document.querySelector('#last_name');
+                const professionInput = document.querySelector('#profession');
+                const zipInput = document.querySelector('#us_zip_code');
+                const countryInput = document.querySelector('#country');
+                
+                if (firstNameInput) firstNameInput.value = data.first_name || '';
+                if (lastNameInput) lastNameInput.value = data.last_name || '';
+                if (professionInput) professionInput.value = data.profession || '';
+                if (zipInput) zipInput.value = data.us_zip_code || '';
+                if (countryInput) countryInput.value = data.country || (data.us_zip_code ? 'United States' : '');
+                
+            } else if (data.status === 'created') {
+                // New contact created
+                console.log('✅ New HubSpot contact created:', data.hubspot_contact_id);
+                localStorage.setItem('hubspot_contact_data', JSON.stringify({
+                    hubspot_contact_id: data.hubspot_contact_id,
+                    is_member: false
+                }));
+            } else {
+                console.log('ℹ️ Contact not found in HubSpot - user will fill form manually');
+            }
+        } catch (error) {
+            console.error('❌ Email validation error:', error);
+            // Silent fail - user can still proceed
+        } finally {
+            setIsValidatingEmail(false);
+        }
+    };
+
     // Use the working Edge Function - no JWT issues!
     const validateEmail = async (email) => {
         if (!email || !email.includes('@')) return;
@@ -2148,60 +2240,22 @@
 
             const handleNextPage = async () => {
                 if (currentPage === 1) {
-                    // Special handling for Page 1 - check authentication
-                    const token = localStorage.getItem('supabase_token');
+                    // Progressive Trust: Allow anonymous progression from Page 1
+                    console.log('Proceeding from Page 1 - Progressive Trust flow');
+                    // Progressive Trust: Save form data and proceed to next page
+                    // Authentication will happen later via magic link
+                    const formData = {
+                        email: document.querySelector('#email')?.value,
+                        first_name: document.querySelector('#first_name')?.value,
+                        last_name: document.querySelector('#last_name')?.value,
+                        profession: document.querySelector('#profession')?.value,
+                        us_zip_code: document.querySelector('#us_zip_code')?.value,
+                        country: document.querySelector('#country')?.value
+                    };
                     
-                    if (!token) {
-                        // Not authenticated - send magic link
-                try {
-                    // Get form data from Page 1
-                    const email = document.querySelector('#email')?.value;
-                    const firstName = document.querySelector('#first_name')?.value;
-                    const lastName = document.querySelector('#last_name')?.value;
-                    const profession = document.querySelector('#profession')?.value;
-                    const usZipCode = document.querySelector('#us_zip_code')?.value;
-                    const country = document.querySelector('#country')?.value;
-                    
-                    if (!email) {
-                        alert('Please enter your email address.');
-                        return;
-                    }
-                    
-                    setIsLoading(true);
-                    
-                    const success = await sendMagicLink(email, {
-                        first_name: firstName,
-                        last_name: lastName,
-                        profession: profession,
-                        us_zip_code: usZipCode,
-                        country: country
-                    });
-                    
-                } catch (error) {
-                    alert('Error sending magic link. Please try again.');
-                } finally {
-                    setIsLoading(false);
-                }
-                        return;
-                    } else {
-                        // Already authenticated - save and proceed
-                        try {
-                            // Get form data and save it
-                            const formData = {
-                                email: document.querySelector('#email')?.value,
-                                first_name: document.querySelector('#first_name')?.value,
-                                last_name: document.querySelector('#last_name')?.value,
-                                profession: document.querySelector('#profession')?.value,
-                                us_zip_code: document.querySelector('#us_zip_code')?.value,
-                                country: document.querySelector('#country')?.value
-                            };
-                            
-                            await handlePageSave('user_profile', formData);
-                        } catch (error) {
-                            alert('Error saving your information. Please try again.');
-                            return;
-                        }
-                    }
+                    // Store form data in localStorage for later use
+                    localStorage.setItem('survey_form_data', JSON.stringify(formData));
+                    console.log('Form data saved to localStorage:', formData);
                 }
                 
                 if (currentPage < totalPages) {
@@ -2295,8 +2349,8 @@
                         disabled: isLoading
                     }, (() => {
                         if (currentPage === 1) {
-                            const token = localStorage.getItem('supabase_token');
-                            return token ? 'Next' : 'Send Magic Link';
+                            // Progressive Trust: Always show "Next" on Page 1
+                            return 'Next';
                         }
                         return 'Next';
                     })()),

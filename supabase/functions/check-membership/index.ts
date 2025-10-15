@@ -1,11 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { cors } from "../_shared/utils.ts"
 
 serve(async (req) => {
+  const origin = req.headers.get('origin') || undefined;
+  const corsHeaders = cors(origin);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -87,15 +86,59 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } else {
-      // Contact not found
-      return new Response(JSON.stringify({
-        found: false,
-        email: email,
-        status: 'not_found'
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      // Contact not found: attempt to create minimal contact in HubSpot
+      try {
+        const createResponse = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${hubspotToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            properties: {
+              email: email.toLowerCase(),
+              lifecyclestage: 'subscriber',
+              hs_analytics_source: 'DIRECT_TRAFFIC'
+            }
+          })
+        })
+
+        if (createResponse.ok) {
+          const newContact = await createResponse.json()
+          return new Response(JSON.stringify({
+            found: false,
+            email: email,
+            hubspot_contact_id: newContact.id,
+            status: 'created',
+            message: 'New contact created in HubSpot'
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        } else {
+          // If creation fails, still return not_found to avoid blocking UX
+          const errorText = await createResponse.text()
+          console.error('HubSpot create error:', errorText)
+          return new Response(JSON.stringify({
+            found: false,
+            email: email,
+            status: 'not_found'
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      } catch (e) {
+        console.error('Error creating HubSpot contact:', e)
+        return new Response(JSON.stringify({
+          found: false,
+          email: email,
+          status: 'not_found'
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
   } catch (error) {

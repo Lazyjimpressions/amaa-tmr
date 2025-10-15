@@ -5,12 +5,20 @@ import { encode as encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.
 type Json = Record<string, any>;
 
 export const cors = (origin?: string) => {
-  const allowed = Deno.env.get("ALLOWED_ORIGIN") || "*";
+  const allowedOrigins = [
+    "https://marketrepstg.wpengine.com",
+    "https://thereport.wpenginepowered.com",
+  ];
+  const requestOrigin = origin || "";
+  const allowedOrigin = allowedOrigins.includes(requestOrigin)
+    ? requestOrigin
+    : allowedOrigins[0];
   return {
-    "access-control-allow-origin": origin || allowed,
+    "access-control-allow-origin": allowedOrigin,
     "access-control-allow-methods": "GET,POST,OPTIONS",
-    "access-control-allow-headers": "authorization,content-type,x-admin-token",
+    "access-control-allow-headers": "authorization,content-type,x-admin-token,apikey,x-client-info",
     "access-control-max-age": "86400",
+    "access-control-allow-credentials": "true",
     "cache-control": "no-store",
     "content-type": "application/json",
   } as HeadersInit;

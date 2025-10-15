@@ -71,3 +71,50 @@
             </ul>
         </nav>
     </header>
+    <script>
+    (function(){
+        'use strict';
+        var authStateEl = document.getElementById('supabase-auth-state');
+        if (!authStateEl) return;
+        var token = localStorage.getItem('supabase_token');
+        if (token) {
+            var userRaw = localStorage.getItem('supabase_user_data');
+            var initials = 'U';
+            if (userRaw) {
+                try {
+                    var user = JSON.parse(userRaw);
+                    var fn = (user.first_name||'');
+                    var ln = (user.last_name||'');
+                    var em = (user.email||'');
+                    if (fn && ln) initials = (fn.charAt(0)+ln.charAt(0)).toUpperCase();
+                    else if (em) initials = em.substring(0,2).toUpperCase();
+                } catch(e) {}
+            }
+            authStateEl.innerHTML = '<div class="user-avatar" onclick="toggleUserDropdown()">\
+                <div class="avatar-circle">'+initials+'</div>\
+                <div class="user-dropdown" id="user-dropdown" style="display: none;">\
+                    <a href="/survey">Survey</a>\
+                    <a href="/dashboard">Dashboard</a>\
+                    <a href="/insights">Insights</a>\
+                    <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid #e5e7eb;">\
+                    <a href="#" onclick="handleLogout(); return false;">Logout</a>\
+                </div>\
+            </div>';
+        }
+        window.toggleUserDropdown = function(){
+            var d = document.getElementById('user-dropdown');
+            if (d) d.style.display = (d.style.display === 'none' ? 'block' : 'none');
+        };
+        window.handleLogout = function(){
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        };
+        document.addEventListener('click', function(evt){
+            var a = document.querySelector('.user-avatar');
+            var d = document.getElementById('user-dropdown');
+            if (a && d && !a.contains(evt.target)) d.style.display = 'none';
+        });
+    })();
+    </script>
