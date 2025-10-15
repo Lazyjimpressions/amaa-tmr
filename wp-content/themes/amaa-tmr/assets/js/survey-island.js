@@ -553,7 +553,7 @@
                         )
                     ),
                     
-                    question.type === 'textarea' && h('textarea', {
+                    (question.type === 'textarea' || (question.code.includes('deal') && question.code.includes('details'))) && h('textarea', {
                         id: `question_${question.code}`,
                         className: 'form-textarea',
                         rows: 4,
@@ -561,16 +561,6 @@
                         placeholder: question.code.includes('deal') && question.code.includes('details') 
                             ? 'Describe the deals you worked on...' 
                             : 'Enter your answer...',
-                        onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
-                    }),
-                    
-                    // Special handling for deal description questions that should be textareas
-                    question.code.includes('deal') && question.code.includes('details') && question.type !== 'textarea' && h('textarea', {
-                        id: `question_${question.code}`,
-                        className: 'form-textarea',
-                        rows: 4,
-                        value: currentValue,
-                        placeholder: 'Describe the deals you worked on...',
                         onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
                     })
                 ])
