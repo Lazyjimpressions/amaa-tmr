@@ -12,11 +12,11 @@ Owner: Jonathan • Updated: 2025-10-15
 Members and prospects need a secure portal to complete the AM&AA Market Survey and (for members) access the full report. Today the survey runs in Zoho; results are exported and reports built offline.
 
 **MVP Goals**
-- G1: ✅ **COMPLETED** - Host the survey **inside TMR**, persisting to Supabase (no Zoho).
-- G2: ✅ **COMPLETED** - Auth via Supabase; HubSpot confirms membership via Contact property **membership_status___amaa** ("Active" ⇒ member).
-- G3: 🔄 **IN PROGRESS** - Deliver downloads: **Teaser (HubSpot)** for all authenticated users; **Full/historical PDFs (WP Engine)** for members.
-- G4: 🔄 **FUTURE** - Light analytics (HubSpot + GA) for funnel visibility.
-- G5: ✅ **COMPLETED** - Expose an **AI Insight Brief** button (visible, clearly labeled "AI-generated").
+- G1: 🔄 **IN PROGRESS** - Host the survey **inside TMR**, persisting to Supabase (no Zoho). *Survey design not complete, not tested with Supabase.*
+- G2: 🔄 **PARTIAL** - Auth via Supabase; HubSpot confirms membership via Contact property **membership_status___amaa** ("Active" ⇒ member). *Record check works, form population still buggy, profession dropdown needs HS data.*
+- G3: ❌ **NOT STARTED** - Deliver downloads: **Teaser (HubSpot)** for all authenticated users; **Full/historical PDFs (WP Engine)** for members. *No download functionality implemented.*
+- G4: ❌ **NOT STARTED** - Light analytics (HubSpot + GA) for funnel visibility. *No analytics implemented.*
+- G5: ❌ **NOT STARTED** - Expose an **AI Insight Brief** button (visible, clearly labeled "AI-generated"). *Not working.*
 
 **Success**
 - ≥70% invited respondents complete in-portal
@@ -40,23 +40,23 @@ Members and prospects need a secure portal to complete the AM&AA Market Survey a
 - **Admin**: import Winter 2025 CSV; publish links.
 
 ## 4) User Stories & AC (MVP)
-**U1 — Take Survey (any authenticated user)** ✅ **COMPLETED**
-- AC: ✅ 2-page survey with dynamic questions submits via EF; writes to `survey_non_deal_responses` and `survey_deal_responses`.
-- AC: ✅ Progressive trust authentication (anonymous start → email validation → magic link auth).
-- AC: ✅ HubSpot contact auto-creation and data prepopulation.
-- Post-submit: 🔄 **IN PROGRESS** - member sees Full+Teaser (WPE+HubSpot); non-member sees Teaser (HubSpot) + join CTA.
+**U1 — Take Survey (any authenticated user)** 🔄 **IN PROGRESS**
+- AC: 🔄 2-page survey with dynamic questions submits via EF; writes to `survey_non_deal_responses` and `survey_deal_responses`. *Survey not complete or tested for submittal. Design isn't even done.*
+- AC: 🔄 Progressive trust authentication (anonymous start → email validation → magic link auth). *Partially working.*
+- AC: 🔄 HubSpot contact auto-creation and data prepopulation. *Form population still buggy, profession dropdown needs HS data.*
+- Post-submit: ❌ **NOT STARTED** - member sees Full+Teaser (WPE+HubSpot); non-member sees Teaser (HubSpot) + join CTA.
 
-**U2 — Download Report** 🔄 **IN PROGRESS**
-- AC: 🔄 Gated buttons render based on `/me`; WPE full report 200 OK for members; HubSpot teaser 200 OK for all logged-in users.
+**U2 — Download Report** ❌ **NOT STARTED**
+- AC: ❌ Gated buttons render based on `/me`; WPE full report 200 OK for members; HubSpot teaser 200 OK for all logged-in users. *No download buttons implemented.*
 
-**U3 — Admin import (Winter 2025)** ✅ **COMPLETED**
-- AC: ✅ Upload CSV; validate; upsert; report counts.
+**U3 — Admin import (Winter 2025)** ❌ **NOT STARTED**
+- AC: ❌ Upload CSV; validate; upsert; report counts. *Not done.*
 
-**U4 — AI Insight Brief (visible)** ✅ **COMPLETED**
-- AC: ✅ Generates markdown within ~10s; clearly labeled "AI-generated"; stored in `ai_briefs`.
+**U4 — AI Insight Brief (visible)** ❌ **NOT STARTED**
+- AC: ❌ Generates markdown within ~10s; clearly labeled "AI-generated"; stored in `ai_briefs`. *Not working.*
 
-**U5 — Analytics** 🔄 **FUTURE**
-- AC: 🔄 Events recorded: `auth_login`, `survey_start`, `survey_submit`, `download_full`, `download_teaser`.
+**U5 — Analytics** ❌ **NOT STARTED**
+- AC: ❌ Events recorded: `auth_login`, `survey_start`, `survey_submit`, `download_full`, `download_teaser`. *No analytics implemented.*
 
 ## 5) Data & Rules
 - RLS anchored to `auth.uid()`; user-owned tables have `user_id (uuid)`.
@@ -129,7 +129,7 @@ Members and prospects need a secure portal to complete the AM&AA Market Survey a
 
 ## 9) Current Reality Check (2025-10-15)
 
-### ✅ **Major Accomplishments (85% Complete):**
+### ✅ **Major Accomplishments (Infrastructure Only):**
 - **WordPress**: ✅ App shell fully functional with custom PHP templates and Supabase config injection
 - **Design System**: ✅ Fully implemented with CSS custom properties, typography, colors, spacing, and components
 - **Template System**: ✅ WordPress template hierarchy resolved, PHP templates working correctly
@@ -137,42 +137,42 @@ Members and prospects need a secure portal to complete the AM&AA Market Survey a
 - **Header/Footer System**: ✅ Unified navigation with dynamic auth state and avatar dropdown
 - **Supabase**: ✅ All 7 Edge Functions deployed and verified working with proper CORS and secrets
 - **Theme Structure**: ✅ Clean WordPress interface without default styling, professional appearance
-- **Survey Infrastructure**: ✅ 2-page survey with dynamic question loading from database
-- **Authentication**: ✅ Progressive trust flow with magic link integration and HubSpot auto-creation
 - **Database Schema**: ✅ Specialized tables for survey responses and deal data with proper RLS
 
-### ✅ **Completed (2025-10-15):**
-- **Progressive Trust Authentication**: ✅ Anonymous start → email validation → magic link auth
-- **HubSpot Integration**: ✅ Contact auto-creation and data prepopulation working
-- **Dynamic Question System**: ✅ Database-driven question loading via `get-survey-questions` Edge Function
-- **React Components**: ✅ Clean 2-page survey with proper form handling and validation
-- **Header Auth State**: ✅ Dynamic avatar with dropdown based on authentication status
+### 🔄 **Partially Working (2025-10-15):**
+- **Progressive Trust Authentication**: 🔄 Anonymous start → email validation → magic link auth *Partially working*
+- **HubSpot Integration**: 🔄 Contact auto-creation and data prepopulation *Form population still buggy, profession dropdown needs HS data*
+- **Dynamic Question System**: 🔄 Database-driven question loading via `get-survey-questions` Edge Function *Questions loaded but survey not complete*
+- **React Components**: 🔄 2-page survey with form handling *Survey design not complete, not tested for submittal*
+- **Header Auth State**: 🔄 Dynamic avatar with dropdown based on authentication status *Working*
 - **CORS Configuration**: ✅ Proper origin allowlist for staging and production
-- **Form Validation**: ✅ Real-time validation with proper error handling
-- **Data Persistence**: ✅ localStorage integration for form data across pages
+- **Form Validation**: 🔄 Real-time validation with proper error handling *Partially working*
+- **Data Persistence**: 🔄 localStorage integration for form data across pages *Working*
 
-### 🔄 **Current Status (15% Remaining):**
-- **Survey Completion**: 🔄 **IN PROGRESS** - Final submission to Supabase tables
-- **Data Persistence**: 🔄 **IN PROGRESS** - Save to `survey_non_deal_responses` and `survey_deal_responses`
-- **Download Gating**: 🔄 **FUTURE** - Member vs non-member download access
-- **Analytics**: 🔄 **FUTURE** - Event tracking and funnel visibility
-- **Admin Question Management**: 🔄 **FUTURE** - WordPress plugin for question CRUD
+### ❌ **Not Started:**
+- **Survey Completion**: ❌ **NOT STARTED** - Final submission to Supabase tables *Survey not complete or tested for submittal*
+- **Data Persistence**: ❌ **NOT STARTED** - Save to `survey_non_deal_responses` and `survey_deal_responses` *Not all tables tested for writability*
+- **Download System**: ❌ **NOT STARTED** - No download functionality implemented
+- **Analytics**: ❌ **NOT STARTED** - No analytics implemented
+- **Admin Question Management**: ❌ **NOT STARTED** - No admin tools implemented
+- **Winter 2025 Import**: ❌ **NOT STARTED** - Not done
+- **AI Insight Brief**: ❌ **NOT STARTED** - Not working
 
 ### 🎯 **Current Focus (Week of 2025-10-15):**
-- **Complete Survey Submission**: Connect final submission to `survey-submit` Edge Function
-- **Data Persistence**: Implement saving to specialized Supabase tables
+- **Complete Survey Design**: Finish survey design and testing
+- **Fix HubSpot Integration**: Resolve form population bugs, update profession dropdown with HS data
+- **Test Supabase Tables**: Confirm all tables are writable
+- **Survey Submission**: Implement and test survey submission to Supabase
 - **End-to-End Testing**: Test complete survey flow from start to finish
-- **Error Handling**: Implement proper error handling for submission failures
-- **Performance Validation**: Ensure <1.5s response times for all operations
 
 ### 📊 **Progress Summary:**
 - **Core Infrastructure**: ✅ 100% Complete
-- **Authentication Flow**: ✅ 100% Complete  
-- **Survey UI/UX**: ✅ 100% Complete
-- **Data Collection**: 🔄 85% Complete (submission remaining)
-- **Download System**: 🔄 0% Complete (future phase)
-- **Analytics**: 🔄 0% Complete (future phase)
-- **Admin Tools**: 🔄 0% Complete (future phase)
+- **Authentication Flow**: 🔄 60% Complete (partially working)
+- **Survey UI/UX**: 🔄 40% Complete (design not complete)
+- **Data Collection**: ❌ 0% Complete (not tested for submittal)
+- **Download System**: ❌ 0% Complete (not started)
+- **Analytics**: ❌ 0% Complete (not started)
+- **Admin Tools**: ❌ 0% Complete (not started)
 
-**Overall MVP Progress: 85% Complete**
+**Overall MVP Progress: ~30% Complete**
 
