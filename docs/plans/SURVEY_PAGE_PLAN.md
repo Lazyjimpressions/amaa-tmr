@@ -2,82 +2,99 @@
 
 ## Document Information
 - **Created:** 2025-10-12
-- **Last Updated:** 2025-10-12
-- **Version:** 2.0
+- **Last Updated:** 2025-10-15
+- **Version:** 3.0
 - **Owner:** Jonathan
 
 ## 1) Overview
 
 ### Objective
-Develop a comprehensive multi-page survey that captures AM&AA Market Survey data with proper Supabase integration, user authentication, and specialized deal data tables.
+Develop a comprehensive 2-page survey that captures AM&AA Market Survey data with proper Supabase integration, user authentication, and specialized deal data tables. The survey uses a Supabase-first architecture with dynamic question loading and progressive trust authentication.
 
-### Current State
+### Current State (As of 2025-10-15)
 - ✅ **Home Page**: Fully functional with React island and unified header/footer
-- ✅ **Header/Footer System**: Survey CTA prominently placed
-- ✅ **Design System**: CSS properly integrated
-- ✅ **WordPress Theme**: Custom templates with proper routing
-- ✅ **Supabase**: 14 Edge Functions deployed and functional
+- ✅ **Header/Footer System**: Survey CTA prominently placed with dynamic auth state
+- ✅ **Design System**: CSS properly integrated with survey-specific styling
+- ✅ **WordPress Theme**: Custom templates with proper routing and Supabase config injection
+- ✅ **Supabase**: 7 Edge Functions deployed and functional with proper CORS
 - ✅ **Database**: 7 tables with RLS, specialized survey response tables
-- ✅ **Multi-Page Survey**: 5-page survey with progress tracking implemented
-- ✅ **Authentication**: Magic link integration with Supabase
-- ✅ **Deal Tables**: Dynamic inline editing for individual deal data
-- ✅ **Survey Authentication Flow**: Fixed two-button issue (component architecture problem)
-- ✅ **HubSpot Integration**: Form prepopulation working with profession_am_aa field
-- ✅ **Single Button UX**: Global navigation handles authentication logic
-- 🔄 **Magic Link Testing**: Test complete authentication flow
-- 🔄 **Header Login State**: Update to show Supabase authentication
+- ✅ **2-Page Survey**: User Profile + All Sections with dynamic question loading
+- ✅ **Authentication**: Magic link integration with Supabase and HubSpot auto-creation
+- ✅ **Progressive Trust Flow**: Anonymous start, email validation, magic link auth
+- ✅ **HubSpot Integration**: Contact creation and data prepopulation
+- ✅ **Dynamic Questions**: Database-driven question loading via `get-survey-questions`
+- ✅ **Header Login State**: Dynamic avatar with dropdown based on auth status
+- 🔄 **Survey Completion**: Need to implement final submission to Supabase
+- 🔄 **Admin Question Management**: Future WordPress plugin for question CRUD
 
 ### Current Priority
-**Test Magic Link Flow** - Complete authentication testing and header login state
+**Complete Survey Flow** - Implement final submission and test end-to-end flow
 
 ## 2) Survey Page Requirements
 
 ### Core Functionality
-1. **Multi-Page Survey Structure**
+1. **2-Page Survey Structure** (Current Implementation)
    - **Page 1: User Profile** → `survey_non_deal_responses`
-   - **Page 2: Closed Deals** → `survey_deal_responses` (up to 5 deals)
-   - **Page 3: Active Deals** → `survey_deal_responses` (up to 5 deals)
-   - **Page 4: Looking Ahead** → `survey_non_deal_responses`
-   - **Page 5: About You** → `survey_non_deal_responses`
+     - Email, name, location, profession
+     - Magic link authentication
+     - HubSpot data prepopulation
+   - **Page 2: All Sections** → `survey_non_deal_responses` + `survey_deal_responses`
+     - Basic user info (pre-populated from Page 1)
+     - Deal-specific data (closed/active deals)
+     - Predictions and outlook
+     - Survey value assessment
+     - Dynamic question loading from database
 
-2. **User Authentication**
-   - Magic link authentication via Supabase
-   - User session management
-   - Progress persistence across sessions
-   - HubSpot data prepopulation for members
+**Future Extension**: Option to expand to 5-page structure (Pages 3-5) for more detailed deal data collection
 
-3. **Deal Data Management**
-   - Dynamic table generation based on deal count
-   - Inline editing for individual deal details
-   - Financial metrics capture (success fees, retainer fees)
-   - Market factors and seller motivations
+2. **Progressive Trust Authentication**
+   - Anonymous survey start (no login required)
+   - Email validation with HubSpot contact creation
+   - Magic link authentication for data persistence
+   - Seamless transition from anonymous to authenticated
+   - Header state updates based on authentication status
+
+3. **Dynamic Question Management**
+   - Database-driven question loading via `get-survey-questions` Edge Function
+   - Questions organized by sections (Basic user info, Deal-specific data, etc.)
+   - Support for multiple question types (text, number, select, checkbox, radio, textarea)
+   - Future admin interface for question CRUD operations
 
 4. **Data Integration**
-   - Submit responses to specialized Supabase tables
-   - HubSpot contact sync
-   - Analytics tracking
-   - CORS-enabled Edge Functions
+   - Submit responses to specialized Supabase tables (`survey_non_deal_responses`, `survey_deal_responses`)
+   - HubSpot contact auto-creation and sync
+   - CORS-enabled Edge Functions with proper origin allowlist
+   - Real-time form validation and error handling
 
 ## 3) Technical Implementation
 
+### Architecture Decision: Supabase-First Approach
+**Why we moved from WordPress REST API to Supabase Edge Functions:**
+- **Performance**: Direct database access without WordPress overhead
+- **Security**: Built-in RLS and JWT authentication
+- **Scalability**: Serverless functions with automatic scaling
+- **CORS**: Native CORS handling for cross-origin requests
+- **Real-time**: Built-in real-time capabilities for future features
+
 ### WordPress Integration
 - **Template**: `page-survey.php` (App Shell template)
-- **Content Management**: Custom fields for survey questions
-- **Admin Interface**: WordPress admin for question management
+- **Configuration**: Supabase URL and Anon Key injection via `wp_localize_script`
+- **Header Integration**: Dynamic auth state with avatar dropdown
 - **User Experience**: Clean, distraction-free survey interface
 
 ### React Components
-- **Survey Form**: Dynamic form generation from WordPress data
-- **Progress Tracking**: Visual progress indicators
-- **Validation**: Real-time form validation
-- **Save Draft**: Auto-save functionality
+- **Survey Form**: Dynamic form generation from Supabase database
+- **Progress Tracking**: Visual progress indicators (2 pages)
+- **Validation**: Real-time form validation with proper error handling
+- **Authentication**: Magic link flow with token management
 - **Submit**: Final submission with confirmation
 
 ### Supabase Integration
-- **Authentication**: User login/logout
-- **Data Storage**: Survey responses in `survey_responses` table
-- **Edge Functions**: Survey submission and draft saving
+- **Authentication**: Magic link authentication with token storage
+- **Data Storage**: Specialized tables (`survey_non_deal_responses`, `survey_deal_responses`)
+- **Edge Functions**: 7 deployed functions for survey operations
 - **RLS**: User can only access their own responses
+- **CORS**: Proper origin allowlist for staging and production
 
 ### Design System Integration
 - **Consistent Styling**: Use existing design tokens
@@ -87,119 +104,136 @@ Develop a comprehensive multi-page survey that captures AM&AA Market Survey data
 
 ## 4) Implementation Phases
 
-### Phase 1: WordPress Survey Management (Week 1)
-**Objective**: Set up WordPress admin interface for survey questions
+### Phase 1: Core Survey Infrastructure ✅ **COMPLETED**
+**Objective**: Set up Supabase-first survey architecture
 
-**Tasks**:
-1. **Custom Post Type**: Create `survey_question` post type
-2. **Custom Fields**: Add fields for question text, type, options, conditional logic
-3. **Admin Interface**: User-friendly question management
-4. **API Endpoints**: REST API for survey data retrieval
+**Completed Tasks**:
+1. **Database Schema**: 7 tables with RLS and specialized response tables
+2. **Edge Functions**: 7 deployed functions with proper CORS
+3. **WordPress Integration**: Supabase config injection and header auth state
+4. **React Components**: 2-page survey with dynamic question loading
 
-**Deliverables**:
-- WordPress admin interface for survey management
-- REST API endpoints for survey data
-- Basic question types (multiple choice, text, rating)
+**Deliverables**: ✅
+- Supabase database with specialized tables
+- Edge Functions for survey operations
+- WordPress theme integration with Supabase
+- React survey components with authentication
 
-### Phase 2: Survey Page Template (Week 1)
-**Objective**: Create the survey page template and basic structure
+### Phase 2: Progressive Trust Authentication ✅ **COMPLETED**
+**Objective**: Implement anonymous start with magic link authentication
 
-**Tasks**:
-1. **Page Template**: Create `page-survey.php` with App Shell
-2. **React Mount Point**: Add `#survey-root` for React components
-3. **Basic Styling**: Apply design system to survey page
-4. **Navigation**: Ensure proper header/footer integration
+**Completed Tasks**:
+1. **Anonymous Start**: Users can begin survey without login
+2. **Email Validation**: HubSpot contact creation and data prepopulation
+3. **Magic Link Flow**: Seamless authentication with token management
+4. **Header Integration**: Dynamic auth state with avatar dropdown
 
-**Deliverables**:
-- Survey page template
-- React mount point
-- Basic styling and navigation
+**Deliverables**: ✅
+- Progressive trust authentication flow
+- HubSpot integration with auto-creation
+- Magic link authentication
+- Header auth state management
 
-### Phase 3: React Survey Components (Week 2)
-**Objective**: Build the interactive survey components
+### Phase 3: Dynamic Question System ✅ **COMPLETED**
+**Objective**: Database-driven question loading and rendering
 
-**Tasks**:
-1. **Survey Form Component**: Dynamic form generation
-2. **Question Components**: Different question types
-3. **Progress Component**: Visual progress tracking
-4. **Validation**: Form validation and error handling
-5. **Save Draft**: Auto-save functionality
+**Completed Tasks**:
+1. **Question Database**: 44 questions organized by sections
+2. **Dynamic Loading**: `get-survey-questions` Edge Function
+3. **Question Types**: Support for text, number, select, checkbox, radio, textarea
+4. **Form Rendering**: Dynamic form generation with proper validation
 
-**Deliverables**:
-- React survey components
-- Form validation
-- Progress tracking
-- Draft saving
+**Deliverables**: ✅
+- Database-driven question system
+- Dynamic form rendering
+- Multiple question types
+- Real-time validation
 
-### Phase 4: Supabase Integration (Week 2)
-**Objective**: Connect survey to Supabase backend
+### Phase 4: Survey Completion 🔄 **IN PROGRESS**
+**Objective**: Implement final submission and data persistence
 
-**Tasks**:
-1. **Authentication**: User login/logout integration
-2. **Data Submission**: Submit responses to Supabase
-3. **Draft Saving**: Save progress to database
-4. **Error Handling**: Handle network and validation errors
+**Current Tasks**:
+1. **Final Submission**: Connect to `survey-submit` Edge Function
+2. **Data Persistence**: Save to `survey_non_deal_responses` and `survey_deal_responses`
+3. **Completion Flow**: Success page and data confirmation
+4. **Error Handling**: Handle submission errors gracefully
 
-**Deliverables**:
-- Supabase authentication
-- Data submission
-- Draft saving
-- Error handling
+**Remaining Deliverables**:
+- Complete survey submission flow
+- Data persistence to Supabase
+- Success/error handling
+- End-to-end testing
 
-### Phase 5: Testing & Polish (Week 3)
-**Objective**: Test and refine the survey experience
+### Phase 5: Admin Question Management 🔄 **FUTURE**
+**Objective**: WordPress plugin for question CRUD operations
 
-**Tasks**:
-1. **User Testing**: Test survey flow and usability
-2. **Mobile Testing**: Ensure mobile responsiveness
-3. **Accessibility**: Test keyboard navigation and screen readers
-4. **Performance**: Optimize loading and submission times
-5. **Error Handling**: Test edge cases and error scenarios
+**Future Tasks**:
+1. **WordPress Plugin**: Admin interface for question management
+2. **Question CRUD**: Create, read, update, delete questions
+3. **Section Management**: Organize questions by sections
+4. **Question Types**: Support for all question types in admin
 
-**Deliverables**:
-- Fully functional survey page
-- Mobile-responsive design
-- Accessibility compliance
-- Performance optimization
+**Future Deliverables**:
+- WordPress admin plugin
+- Question management interface
+- Section organization
+- Question type support
 
 ## 5) Technical Specifications
 
-### WordPress Custom Post Type
-```php
-// Survey Question Post Type
-- question_text (text)
-- question_type (select: multiple_choice, text, rating, yes_no)
-- options (repeater field for multiple choice)
-- required (boolean)
-- conditional_logic (text)
-- order (number)
-```
-
-### React Component Structure
-```
-SurveyPage/
-├── SurveyForm.jsx
-├── QuestionComponent.jsx
-├── ProgressBar.jsx
-├── SaveDraft.jsx
-├── SubmitButton.jsx
-└── ValidationMessage.jsx
-```
-
-### Supabase Schema
+### Current Database Schema
 ```sql
--- Survey responses table (already exists)
-survey_responses (
-  id, user_id, survey_id, question_id, 
-  response_text, response_value, 
-  created_at, updated_at
+-- Core survey tables
+surveys (id, slug, title, period_start, period_end, created_at)
+survey_questions (id, survey_id, code, text, type, section, order, options, created_at)
+survey_responses (id, user_id, survey_id, submitted_at, created_at)
+
+-- Specialized response tables
+survey_non_deal_responses (
+  response_id, question_code, response_type,
+  first_name, last_name, email, profession, us_zip_code, country,
+  closed_deals_count, active_deals_count, economic_environment_second_half_2025,
+  survey_value_rating, amaa_membership_interest, created_at
+)
+
+survey_deal_responses (
+  response_id, question_code, response_type, deal_index, deal_type,
+  total_consideration_ev_usd_m, industry, sub_industry, buyer_type,
+  sell_side_success_fee_pct, sell_side_retainer_fee_usd_m,
+  deal_period, deal_status, created_at
 )
 ```
 
-### API Endpoints
-- `GET /wp-json/amaa/v1/survey/questions` - Get survey questions
-- `POST /wp-json/amaa/v1/survey/submit` - Submit survey response
-- `POST /wp-json/amaa/v1/survey/draft` - Save draft
+### React Component Structure (Current)
+```
+Survey Island (survey-island.js)
+├── UserProfilePage (Page 1)
+│   ├── Form validation
+│   ├── Email validation with HubSpot
+│   └── Magic link authentication
+├── AllSectionsPage (Page 2)
+│   ├── Dynamic question loading
+│   ├── Section-based rendering
+│   └── Form submission
+├── ProgressBar
+├── MultiPageSurvey (Main component)
+└── Authentication handlers
+```
+
+### Supabase Edge Functions
+- **`get-survey-questions`** - Fetch questions by survey slug
+- **`check-membership`** - HubSpot contact lookup and creation
+- **`me`** - User context and authentication
+- **`survey-submit`** - Final survey submission
+- **`survey-save-draft`** - Save draft responses
+- **`hubspot-contact-upsert`** - HubSpot sync
+- **`ai-generate-brief`** - AI brief generation (stub)
+
+### WordPress Integration
+- **Configuration**: Supabase URL/Anon Key via `wp_localize_script`
+- **Header Auth**: Dynamic avatar with dropdown
+- **Template**: `page-survey.php` with React mount point
+- **CORS**: Proper origin allowlist for staging/production
 
 ## 6) Success Metrics
 
@@ -243,24 +277,40 @@ survey_responses (
 
 ## 8) Next Steps
 
-### Immediate Actions (This Week)
-1. **Create Survey Page Template**: Set up `page-survey.php`
-2. **Custom Post Type**: Implement survey question management
-3. **Basic React Components**: Start with simple form components
-4. **Supabase Integration**: Connect authentication and data submission
+### Immediate Actions (Current Priority)
+1. **Complete Survey Submission**: Connect final submission to `survey-submit` Edge Function
+2. **Data Persistence**: Implement saving to `survey_non_deal_responses` and `survey_deal_responses`
+3. **End-to-End Testing**: Test complete survey flow from start to finish
+4. **Error Handling**: Implement proper error handling for submission failures
 
-### Success Criteria
+### Success Criteria (Current Status)
 - ✅ Survey page loads with proper styling
-- ✅ Admin can create and manage survey questions
-- ✅ Users can complete survey with progress tracking
-- ✅ Data submits to Supabase successfully
+- ✅ 2-page survey structure with dynamic questions
+- ✅ Progressive trust authentication flow
+- ✅ HubSpot integration with auto-creation
+- 🔄 **Survey completion and data persistence**
 - ✅ Mobile-responsive and accessible design
 
-### Timeline
-- **Week 1**: WordPress integration and basic template
-- **Week 2**: React components and Supabase integration
-- **Week 3**: Testing, polish, and deployment
+### Timeline (Updated)
+- **Week 1 (10/12-10/15)**: ✅ Core infrastructure and authentication
+- **Week 2 (10/15-10/22)**: 🔄 Complete survey submission and testing
+- **Week 3 (10/22-10/29)**: 🔄 Admin question management plugin (future)
+
+### Current Status Summary
+**Completed (85%)**:
+- ✅ Supabase-first architecture with 7 Edge Functions
+- ✅ 2-page survey with dynamic question loading
+- ✅ Progressive trust authentication with magic links
+- ✅ HubSpot integration with contact auto-creation
+- ✅ WordPress theme integration with Supabase config
+- ✅ React components with proper form handling
+
+**Remaining (15%)**:
+- 🔄 Final survey submission implementation
+- 🔄 Data persistence to specialized tables
+- 🔄 End-to-end testing and validation
+- 🔄 Future admin question management plugin
 
 ---
 
-**Ready to proceed with Survey Page Development!**
+**Survey Page Development: 85% Complete - Final submission phase in progress**
