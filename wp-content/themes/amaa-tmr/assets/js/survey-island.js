@@ -342,6 +342,304 @@
         ]);
     }
 
+    // Deal Table Component
+    function DealTable({ question, dealData, onDealChange, formData }) {
+        const [deals, setDeals] = useState(dealData || Array(5).fill({}));
+        const [errors, setErrors] = useState({});
+        
+        // Initialize deals with empty objects if not provided
+        useEffect(() => {
+            if (!dealData || dealData.length === 0) {
+                const emptyDeals = Array(5).fill({});
+                setDeals(emptyDeals);
+                onDealChange(emptyDeals);
+            }
+        }, [dealData, onDealChange]);
+        
+        // Handle individual deal field updates
+        const handleDealUpdate = (index, field, value) => {
+            const updatedDeals = [...deals];
+            updatedDeals[index] = { ...updatedDeals[index], [field]: value };
+            setDeals(updatedDeals);
+            onDealChange(updatedDeals);
+            
+            // Clear field error when user starts typing
+            if (errors[`${index}_${field}`]) {
+                setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors[`${index}_${field}`];
+                    return newErrors;
+                });
+            }
+        };
+        
+        // Validate deal field
+        const validateField = (field, value, index) => {
+            if (!value && field !== 'escrow_held_close_usd_m' && field !== 'note_amount_close_usd_m' && 
+                field !== 'rolled_equity_close_usd_m' && field !== 'earnout_after_close_usd_m' &&
+                field !== 'revenue_growth_rate_pct' && field !== 'number_employees' &&
+                field !== 'sell_side_success_fee_pct' && field !== 'sell_side_retainer_fee_usd_m') {
+                return null; // Allow empty for optional fields
+            }
+            
+            switch (field) {
+                case 'total_consideration_ev_usd_m':
+                    const dealValue = parseFloat(value);
+                    if (dealValue < 1 || dealValue > 500) {
+                        return 'Deal value must be between $1M and $500M';
+                    }
+                    break;
+                case 'cash_paid_close_usd_m':
+                    const cashValue = parseFloat(value);
+                    if (cashValue < 0 || cashValue > 500) {
+                        return 'Cash paid must be between $0M and $500M';
+                    }
+                    break;
+                case 'annual_revenue_usd_m':
+                    const revenueValue = parseFloat(value);
+                    if (revenueValue < 0 || revenueValue > 999.99) {
+                        return 'Revenue must be between $0M and $999.99M';
+                    }
+                    break;
+                case 'adjusted_ebitda_usd_m':
+                    const ebitdaValue = parseFloat(value);
+                    if (ebitdaValue < 0 || ebitdaValue > 999.99) {
+                        return 'EBITDA must be between $0M and $999.99M';
+                    }
+                    break;
+                case 'sell_side_success_fee_pct':
+                    const feeValue = parseFloat(value);
+                    if (feeValue < 0 || feeValue > 12) {
+                        return 'Success fee must be between 0% and 12%';
+                    }
+                    break;
+                case 'sell_side_retainer_fee_usd_m':
+                    const retainerValue = parseFloat(value);
+                    if (retainerValue < 0 || retainerValue > 0.2) {
+                        return 'Retainer fee must be between $0M and $0.2M';
+                    }
+                    break;
+            }
+            return null;
+        };
+        
+        // Handle field blur for validation
+        const handleFieldBlur = (index, field, value) => {
+            const error = validateField(field, value, index);
+            if (error) {
+                setErrors(prev => ({ ...prev, [`${index}_${field}`]: error }));
+            } else {
+                setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors[`${index}_${field}`];
+                    return newErrors;
+                });
+            }
+        };
+        
+        // Get industry options
+        const industryOptions = [
+            'Technology', 'Healthcare', 'Financial Services', 'Manufacturing',
+            'Business Services-B2B', 'Business Services-B2C', 'Consumer Products',
+            'Energy', 'Real Estate', 'Transportation', 'Other'
+        ];
+        
+        // Get buyer type options
+        const buyerTypeOptions = [
+            'Corporate - Strategic, Competitor, Synergistic',
+            'Corporate - Financial, Non-Strategic',
+            'Private Equity - Platform',
+            'Private Equity - Add-on',
+            'Private Equity - Roll-up',
+            'Family Office',
+            'Individual',
+            'Other'
+        ];
+        
+        // Get month options
+        const monthOptions = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        
+        return h('div', { className: 'deal-table-container' }, [
+            h('div', { className: 'deal-table-header' }, [
+                h('h4', { className: 'deal-table-title' }, question.text),
+                h('p', { className: 'deal-table-description' }, 
+                    'Enter details for up to 5 deals. Leave rows blank if you have fewer deals.'
+                )
+            ]),
+            
+            h('div', { className: 'deals-table-container' }, [
+                h('table', { className: 'deals-table' }, [
+                    // Table Header
+                    h('thead', { className: 'table-header' }, [
+                        h('tr', { className: 'table-row' }, [
+                            h('th', { className: 'table-cell' }, 'Industry'),
+                            h('th', { className: 'table-cell' }, 'Deal Value ($M)'),
+                            h('th', { className: 'table-cell' }, 'Cash at Close ($M)'),
+                            h('th', { className: 'table-cell' }, 'Revenue ($M)'),
+                            h('th', { className: 'table-cell' }, 'EBITDA ($M)'),
+                            h('th', { className: 'table-cell' }, 'Buyer Type'),
+                            h('th', { className: 'table-cell' }, 'Month Close'),
+                            h('th', { className: 'table-cell' }, 'Success Fee (%)'),
+                            h('th', { className: 'table-cell' }, 'Retainer Fee ($M)')
+                        ])
+                    ]),
+                    
+                    // Table Body - 5 static rows
+                    h('tbody', null, deals.map((deal, index) => 
+                        h('tr', { key: index, className: 'table-row' }, [
+                            // Industry
+                            h('td', { className: 'table-cell' }, [
+                                h('select', {
+                                    value: deal.industry || '',
+                                    onChange: (e) => handleDealUpdate(index, 'industry', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'industry', e.target.value),
+                                    className: errors[`${index}_industry`] ? 'form-select error' : 'form-select'
+                                }, [
+                                    h('option', { value: '' }, 'Select Industry...'),
+                                    ...industryOptions.map(option => 
+                                        h('option', { key: option, value: option }, option)
+                                    )
+                                ]),
+                                errors[`${index}_industry`] && h('div', { className: 'field-error' }, errors[`${index}_industry`])
+                            ]),
+                            
+                            // Deal Value
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.total_consideration_ev_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'total_consideration_ev_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'total_consideration_ev_usd_m', e.target.value),
+                                    placeholder: '10.5',
+                                    step: '0.1',
+                                    min: '1',
+                                    max: '500',
+                                    className: errors[`${index}_total_consideration_ev_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_total_consideration_ev_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_total_consideration_ev_usd_m`])
+                            ]),
+                            
+                            // Cash at Close
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.cash_paid_close_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'cash_paid_close_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'cash_paid_close_usd_m', e.target.value),
+                                    placeholder: '8.0',
+                                    step: '0.1',
+                                    min: '0',
+                                    max: '500',
+                                    className: errors[`${index}_cash_paid_close_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_cash_paid_close_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_cash_paid_close_usd_m`])
+                            ]),
+                            
+                            // Revenue
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.annual_revenue_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'annual_revenue_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'annual_revenue_usd_m', e.target.value),
+                                    placeholder: '15.2',
+                                    step: '0.01',
+                                    min: '0',
+                                    max: '999.99',
+                                    className: errors[`${index}_annual_revenue_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_annual_revenue_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_annual_revenue_usd_m`])
+                            ]),
+                            
+                            // EBITDA
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.adjusted_ebitda_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'adjusted_ebitda_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'adjusted_ebitda_usd_m', e.target.value),
+                                    placeholder: '3.8',
+                                    step: '0.01',
+                                    min: '0',
+                                    max: '999.99',
+                                    className: errors[`${index}_adjusted_ebitda_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_adjusted_ebitda_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_adjusted_ebitda_usd_m`])
+                            ]),
+                            
+                            // Buyer Type
+                            h('td', { className: 'table-cell' }, [
+                                h('select', {
+                                    value: deal.buyer_type || '',
+                                    onChange: (e) => handleDealUpdate(index, 'buyer_type', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'buyer_type', e.target.value),
+                                    className: errors[`${index}_buyer_type`] ? 'form-select error' : 'form-select'
+                                }, [
+                                    h('option', { value: '' }, 'Select Buyer Type...'),
+                                    ...buyerTypeOptions.map(option => 
+                                        h('option', { key: option, value: option }, option)
+                                    )
+                                ]),
+                                errors[`${index}_buyer_type`] && h('div', { className: 'field-error' }, errors[`${index}_buyer_type`])
+                            ]),
+                            
+                            // Month Close
+                            h('td', { className: 'table-cell' }, [
+                                h('select', {
+                                    value: deal.month_close || '',
+                                    onChange: (e) => handleDealUpdate(index, 'month_close', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'month_close', e.target.value),
+                                    className: errors[`${index}_month_close`] ? 'form-select error' : 'form-select'
+                                }, [
+                                    h('option', { value: '' }, 'Select Month...'),
+                                    ...monthOptions.map(option => 
+                                        h('option', { key: option, value: option }, option)
+                                    )
+                                ]),
+                                errors[`${index}_month_close`] && h('div', { className: 'field-error' }, errors[`${index}_month_close`])
+                            ]),
+                            
+                            // Success Fee
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.sell_side_success_fee_pct || '',
+                                    onChange: (e) => handleDealUpdate(index, 'sell_side_success_fee_pct', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'sell_side_success_fee_pct', e.target.value),
+                                    placeholder: '2.5',
+                                    step: '0.1',
+                                    min: '0',
+                                    max: '12',
+                                    className: errors[`${index}_sell_side_success_fee_pct`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_sell_side_success_fee_pct`] && h('div', { className: 'field-error' }, errors[`${index}_sell_side_success_fee_pct`])
+                            ]),
+                            
+                            // Retainer Fee
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.sell_side_retainer_fee_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'sell_side_retainer_fee_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'sell_side_retainer_fee_usd_m', e.target.value),
+                                    placeholder: '0.05',
+                                    step: '0.01',
+                                    min: '0',
+                                    max: '0.2',
+                                    className: errors[`${index}_sell_side_retainer_fee_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_sell_side_retainer_fee_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_sell_side_retainer_fee_usd_m`])
+                            ])
+                        ])
+                    ))
+                ])
+            ])
+        ]);
+    }
+
     // Page 2: All Sections Component
     function AllSectionsPage({ onNext, onSave }) {
         const [formData, setFormData] = useState({});
@@ -535,6 +833,14 @@
                         value: currentValue,
                         placeholder: 'Enter your answer...',
                         onChange: (e) => setFormData(prev => ({ ...prev, [question.code]: e.target.value }))
+                    }),
+                    
+                    // Deal Table Component
+                    question.type === 'deal_table' && h(DealTable, {
+                        question: question,
+                        dealData: currentValue || [],
+                        onDealChange: (deals) => setFormData(prev => ({ ...prev, [question.code]: deals })),
+                        formData: formData
                     })
                 ]);
             });
