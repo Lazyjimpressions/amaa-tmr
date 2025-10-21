@@ -23,24 +23,24 @@ add_action('after_setup_theme', function () {
 // Enqueue theme styles and scripts
 function amaa_tmr_enqueue_styles() {
     // Main theme style
-    wp_enqueue_style('amaa-tmr-style', get_stylesheet_uri(), array(), '1.0.0');
-    
+    wp_enqueue_style('amaa-tmr-style', get_stylesheet_uri(), array(), filemtime(get_stylesheet_directory() . '/style.css'));
+
     // Design tokens (always loaded first)
     wp_enqueue_style(
         'amaa-tmr-tokens',
         get_template_directory_uri() . '/assets/css/design-tokens.css',
         array(),
-        '1.0.0'
+        filemtime(get_template_directory() . '/assets/css/design-tokens.css')
     );
-    
+
     // Components (always loaded for header/footer)
     wp_enqueue_style(
         'amaa-tmr-components',
         get_template_directory_uri() . '/assets/css/components.css',
         array('amaa-tmr-tokens'),
-        filemtime(get_template_directory() . '/assets/css/components.css') // Cache-busting
+        filemtime(get_template_directory() . '/assets/css/components.css')
     );
-    
+
     // Template-specific styles
     if (strpos($_SERVER['REQUEST_URI'], '/app/') === 0) {
         // App shell styles
@@ -48,7 +48,7 @@ function amaa_tmr_enqueue_styles() {
             'amaa-tmr-app',
             get_template_directory_uri() . '/assets/css/app.css',
             array('amaa-tmr-components'),
-            '1.0.0'
+            filemtime(get_template_directory() . '/assets/css/app.css')
         );
     } else {
         // Marketing styles
@@ -56,7 +56,7 @@ function amaa_tmr_enqueue_styles() {
             'amaa-tmr-marketing',
             get_template_directory_uri() . '/assets/css/marketing.css',
             array('amaa-tmr-components'),
-            '1.0.0'
+            filemtime(get_template_directory() . '/assets/css/marketing.css')
         );
 
         // Homepage / Marketing Shell specific styles
@@ -65,17 +65,17 @@ function amaa_tmr_enqueue_styles() {
                 'amaa-tmr-home',
                 get_template_directory_uri() . '/assets/css/home.css',
                 array('amaa-tmr-marketing'),
-                '1.0.0'
+                filemtime(get_template_directory() . '/assets/css/home.css')
             );
         }
-        
+
         // Survey page specific styles
         if (is_page_template('page-survey.php')) {
             wp_enqueue_style(
                 'amaa-tmr-survey',
                 get_template_directory_uri() . '/assets/css/survey.css',
                 array('amaa-tmr-components'),
-                '1.0.0'
+                filemtime(get_template_directory() . '/assets/css/survey.css')
             );
         }
     }
@@ -89,12 +89,15 @@ function amaa_tmr_enqueue_scripts() {
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
 
-        // Cache-bust homepage island by appending filemtime as ?v= param
+        // Cache-bust homepage island using filemtime
         $island_path = get_template_directory() . '/assets/js/homepage-island.js';
-        $island_url  = get_template_directory_uri() . '/assets/js/homepage-island.js';
-        $island_ver  = file_exists($island_path) ? filemtime($island_path) : time();
-        $island_url  = add_query_arg('v', $island_ver, $island_url);
-        wp_enqueue_script('amaa-tmr-home-island', $island_url, array('react', 'react-dom'), null, true);
+        wp_enqueue_script(
+            'amaa-tmr-home-island',
+            get_template_directory_uri() . '/assets/js/homepage-island.js',
+            array('react', 'react-dom'),
+            file_exists($island_path) ? filemtime($island_path) : false,
+            true
+        );
     }
     
     // Survey page scripts - use global $post to detect survey page
@@ -108,21 +111,18 @@ function amaa_tmr_enqueue_scripts() {
     }
     
     if ($is_survey_page) {
-        // Debug: Add inline script to confirm this condition is met
-        wp_add_inline_script('amaa-tmr-survey-island', 'console.log("SURVEY PAGE DETECTED - LOADING SURVEY SCRIPTS");', 'before');
-        error_log('SURVEY PAGE DETECTED - LOADING SURVEY SCRIPTS');
-        
-        // Debug: Add inline script to check if React is loaded
-        wp_add_inline_script('amaa-tmr-survey-island', 'console.log("React available:", typeof React !== "undefined"); console.log("ReactDOM available:", typeof ReactDOM !== "undefined");', 'before');
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
-        
-        // Survey React components - use simple cache busting
+
+        // Survey React components - use filemtime for cache busting
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
-        $survey_url  = get_template_directory_uri() . '/assets/js/survey-island.js';
-        $survey_ver = '2.2.1_fixed_ordering_' . time(); // Force cache refresh with new version
-        $survey_url  = add_query_arg('v', $survey_ver, $survey_url);
-        wp_enqueue_script('amaa-tmr-survey-island', $survey_url, array('react', 'react-dom'), $survey_ver, true);
+        wp_enqueue_script(
+            'amaa-tmr-survey-island',
+            get_template_directory_uri() . '/assets/js/survey-island.js',
+            array('react', 'react-dom'),
+            file_exists($survey_path) ? filemtime($survey_path) : false,
+            true
+        );
 
         // Localize Supabase configuration (avoid hardcoding in JS)
         $supabase_url = defined('WP_SUPABASE_URL') ? WP_SUPABASE_URL : 'https://ffgjqlmulaqtfopgwenf.supabase.co';
