@@ -962,6 +962,7 @@
                         h('span', { className: 'question-number' }, 
                             (question.code === 'first_name' || question.code === 'last_name' || question.code === 'email') ? '1. ' :
                             (question.code === 'us_zip_code' || question.code === 'country') ? '2. ' :
+                            (question.code === 'profession') ? '3. ' :
                             `${question.order}. `
                         ),
                         question.text
