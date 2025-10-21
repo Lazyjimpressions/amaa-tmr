@@ -383,12 +383,6 @@
             }
             
             switch (field) {
-                case 'total_consideration_ev_usd_m':
-                    const dealValue = parseFloat(value);
-                    if (dealValue < 1 || dealValue > 500) {
-                        return 'Deal value must be between $1M and $500M';
-                    }
-                    break;
                 case 'cash_paid_close_usd_m':
                     const cashValue = parseFloat(value);
                     if (cashValue < 0 || cashValue > 500) {
@@ -931,7 +925,6 @@
                     if (question.code === 'us_zip_code') return '90210';
                     if (question.code.includes('success_fee') || question.code.includes('retainer_fee')) return '2.5';
                     if (question.code.includes('deal') && question.code.includes('count')) return '3';
-                    if (question.code.includes('total_consideration') || question.code.includes('deal_size')) return '10.5';
                     if (question.type === 'number') return 'Enter a number...';
                     if (question.type === 'text') return 'Enter your answer...';
                     return 'Select an option...';
@@ -941,11 +934,16 @@
                     key: question.id,
                     className: 'form-group' 
                 }, [
-                    h('label', { 
+                    h('label', {
                         className: 'form-label',
                         htmlFor: `question_${question.code}`
                     }, [
-                        h('span', { className: 'question-number' }, `${question.order}. `),
+                        // Group basic user info fields under single question numbers
+                        h('span', { className: 'question-number' }, 
+                            (question.code === 'first_name' || question.code === 'last_name' || question.code === 'email') ? '1. ' :
+                            (question.code === 'us_zip_code' || question.code === 'country') ? '2. ' :
+                            `${question.order}. `
+                        ),
                         question.text
                     ]),
                     
