@@ -640,6 +640,113 @@
         ]);
     }
 
+    // Matrix Question Component (for success/retainer fee matrices)
+    function MatrixQuestion({ question, matrixData, onMatrixChange, formData }) {
+        const [matrix, setMatrix] = useState(matrixData || {});
+        
+        // Deal size ranges for the matrix
+        const dealSizeRanges = [
+            'Under $1M', '$1M - $1.9M', '$2M - $3.9M', '$4M - $6.9M', '$7M - $9.9M',
+            '$10M - $14.9M', '$15M - $19.9M', '$20M - $29.9M', '$30M - $49.9M',
+            '$50M - $79.9M', '$80M - $99.9M', '$100M - $199M', '$200M+'
+        ];
+        
+        const handleMatrixChange = (dealSize, value) => {
+            const updatedMatrix = { ...matrix, [dealSize]: value };
+            setMatrix(updatedMatrix);
+            onMatrixChange(updatedMatrix);
+        };
+        
+        return h('div', { className: 'matrix-question-container' }, [
+            h('div', { className: 'matrix-table-container' }, [
+                h('table', { className: 'matrix-table' }, [
+                    h('thead', { className: 'table-header' }, [
+                        h('tr', { className: 'table-row' }, [
+                            h('th', { className: 'table-cell' }, 'Deal Size'),
+                            h('th', { className: 'table-cell' }, 'Response')
+                        ])
+                    ]),
+                    h('tbody', null, dealSizeRanges.map(dealSize => 
+                        h('tr', { key: dealSize, className: 'table-row' }, [
+                            h('td', { className: 'table-cell' }, dealSize),
+                            h('td', { className: 'table-cell' }, [
+                                h('select', {
+                                    value: matrix[dealSize] || '',
+                                    onChange: (e) => handleMatrixChange(dealSize, e.target.value),
+                                    className: 'form-select'
+                                }, [
+                                    h('option', { value: '' }, 'Select...'),
+                                    ...(question.options?.choices || []).map(choice => 
+                                        h('option', { key: choice.value, value: choice.value }, choice.label)
+                                    )
+                                ])
+                            ])
+                        ])
+                    ))
+                ])
+            ])
+        ]);
+    }
+
+    // Radio Array Component (for sentiment arrays)
+    function RadioArray({ question, arrayData, onArrayChange, formData }) {
+        const [array, setArray] = useState(arrayData || {});
+        
+        // Impact factors for the radio array
+        const impactFactors = [
+            'Interest rate changes',
+            'Impact of lending environment', 
+            'Supply chain issues',
+            'Labor shortages',
+            'Worker motivation / commitment',
+            'Labor / benefits costs',
+            'Cost of goods / raw materials',
+            'Global trade / economic climate',
+            'Election/Political cycle',
+            'Tariffs'
+        ];
+        
+        const handleArrayChange = (factor, value) => {
+            const updatedArray = { ...array, [factor]: value };
+            setArray(updatedArray);
+            onArrayChange(updatedArray);
+        };
+        
+        return h('div', { className: 'radio-array-container' }, [
+            h('div', { className: 'radio-array-table-container' }, [
+                h('table', { className: 'radio-array-table' }, [
+                    h('thead', { className: 'table-header' }, [
+                        h('tr', { className: 'table-row' }, [
+                            h('th', { className: 'table-cell' }, 'Factor'),
+                            h('th', { className: 'table-cell' }, 'Impact Level')
+                        ])
+                    ]),
+                    h('tbody', null, impactFactors.map(factor => 
+                        h('tr', { key: factor, className: 'table-row' }, [
+                            h('td', { className: 'table-cell' }, factor),
+                            h('td', { className: 'table-cell' }, [
+                                h('div', { className: 'radio-group' }, 
+                                    (question.options?.choices || []).map(choice => 
+                                        h('label', { key: choice.value, className: 'radio-item' }, [
+                                            h('input', {
+                                                type: 'radio',
+                                                name: `question_${question.code}_${factor}`,
+                                                value: choice.value,
+                                                checked: array[factor] === choice.value,
+                                                onChange: (e) => handleArrayChange(factor, e.target.value)
+                                            }),
+                                            h('span', { className: 'radio-label' }, choice.label)
+                                        ])
+                                    )
+                                )
+                            ])
+                        ])
+                    ))
+                ])
+            ])
+        ]);
+    }
+
     // Page 2: All Sections Component
     function AllSectionsPage({ onNext, onSave }) {
         const [formData, setFormData] = useState({});
@@ -753,7 +860,10 @@
                     h('label', { 
                         className: 'form-label',
                         htmlFor: `question_${question.code}`
-                    }, question.text),
+                    }, [
+                        h('span', { className: 'question-number' }, `${question.order}. `),
+                        question.text
+                    ]),
                     
                     // Render different input types based on question.type
                     question.type === 'text' && h('input', {
@@ -841,7 +951,45 @@
                         dealData: currentValue || [],
                         onDealChange: (deals) => setFormData(prev => ({ ...prev, [question.code]: deals })),
                         formData: formData
-                    })
+                    }),
+                    
+                    // Matrix Component (for success/retainer fee matrices)
+                    question.type === 'matrix' && h(MatrixQuestion, {
+                        question: question,
+                        matrixData: currentValue || {},
+                        onMatrixChange: (data) => setFormData(prev => ({ ...prev, [question.code]: data })),
+                        formData: formData
+                    }),
+                    
+                    // Radio Array Component (for sentiment arrays)
+                    question.type === 'radio_array' && h(RadioArray, {
+                        question: question,
+                        arrayData: currentValue || {},
+                        onArrayChange: (data) => setFormData(prev => ({ ...prev, [question.code]: data })),
+                        formData: formData
+                    }),
+                    
+                    // Multi Select Component
+                    question.type === 'multi_select' && h('div', { className: 'checkbox-group' }, 
+                        (question.options?.choices || []).map(option => 
+                            h('label', { key: option.value, className: 'checkbox-item' }, [
+                                h('input', {
+                                    type: 'checkbox',
+                                    name: `question_${question.code}`,
+                                    value: option.value,
+                                    checked: formData[question.code] && formData[question.code].includes(option.value),
+                                    onChange: (e) => {
+                                        const currentValues = formData[question.code] || [];
+                                        const newValues = e.target.checked 
+                                            ? [...currentValues, option.value]
+                                            : currentValues.filter(v => v !== option.value);
+                                        setFormData(prev => ({ ...prev, [question.code]: newValues }));
+                                    }
+                                }),
+                                h('span', { className: 'checkbox-label' }, option.label || option.value)
+                            ])
+                        )
+                    )
                 ]);
             });
         };

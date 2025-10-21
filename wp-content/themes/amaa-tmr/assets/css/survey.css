@@ -885,6 +885,148 @@
     }
 }
 
+/* Question Numbering */
+.question-number {
+    font-weight: var(--font-bold);
+    color: var(--brand-600);
+    margin-right: var(--space-4);
+}
+
+/* Matrix Question Styles */
+.matrix-question-container {
+    margin: var(--space-24) 0;
+    background: var(--bg-surface);
+    border-radius: var(--radius-12);
+    border: 1px solid var(--border-200);
+    overflow: hidden;
+}
+
+.matrix-table-container {
+    overflow-x: auto;
+}
+
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+}
+
+.matrix-table .table-header {
+    background: var(--brand-50);
+    border-bottom: 2px solid var(--brand-200);
+}
+
+.matrix-table .table-header .table-cell {
+    font-weight: var(--font-semibold);
+    color: var(--brand-700);
+    font-size: var(--text-sm);
+    padding: var(--space-12);
+    white-space: nowrap;
+}
+
+.matrix-table .table-row {
+    border-bottom: 1px solid var(--border-200);
+    transition: background-color 0.2s ease;
+}
+
+.matrix-table .table-row:hover {
+    background: var(--gray-50);
+}
+
+.matrix-table .table-row .table-cell {
+    padding: var(--space-12);
+    vertical-align: middle;
+}
+
+.matrix-table .table-row .table-cell select {
+    width: 100%;
+    border: 1px solid var(--border-300);
+    border-radius: var(--radius-6);
+    padding: var(--space-8);
+    font-size: var(--text-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matrix-table .table-row .table-cell select:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* Radio Array Styles */
+.radio-array-container {
+    margin: var(--space-24) 0;
+    background: var(--bg-surface);
+    border-radius: var(--radius-12);
+    border: 1px solid var(--border-200);
+    overflow: hidden;
+}
+
+.radio-array-table-container {
+    overflow-x: auto;
+}
+
+.radio-array-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+}
+
+.radio-array-table .table-header {
+    background: var(--brand-50);
+    border-bottom: 2px solid var(--brand-200);
+}
+
+.radio-array-table .table-header .table-cell {
+    font-weight: var(--font-semibold);
+    color: var(--brand-700);
+    font-size: var(--text-sm);
+    padding: var(--space-12);
+    white-space: nowrap;
+}
+
+.radio-array-table .table-row {
+    border-bottom: 1px solid var(--border-200);
+    transition: background-color 0.2s ease;
+}
+
+.radio-array-table .table-row:hover {
+    background: var(--gray-50);
+}
+
+.radio-array-table .table-row .table-cell {
+    padding: var(--space-12);
+    vertical-align: middle;
+}
+
+.radio-array-table .table-row .table-cell:first-child {
+    font-weight: var(--font-medium);
+    color: var(--gray-700);
+    min-width: 200px;
+}
+
+.radio-array-table .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+}
+
+.radio-array-table .radio-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: var(--text-sm);
+}
+
+.radio-array-table .radio-item input[type="radio"] {
+    margin: 0;
+}
+
+.radio-array-table .radio-label {
+    font-size: var(--text-sm);
+    color: var(--gray-700);
+}
+
 /* Button Styles */
 .btn-sm {
     padding: var(--space-8) var(--space-12);
