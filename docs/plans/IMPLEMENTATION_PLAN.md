@@ -11,6 +11,14 @@ Owner: Jonathan • Code Freeze: TBA • Launch: TBA
 ## ⚠️ **CRITICAL UPDATE (2025-10-15)**
 This plan has been **significantly updated** to reflect actual implementation status. Many items previously marked as "completed" were not actually implemented. This document now reflects the **real current state** based on code verification.
 
+## 🔧 **VERIFICATION PROTOCOL (2025-10-21)**
+All implementation claims must be verified before marking as complete:
+- [ ] Changes committed to git
+- [ ] Functionality tested end-to-end
+- [ ] Original issue resolved
+- [ ] No new issues introduced
+- [ ] User can verify the fix works
+
 ## 0) Preconditions
 - WPE staging live; CI → WPE working (✅).
 - Supabase project ref: ffgjqlmulaqtfopgwenf; `/supabase/sql/001_init.sql` applied (auth.uid()).

@@ -3,6 +3,13 @@
 **Project:** TMS (ffgjqlmulaqtfopgwenf)
 **Last Updated:** October 5, 2025
 
+## 🔧 **VERIFICATION REQUIREMENT**
+Before claiming any setup is complete, verify:
+- [ ] All secrets are actually configured in Supabase
+- [ ] Edge Functions can access the secrets
+- [ ] Test functionality works end-to-end
+- [ ] No errors in Supabase logs
+
 ---
 
 ## Understanding the Difference

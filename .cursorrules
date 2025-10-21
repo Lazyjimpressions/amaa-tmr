@@ -23,3 +23,13 @@
 - ✅ Edge Functions updated and ready
 - 🔄 Need to set remaining secrets (OpenAI key, admin token)
 - 🔄 Ready for Edge Function deployment
+
+## MANDATORY VERIFICATION PROTOCOL
+- ✅ **ALWAYS use MCP tools** to verify Supabase state before making claims
+- ✅ **ALWAYS search codebase** for existing implementations before assuming gaps
+- ✅ **ALWAYS test functionality** with Playwright when applicable
+- ✅ **NEVER assume** deployment status, database state, or functionality without verification
+- ✅ **ALWAYS read** existing documentation (PRD.md, IMPLEMENTATION_PLAN.md) before updating
+- ✅ **ALWAYS ask** for clarification when uncertain about current state
+- ✅ **Reference** docs/runbooks/VERIFICATION_PROTOCOL.md for complete checklist
+- always remember that we use supabase online, not a local. we need to make sql commands in the online terminal manually.
