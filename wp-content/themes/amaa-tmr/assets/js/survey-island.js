@@ -920,6 +920,15 @@
             questionsBySection[section].sort((a, b) => (a.order || 0) - (b.order || 0));
             console.log(`🔧 Section "${section}" questions:`, questionsBySection[section].map(q => ({ code: q.code, order: q.order })));
         });
+        
+        // Sort sections by the minimum order of questions in each section
+        const sortedSections = Object.keys(questionsBySection).sort((a, b) => {
+            const minOrderA = Math.min(...questionsBySection[a].map(q => q.order || 0));
+            const minOrderB = Math.min(...questionsBySection[b].map(q => q.order || 0));
+            return minOrderA - minOrderB;
+        });
+        
+        console.log('🔧 Section order:', sortedSections);
 
         // Render questions for a section
         const renderSectionQuestions = (sectionQuestions) => {
@@ -1104,15 +1113,24 @@
                     h('p', null, 'Loading survey questions...')
                 ]) : questions.length === 0 ? h('div', { className: 'no-questions' }, [
                     h('p', null, 'No questions available. Please contact support.')
-                ]) : Object.entries(questionsBySection).map(([sectionName, sectionQuestions]) => 
-                    h('div', { 
+                ]) : (() => {
+                    const sortedSections = Object.keys(questionsBySection).sort((a, b) => {
+                        const minOrderA = Math.min(...questionsBySection[a].map(q => q.order || 0));
+                        const minOrderB = Math.min(...questionsBySection[b].map(q => q.order || 0));
+                        return minOrderA - minOrderB;
+                    });
+                    console.log('🔧 Final section order:', sortedSections);
+                    return sortedSections;
+                })().map(sectionName => {
+                    const sectionQuestions = questionsBySection[sectionName];
+                    return h('div', { 
                         key: sectionName,
                         className: 'survey-section' 
                     }, [
                         h('h3', { className: 'section-title' }, sectionName),
                         h('div', { className: 'section-questions' }, renderSectionQuestions(sectionQuestions))
-                    ])
-                )
+                    ]);
+                })
             ]),
             
             h('form', { 
