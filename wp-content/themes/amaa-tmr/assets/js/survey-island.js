@@ -932,6 +932,7 @@
 
         // Render questions for a section
         const renderSectionQuestions = (sectionQuestions) => {
+            console.log('🔧 Rendering section questions:', sectionQuestions.map(q => ({ code: q.code, type: q.type, text: q.text?.substring(0, 50) })));
             return sectionQuestions.map((question, index) => {
                 // Get current value from formData or page1Data
                 const currentValue = formData[question.code] || (page1Data && page1Data[question.code]) || '';
@@ -1047,20 +1048,26 @@
                     }),
                     
                     // Deal Table Component
-                    question.type === 'deal_table' && h(DealTable, {
-                        question: question,
-                        dealData: currentValue || [],
-                        onDealChange: (deals) => setFormData(prev => ({ ...prev, [question.code]: deals })),
-                        formData: formData
-                    }),
+                    question.type === 'deal_table' && (() => {
+                        console.log('🔧 Rendering DealTable for question:', question.code, question.text);
+                        return h(DealTable, {
+                            question: question,
+                            dealData: currentValue || [],
+                            onDealChange: (deals) => setFormData(prev => ({ ...prev, [question.code]: deals })),
+                            formData: formData
+                        });
+                    })(),
                     
                     // Matrix Component (for success/retainer fee matrices)
-                    question.type === 'matrix' && h(MatrixQuestion, {
-                        question: question,
-                        matrixData: currentValue || {},
-                        onMatrixChange: (data) => setFormData(prev => ({ ...prev, [question.code]: data })),
-                        formData: formData
-                    }),
+                    question.type === 'matrix' && (() => {
+                        console.log('🔧 Rendering MatrixQuestion for question:', question.code, question.text);
+                        return h(MatrixQuestion, {
+                            question: question,
+                            matrixData: currentValue || {},
+                            onMatrixChange: (data) => setFormData(prev => ({ ...prev, [question.code]: data })),
+                            formData: formData
+                        });
+                    })(),
                     
                     // Radio Array Component (for sentiment arrays)
                     question.type === 'radio_array' && h(RadioArray, {
@@ -1123,13 +1130,19 @@
                     return sortedSections;
                 })().map(sectionName => {
                     const sectionQuestions = questionsBySection[sectionName];
-                    return h('div', { 
-                        key: sectionName,
-                        className: 'survey-section' 
-                    }, [
-                        h('h3', { className: 'section-title' }, sectionName),
-                        h('div', { className: 'section-questions' }, renderSectionQuestions(sectionQuestions))
-                    ]);
+                    console.log('🔧 Rendering section:', sectionName, 'with questions:', sectionQuestions.length);
+                    try {
+                        return h('div', { 
+                            key: sectionName,
+                            className: 'survey-section' 
+                        }, [
+                            h('h3', { className: 'section-title' }, sectionName),
+                            h('div', { className: 'section-questions' }, renderSectionQuestions(sectionQuestions))
+                        ]);
+                    } catch (error) {
+                        console.error('🔧 Error rendering section:', sectionName, error);
+                        return h('div', { key: sectionName }, `Error rendering section: ${sectionName}`);
+                    }
                 })
             ]),
             
