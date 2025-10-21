@@ -770,8 +770,8 @@
     function RadioArray({ question, arrayData, onArrayChange, formData }) {
         const [array, setArray] = useState(arrayData || {});
         
-        // Impact factors for the radio array
-        const impactFactors = [
+        // Use dynamic factors from question options
+        const impactFactors = question.options?.factors || [
             'Interest rate changes',
             'Impact of lending environment', 
             'Supply chain issues',
@@ -804,16 +804,16 @@
                             h('td', { className: 'table-cell' }, factor),
                             h('td', { className: 'table-cell' }, [
                                 h('div', { className: 'radio-group' }, 
-                                    (question.options?.choices || []).map(choice => 
-                                        h('label', { key: choice.value, className: 'radio-item' }, [
+                                    (question.options?.scale || []).map(scaleValue => 
+                                        h('label', { key: scaleValue, className: 'radio-item' }, [
                                             h('input', {
                                                 type: 'radio',
                                                 name: `question_${question.code}_${factor}`,
-                                                value: choice.value,
-                                                checked: array[factor] === choice.value,
+                                                value: scaleValue,
+                                                checked: array[factor] === scaleValue,
                                                 onChange: (e) => handleArrayChange(factor, e.target.value)
                                             }),
-                                            h('span', { className: 'radio-label' }, choice.label)
+                                            h('span', { className: 'radio-label' }, scaleValue)
                                         ])
                                     )
                                 )
