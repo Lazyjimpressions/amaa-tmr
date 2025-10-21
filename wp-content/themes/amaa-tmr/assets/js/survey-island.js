@@ -6,7 +6,7 @@
 (function() {
     'use strict';
     
-    console.log('🚀 Survey Island Script Loading...');
+    console.log('🚀 Survey Island Script Loading... [FIXED_ORDERING_v2.2.1]');
 
     // Global configuration from WordPress
     const supabaseConfig = window.supabaseConfig || {
@@ -903,13 +903,23 @@
             ]);
         };
 
+        // Sort questions by order field first, then group by section
+        const sortedQuestions = [...questions].sort((a, b) => (a.order || 0) - (b.order || 0));
+        console.log('🔧 Sorted questions by order:', sortedQuestions.map(q => ({ code: q.code, order: q.order, text: q.text?.substring(0, 50) })));
+        
         // Group questions by section
-        const questionsBySection = questions.reduce((acc, question) => {
+        const questionsBySection = sortedQuestions.reduce((acc, question) => {
             const section = question.section || 'Other';
             if (!acc[section]) acc[section] = [];
             acc[section].push(question);
             return acc;
         }, {});
+        
+        // Sort questions within each section by order
+        Object.keys(questionsBySection).forEach(section => {
+            questionsBySection[section].sort((a, b) => (a.order || 0) - (b.order || 0));
+            console.log(`🔧 Section "${section}" questions:`, questionsBySection[section].map(q => ({ code: q.code, order: q.order })));
+        });
 
         // Render questions for a section
         const renderSectionQuestions = (sectionQuestions) => {
