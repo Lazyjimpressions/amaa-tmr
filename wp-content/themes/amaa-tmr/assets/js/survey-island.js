@@ -476,21 +476,26 @@
                     h('thead', { className: 'table-header' }, [
                         h('tr', { className: 'table-row' }, [
                             h('th', { className: 'table-cell' }, 'Industry'),
-                            h('th', { className: 'table-cell' }, 'Deal Value ($M)'),
                             h('th', { className: 'table-cell' }, 'Cash at Close ($M)'),
+                            h('th', { className: 'table-cell' }, 'Escrow at Close ($M)'),
+                            h('th', { className: 'table-cell' }, 'Note at Close ($M)'),
+                            h('th', { className: 'table-cell' }, 'Rolled Equity ($M)'),
+                            h('th', { className: 'table-cell' }, 'Earnout ($M)'),
                             h('th', { className: 'table-cell' }, 'Revenue ($M)'),
                             h('th', { className: 'table-cell' }, 'EBITDA ($M)'),
+                            h('th', { className: 'table-cell' }, 'Growth Rate (%)'),
+                            h('th', { className: 'table-cell' }, 'Employees'),
                             h('th', { className: 'table-cell' }, 'Buyer Type'),
-                            h('th', { className: 'table-cell' }, 'Month Close'),
-                            h('th', { className: 'table-cell' }, 'Success Fee (%)'),
-                            h('th', { className: 'table-cell' }, 'Retainer Fee ($M)')
+                            h('th', { className: 'table-cell' }, 'Sub Industry'),
+                            h('th', { className: 'table-cell' }, 'Tariff Impact'),
+                            h('th', { className: 'table-cell' }, 'Month Close')
                         ])
                     ]),
                     
-                    // Table Body - 5 static rows
+                    // Table Body - 5 static rows with all 14 fields
                     h('tbody', null, deals.map((deal, index) => 
                         h('tr', { key: index, className: 'table-row' }, [
-                            // Industry
+                            // Field 1: Industry
                             h('td', { className: 'table-cell' }, [
                                 h('select', {
                                     value: deal.industry || '',
@@ -506,23 +511,7 @@
                                 errors[`${index}_industry`] && h('div', { className: 'field-error' }, errors[`${index}_industry`])
                             ]),
                             
-                            // Deal Value
-                            h('td', { className: 'table-cell' }, [
-                                h('input', {
-                                    type: 'number',
-                                    value: deal.total_consideration_ev_usd_m || '',
-                                    onChange: (e) => handleDealUpdate(index, 'total_consideration_ev_usd_m', e.target.value),
-                                    onBlur: (e) => handleFieldBlur(index, 'total_consideration_ev_usd_m', e.target.value),
-                                    placeholder: '10.5',
-                                    step: '0.1',
-                                    min: '1',
-                                    max: '500',
-                                    className: errors[`${index}_total_consideration_ev_usd_m`] ? 'form-input error' : 'form-input'
-                                }),
-                                errors[`${index}_total_consideration_ev_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_total_consideration_ev_usd_m`])
-                            ]),
-                            
-                            // Cash at Close
+                            // Field 2: Cash at Close ($M)
                             h('td', { className: 'table-cell' }, [
                                 h('input', {
                                     type: 'number',
@@ -538,7 +527,71 @@
                                 errors[`${index}_cash_paid_close_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_cash_paid_close_usd_m`])
                             ]),
                             
-                            // Revenue
+                            // Field 3: Escrow at Close ($M)
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.escrow_held_close_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'escrow_held_close_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'escrow_held_close_usd_m', e.target.value),
+                                    placeholder: '1.0',
+                                    step: '0.1',
+                                    min: '0',
+                                    max: '50',
+                                    className: errors[`${index}_escrow_held_close_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_escrow_held_close_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_escrow_held_close_usd_m`])
+                            ]),
+                            
+                            // Field 4: Note at Close ($M)
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.note_amount_close_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'note_amount_close_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'note_amount_close_usd_m', e.target.value),
+                                    placeholder: '1.5',
+                                    step: '0.1',
+                                    min: '0',
+                                    max: '50',
+                                    className: errors[`${index}_note_amount_close_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_note_amount_close_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_note_amount_close_usd_m`])
+                            ]),
+                            
+                            // Field 5: Rolled Equity ($M)
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.rolled_equity_close_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'rolled_equity_close_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'rolled_equity_close_usd_m', e.target.value),
+                                    placeholder: '0.0',
+                                    step: '0.1',
+                                    min: '0',
+                                    max: '50',
+                                    className: errors[`${index}_rolled_equity_close_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_rolled_equity_close_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_rolled_equity_close_usd_m`])
+                            ]),
+                            
+                            // Field 6: Earnout ($M)
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.earnout_after_close_usd_m || '',
+                                    onChange: (e) => handleDealUpdate(index, 'earnout_after_close_usd_m', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'earnout_after_close_usd_m', e.target.value),
+                                    placeholder: '0.0',
+                                    step: '0.1',
+                                    min: '0',
+                                    max: '50',
+                                    className: errors[`${index}_earnout_after_close_usd_m`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_earnout_after_close_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_earnout_after_close_usd_m`])
+                            ]),
+                            
+                            // Field 7: Revenue ($M)
                             h('td', { className: 'table-cell' }, [
                                 h('input', {
                                     type: 'number',
@@ -554,7 +607,7 @@
                                 errors[`${index}_annual_revenue_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_annual_revenue_usd_m`])
                             ]),
                             
-                            // EBITDA
+                            // Field 8: EBITDA ($M)
                             h('td', { className: 'table-cell' }, [
                                 h('input', {
                                     type: 'number',
@@ -570,7 +623,39 @@
                                 errors[`${index}_adjusted_ebitda_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_adjusted_ebitda_usd_m`])
                             ]),
                             
-                            // Buyer Type
+                            // Field 9: Growth Rate (%)
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.revenue_growth_rate_pct || '',
+                                    onChange: (e) => handleDealUpdate(index, 'revenue_growth_rate_pct', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'revenue_growth_rate_pct', e.target.value),
+                                    placeholder: '7.5',
+                                    step: '0.1',
+                                    min: '-100',
+                                    max: '1000',
+                                    className: errors[`${index}_revenue_growth_rate_pct`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_revenue_growth_rate_pct`] && h('div', { className: 'field-error' }, errors[`${index}_revenue_growth_rate_pct`])
+                            ]),
+                            
+                            // Field 10: Employees
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'number',
+                                    value: deal.number_employees || '',
+                                    onChange: (e) => handleDealUpdate(index, 'number_employees', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'number_employees', e.target.value),
+                                    placeholder: '25',
+                                    step: '1',
+                                    min: '1',
+                                    max: '100000',
+                                    className: errors[`${index}_number_employees`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_number_employees`] && h('div', { className: 'field-error' }, errors[`${index}_number_employees`])
+                            ]),
+                            
+                            // Field 11: Buyer Type
                             h('td', { className: 'table-cell' }, [
                                 h('select', {
                                     value: deal.buyer_type || '',
@@ -586,7 +671,38 @@
                                 errors[`${index}_buyer_type`] && h('div', { className: 'field-error' }, errors[`${index}_buyer_type`])
                             ]),
                             
-                            // Month Close
+                            // Field 12: Sub Industry
+                            h('td', { className: 'table-cell' }, [
+                                h('input', {
+                                    type: 'text',
+                                    value: deal.sub_industry || '',
+                                    onChange: (e) => handleDealUpdate(index, 'sub_industry', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'sub_industry', e.target.value),
+                                    placeholder: 'e.g., SaaS, Manufacturing',
+                                    className: errors[`${index}_sub_industry`] ? 'form-input error' : 'form-input'
+                                }),
+                                errors[`${index}_sub_industry`] && h('div', { className: 'field-error' }, errors[`${index}_sub_industry`])
+                            ]),
+                            
+                            // Field 13: Tariff Impact
+                            h('td', { className: 'table-cell' }, [
+                                h('select', {
+                                    value: deal.tariff_impact || '',
+                                    onChange: (e) => handleDealUpdate(index, 'tariff_impact', e.target.value),
+                                    onBlur: (e) => handleFieldBlur(index, 'tariff_impact', e.target.value),
+                                    className: errors[`${index}_tariff_impact`] ? 'form-select error' : 'form-select'
+                                }, [
+                                    h('option', { value: '' }, 'Select Impact...'),
+                                    h('option', { value: 'High negative impact' }, 'High negative impact'),
+                                    h('option', { value: 'Somewhat negative impact' }, 'Somewhat negative impact'),
+                                    h('option', { value: 'Little to no impact' }, 'Little to no impact'),
+                                    h('option', { value: 'Somewhat positive impact' }, 'Somewhat positive impact'),
+                                    h('option', { value: 'High positive impact' }, 'High positive impact')
+                                ]),
+                                errors[`${index}_tariff_impact`] && h('div', { className: 'field-error' }, errors[`${index}_tariff_impact`])
+                            ]),
+                            
+                            // Field 14: Month Close
                             h('td', { className: 'table-cell' }, [
                                 h('select', {
                                     value: deal.month_close || '',
@@ -600,38 +716,6 @@
                                     )
                                 ]),
                                 errors[`${index}_month_close`] && h('div', { className: 'field-error' }, errors[`${index}_month_close`])
-                            ]),
-                            
-                            // Success Fee
-                            h('td', { className: 'table-cell' }, [
-                                h('input', {
-                                    type: 'number',
-                                    value: deal.sell_side_success_fee_pct || '',
-                                    onChange: (e) => handleDealUpdate(index, 'sell_side_success_fee_pct', e.target.value),
-                                    onBlur: (e) => handleFieldBlur(index, 'sell_side_success_fee_pct', e.target.value),
-                                    placeholder: '2.5',
-                                    step: '0.1',
-                                    min: '0',
-                                    max: '12',
-                                    className: errors[`${index}_sell_side_success_fee_pct`] ? 'form-input error' : 'form-input'
-                                }),
-                                errors[`${index}_sell_side_success_fee_pct`] && h('div', { className: 'field-error' }, errors[`${index}_sell_side_success_fee_pct`])
-                            ]),
-                            
-                            // Retainer Fee
-                            h('td', { className: 'table-cell' }, [
-                                h('input', {
-                                    type: 'number',
-                                    value: deal.sell_side_retainer_fee_usd_m || '',
-                                    onChange: (e) => handleDealUpdate(index, 'sell_side_retainer_fee_usd_m', e.target.value),
-                                    onBlur: (e) => handleFieldBlur(index, 'sell_side_retainer_fee_usd_m', e.target.value),
-                                    placeholder: '0.05',
-                                    step: '0.01',
-                                    min: '0',
-                                    max: '0.2',
-                                    className: errors[`${index}_sell_side_retainer_fee_usd_m`] ? 'form-input error' : 'form-input'
-                                }),
-                                errors[`${index}_sell_side_retainer_fee_usd_m`] && h('div', { className: 'field-error' }, errors[`${index}_sell_side_retainer_fee_usd_m`])
                             ])
                         ])
                     ))
