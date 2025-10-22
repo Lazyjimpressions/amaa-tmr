@@ -1,6 +1,8 @@
 /**
  * AM&AA TMR Survey Island - Refactored Version
  * Modal-first authentication + 2-page survey structure
+ * Version: 3.1.0 - Fixed DOM container ID mismatch
+ * Date: 2025-10-22
  */
 
 (function() {
