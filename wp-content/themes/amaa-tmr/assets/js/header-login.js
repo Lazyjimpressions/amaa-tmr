@@ -22,10 +22,10 @@
   
   // LoginModal Component
   function LoginModal({ isOpen, onClose, redirectTo = 'dashboard', supabaseConfig }) {
-    const [email, setEmail] = React.useState('');
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [error, setError] = React.useState('');
-    const [success, setSuccess] = React.useState(false);
+    const [email, setEmail] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e) => {
       e.preventDefault();
@@ -129,10 +129,10 @@
   }
   
   function HeaderLoginManager() {
-    const [showModal, setShowModal] = React.useState(false);
+    const [showModal, setShowModal] = useState(false);
     
     // Listen for open modal event
-    React.useEffect(() => {
+    useEffect(() => {
       const handleOpenModal = () => {
         console.log('📣 Opening login modal...');
         setShowModal(true);
