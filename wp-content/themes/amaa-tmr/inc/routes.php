@@ -35,17 +35,28 @@ add_filter('body_class', 'amaa_tmr_body_classes');
 
 // Custom rewrite rules for app routes
 function amaa_tmr_add_rewrite_rules() {
-    // Add rewrite rule for app routes
+    // Use 'app-' prefix to avoid WordPress page hierarchy conflicts
     add_rewrite_rule(
-        '^app/(.*)/?$',
-        'index.php?pagename=app&app_route=$matches[1]',
+        '^app-dashboard/?$',
+        'index.php?pagename=app&app_route=dashboard',
         'top'
     );
     
-    // Add specific rule for app/dashboard
     add_rewrite_rule(
-        '^app/dashboard/?$',
-        'index.php?pagename=app&app_route=dashboard',
+        '^app-survey/?$',
+        'index.php?pagename=app&app_route=survey',
+        'top'
+    );
+    
+    add_rewrite_rule(
+        '^app-reports/?$',
+        'index.php?pagename=app&app_route=reports',
+        'top'
+    );
+    
+    add_rewrite_rule(
+        '^app-profile/?$',
+        'index.php?pagename=app&app_route=profile',
         'top'
     );
 }

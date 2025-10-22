@@ -362,8 +362,8 @@
         const handleSubmit = async () => {
             try {
                 await onSave('survey_responses', formData);
-                // Redirect to dashboard
-                window.location.href = '/app/dashboard';
+                        // Redirect to dashboard
+                        window.location.href = '/app-dashboard';
             } catch (error) {
                 console.error('Error submitting survey:', error);
                 alert('Error submitting survey. Please try again.');

@@ -11,11 +11,11 @@ get_header(); ?>
         <div class="app-header-content">
             <a href="/" class="app-logo">AM&AA TMR</a>
             <nav class="app-nav">
-                <a href="/app/dashboard" class="active">Dashboard</a>
-                <a href="/app/survey">Survey</a>
-                <a href="/app/reports">Reports</a>
-                <a href="/app/profile">Profile</a>
-                <a href="/app/help">Help</a>
+                <a href="/app-dashboard" class="active">Dashboard</a>
+                <a href="/app-survey">Survey</a>
+                <a href="/app-reports">Reports</a>
+                <a href="/app-profile">Profile</a>
+                <a href="/app-help">Help</a>
             </nav>
         </div>
     </header>
