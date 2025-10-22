@@ -492,14 +492,14 @@
         };
 
         if (isLoading) {
-            return h('div', { className: 'survey-container' }, [
-                h('div', { className: 'loading-spinner' }, 'Loading...')
+            return React.createElement('div', { className: 'survey-container' }, [
+                React.createElement('div', { className: 'loading-spinner' }, 'Loading...')
             ]);
         }
 
-        return h('div', { className: 'survey-container' }, [
+        return React.createElement('div', { className: 'survey-container' }, [
             // Login Modal
-            h(LoginModal, {
+            React.createElement(LoginModal, {
                 isOpen: showLoginModal,
                 onClose: () => setShowLoginModal(false),
                 redirectTo: 'survey',
@@ -507,12 +507,12 @@
             }),
 
             // Survey Pages (only show when authenticated)
-            isAuthenticated && currentPage === 1 && h(UserProfilePage, {
+            isAuthenticated && currentPage === 1 && React.createElement(UserProfilePage, {
                 onNext: handleNext,
                 onSave: handleSave
             }),
 
-            isAuthenticated && currentPage === 2 && h(AllSectionsPage, {
+            isAuthenticated && currentPage === 2 && React.createElement(AllSectionsPage, {
                 onNext: handleNext,
                 onSave: handleSave
             })
@@ -522,9 +522,8 @@
     // Initialize the app
     const surveyContainer = document.getElementById('survey-container');
     if (surveyContainer) {
-        // Clear existing content before mounting React
-        surveyContainer.innerHTML = '';
-        ReactDOM.render(h(SurveyApp), surveyContainer);
+        // Let React manage DOM updates
+        ReactDOM.render(React.createElement(SurveyApp), surveyContainer);
     }
 
     // Handle magic link callback

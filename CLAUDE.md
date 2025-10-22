@@ -21,6 +21,22 @@ AM&AA "The Market Report" (TMR) is a WordPress-hosted survey and report platform
 - Supabase is **online only** (not local) - SQL commands must be run in the online terminal manually
 - Core Supabase secrets are configured; remaining: `OPENAI_API_KEY`, `ADMIN_TOKEN`
 
+## Testing & Development Workflow
+
+### Code Changes & Testing
+- **ALWAYS commit changes** before testing to ensure changes are synced
+- **ALWAYS clear WP Engine cache** after significant code changes (JavaScript, CSS, PHP)
+- **STOP testing loops** after 3-4 attempts - ask user for guidance instead of continuing
+- **Verify changes are live** before testing (check file timestamps, cache clearing)
+- **Test incrementally** - fix one issue at a time, commit, then test
+
+### Testing Protocol
+- **Phase 1**: Environment verification (database, Edge Functions)
+- **Phase 2**: Authentication flow testing
+- **Phase 3**: Survey functionality testing
+- **Stop and ask** if stuck in testing loops or if changes don't appear to be working
+- **Document issues** found during testing for user review
+
 ## Architecture
 
 ### WordPress App Shell (Custom Templates)
