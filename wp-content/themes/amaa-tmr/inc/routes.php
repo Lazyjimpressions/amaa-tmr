@@ -35,9 +35,17 @@ add_filter('body_class', 'amaa_tmr_body_classes');
 
 // Custom rewrite rules for app routes
 function amaa_tmr_add_rewrite_rules() {
+    // Add rewrite rule for app routes
     add_rewrite_rule(
         '^app/(.*)/?$',
         'index.php?pagename=app&app_route=$matches[1]',
+        'top'
+    );
+    
+    // Add specific rule for app/dashboard
+    add_rewrite_rule(
+        '^app/dashboard/?$',
+        'index.php?pagename=app&app_route=dashboard',
         'top'
     );
 }
@@ -75,3 +83,14 @@ function amaa_tmr_flush_rewrite_rules() {
     flush_rewrite_rules();
 }
 add_action('after_switch_theme', 'amaa_tmr_flush_rewrite_rules');
+
+// Force flush rewrite rules on admin init (for development)
+function amaa_tmr_force_flush_rewrite_rules() {
+    if (isset($_GET['flush_rewrite_rules']) && $_GET['flush_rewrite_rules'] === '1') {
+        amaa_tmr_add_rewrite_rules();
+        flush_rewrite_rules();
+        wp_redirect(admin_url('options-permalink.php'));
+        exit;
+    }
+}
+add_action('admin_init', 'amaa_tmr_force_flush_rewrite_rules');
