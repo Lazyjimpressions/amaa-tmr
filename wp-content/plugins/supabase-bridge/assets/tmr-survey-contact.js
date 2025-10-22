@@ -352,7 +352,7 @@ class ContactForm {
     if (statusEl) statusEl.textContent = 'Sending magic link...';
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: cfg.siteOrigin || window.location.origin }
+      options: { emailRedirectTo: `${cfg.siteOrigin || window.location.origin}/survey` }
     });
     if (statusEl) statusEl.textContent = error ? 'Error sending link. Try again.' : 'Check your inbox for the magic link.';
   }

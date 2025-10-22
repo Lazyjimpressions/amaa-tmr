@@ -93,7 +93,7 @@ function wireLogin() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email: String(email),
-      options: { emailRedirectTo: cfg.siteOrigin || window.location.origin }
+      options: { emailRedirectTo: `${cfg.siteOrigin || window.location.origin}/survey` }
     });
 
     if (error) {
