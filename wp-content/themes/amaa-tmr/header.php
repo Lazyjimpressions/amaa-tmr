@@ -60,7 +60,7 @@
                         </div>
                     <?php else : ?>
                         <!-- Logged Out: Login Button -->
-                        <a href="<?php echo esc_url(home_url('/login')); ?>" class="btn btn-secondary">Log In</a>
+                        <button id="header-login-btn" class="btn btn-secondary">Log In</button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -84,11 +84,14 @@
                     <a href="<?php echo esc_url(home_url('/survey')); ?>" class="btn btn-primary">Take the Survey</a>
                 </li>
                 <?php if (!is_user_logged_in()) : ?>
-                    <li><a href="<?php echo esc_url(home_url('/login')); ?>" class="btn btn-secondary">Log In</a></li>
+                    <li><button id="mobile-login-btn" class="btn btn-secondary">Log In</button></li>
                 <?php endif; ?>
             </ul>
         </nav>
     </header>
+
+    <!-- Login Modal Portal (mounted by React) -->
+    <div id="login-modal-root"></div>
 
     <!-- Supabase Auth State Script -->
     <script>

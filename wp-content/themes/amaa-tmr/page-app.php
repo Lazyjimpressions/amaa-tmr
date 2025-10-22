@@ -25,26 +25,30 @@ get_header(); ?>
         <div class="app-container">
             <!-- Dashboard Header -->
             <div class="dashboard-header">
-                <h1 class="dashboard-title">Member Dashboard</h1>
-                <p class="dashboard-subtitle">Welcome back! Here's your latest survey progress and insights.</p>
+                <h1 class="dashboard-title" id="dashboard-welcome">Welcome to Your Dashboard</h1>
+                <p class="dashboard-subtitle">Here's your survey progress and report access.</p>
             </div>
 
-            <!-- KPI Row - Compact Dashboard (#9) -->
+            <!-- KPI Row -->
             <div class="kpi-row">
                 <div class="kpi-card">
-                    <div class="kpi-label">Your Survey Progress</div>
-                    <div class="kpi-value">75%</div>
-                    <div class="kpi-change positive">Continue Survey</div>
+                    <div class="kpi-label">Survey Status</div>
+                    <div class="kpi-value" id="survey-status">Not Started</div>
+                    <div class="kpi-action">
+                        <a href="/survey" class="btn btn-secondary">Start Survey</a>
+                    </div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">Latest Report Access</div>
+                    <div class="kpi-label">Latest Report</div>
                     <div class="kpi-value">Winter 2025</div>
-                    <div class="kpi-change neutral">Download Now</div>
+                    <div class="kpi-action">
+                        <button class="btn btn-secondary" id="download-report">Download</button>
+                    </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">AI Briefs Generated</div>
-                    <div class="kpi-value">3</div>
-                    <div class="kpi-change positive">View All Briefs</div>
+                <div class="kpi-card" id="member-status-card" style="display: none;">
+                    <div class="kpi-label">Membership</div>
+                    <div class="kpi-value">Active Member</div>
+                    <div class="kpi-badge">✓ AM&AA Member</div>
                 </div>
             </div>
 
@@ -131,5 +135,43 @@ get_header(); ?>
         </div>
     </main>
 </div>
+
+<script>
+// Personalize dashboard on load
+(async function() {
+  const token = localStorage.getItem('supabase_token');
+  if (!token) {
+    window.location.href = '/survey';
+    return;
+  }
+  
+  try {
+    const response = await fetch('<?php echo esc_url(rest_url('supabase/v1/me')); ?>', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const userData = await response.json();
+      
+      // Personalize welcome message
+      const welcomeEl = document.getElementById('dashboard-welcome');
+      if (welcomeEl && userData.email) {
+        welcomeEl.textContent = `Welcome back, ${userData.email.split('@')[0]}!`;
+      }
+      
+      // Show member badge if applicable
+      if (userData.is_member) {
+        const memberCard = document.getElementById('member-status-card');
+        if (memberCard) memberCard.style.display = 'block';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+  }
+})();
+</script>
 
 <?php get_footer();

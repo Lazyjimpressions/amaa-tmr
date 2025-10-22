@@ -86,59 +86,15 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } else {
-      // Contact not found: attempt to create minimal contact in HubSpot
-      try {
-        const createResponse = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${hubspotToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            properties: {
-              email: email.toLowerCase(),
-              lifecyclestage: 'subscriber',
-              hs_analytics_source: 'DIRECT_TRAFFIC'
-            }
-          })
-        })
-
-        if (createResponse.ok) {
-          const newContact = await createResponse.json()
-          return new Response(JSON.stringify({
-            found: false,
-            email: email,
-            hubspot_contact_id: newContact.id,
-            status: 'created',
-            message: 'New contact created in HubSpot'
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        } else {
-          // If creation fails, still return not_found to avoid blocking UX
-          const errorText = await createResponse.text()
-          console.error('HubSpot create error:', errorText)
-          return new Response(JSON.stringify({
-            found: false,
-            email: email,
-            status: 'not_found'
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      } catch (e) {
-        console.error('Error creating HubSpot contact:', e)
-        return new Response(JSON.stringify({
-          found: false,
-          email: email,
-          status: 'not_found'
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
+      // Contact not found - simple response, no creation
+      return new Response(JSON.stringify({
+        found: false,
+        email: email,
+        status: 'not_found'
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
   } catch (error) {

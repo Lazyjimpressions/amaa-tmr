@@ -15,8 +15,8 @@ serve(async (req) => {
 
   const supa = service(); // service role to bypass RLS for lookup by email (safer & simpler)
   const { data: row } = await supa
-    .from("members")
-    .select("is_member, membership_level, email, user_id")
+    .from("users")
+    .select("is_member, membership_level, email, user_id, profession")
     .eq("email", user.email.toLowerCase())
     .maybeSingle();
 
@@ -25,6 +25,7 @@ serve(async (req) => {
       email: user.email,
       is_member: !!row?.is_member,
       membership_level: row?.membership_level || null,
+      profession: row?.profession || null,
       user_id: row?.user_id || null,
     },
     origin
