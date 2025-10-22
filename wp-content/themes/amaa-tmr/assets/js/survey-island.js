@@ -522,11 +522,38 @@
         ]);
     }
 
-    // Initialize the app
-    const surveyContainer = document.getElementById('survey-container');
-    if (surveyContainer) {
-        // Let React manage DOM updates
-        ReactDOM.render(React.createElement(SurveyApp), surveyContainer);
+    // Initialize the app when dependencies are ready
+    function initSurveyApp() {
+        console.log('🔍 Attempting to mount Survey App...');
+        const surveyContainer = document.getElementById('survey-root');
+        
+        if (!surveyContainer) {
+            console.error('❌ #survey-root container not found');
+            return;
+        }
+        
+        if (!window.React || !window.ReactDOM) {
+            console.error('❌ React/ReactDOM not loaded yet');
+            setTimeout(initSurveyApp, 100);
+            return;
+        }
+        
+        console.log('✅ Mounting React survey app to #survey-root');
+        
+        // Use createRoot for React 18+
+        if (ReactDOM.createRoot) {
+            const root = ReactDOM.createRoot(surveyContainer);
+            root.render(React.createElement(SurveyApp));
+        } else {
+            ReactDOM.render(React.createElement(SurveyApp), surveyContainer);
+        }
+    }
+
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSurveyApp);
+    } else {
+        initSurveyApp();
     }
 
     // Handle magic link callback

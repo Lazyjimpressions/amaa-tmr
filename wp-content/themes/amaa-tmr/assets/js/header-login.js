@@ -17,6 +17,9 @@
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
   };
   
+  // Make sure React hooks are available
+  const { useState, useEffect } = React;
+  
   // LoginModal Component
   function LoginModal({ isOpen, onClose, redirectTo = 'dashboard', supabaseConfig }) {
     const [email, setEmail] = React.useState('');
@@ -128,6 +131,23 @@
   function HeaderLoginManager() {
     const [showModal, setShowModal] = React.useState(false);
     
+    // Listen for open modal event
+    React.useEffect(() => {
+      const handleOpenModal = () => {
+        console.log('📣 Opening login modal...');
+        setShowModal(true);
+      };
+      
+      window.addEventListener('open-login-modal', handleOpenModal);
+      
+      // Also expose global function for direct access
+      window.openLoginModal = handleOpenModal;
+      
+      return () => {
+        window.removeEventListener('open-login-modal', handleOpenModal);
+      };
+    }, []);
+    
     return React.createElement(LoginModal, {
       isOpen: showModal,
       onClose: () => setShowModal(false),
@@ -140,16 +160,32 @@
   waitForReact().then(() => {
     const modalRoot = document.getElementById('login-modal-root');
     if (modalRoot) {
-      ReactDOM.render(React.createElement(HeaderLoginManager), modalRoot);
+      console.log('✅ Mounting header login manager');
+      
+      // Use createRoot for React 18+
+      if (ReactDOM.createRoot) {
+        const root = ReactDOM.createRoot(modalRoot);
+        root.render(React.createElement(HeaderLoginManager));
+      } else {
+        ReactDOM.render(React.createElement(HeaderLoginManager), modalRoot);
+      }
       
       // Wire up header login button
-      const loginBtn = document.getElementById('header-login-btn');
-      if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-          // Trigger modal open via custom event
-          window.dispatchEvent(new CustomEvent('open-login-modal'));
-        });
-      }
+      setTimeout(() => {
+        const loginBtn = document.getElementById('header-login-btn');
+        if (loginBtn) {
+          console.log('✅ Wiring up header login button');
+          loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔘 Header login button clicked');
+            window.dispatchEvent(new CustomEvent('open-login-modal'));
+          });
+        } else {
+          console.warn('⚠️ Header login button not found');
+        }
+      }, 100);
+    } else {
+      console.error('❌ #login-modal-root not found');
     }
   });
 })();
