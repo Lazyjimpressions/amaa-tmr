@@ -433,10 +433,13 @@
 
     // Main Survey Component
     function SurveyApp() {
+        console.log('🚀 SurveyApp component rendering...');
         const [currentPage, setCurrentPage] = useState(1);
         const [showLoginModal, setShowLoginModal] = useState(false);
         const [isAuthenticated, setIsAuthenticated] = useState(false);
         const [isLoading, setIsLoading] = useState(true);
+        
+        console.log('📊 SurveyApp state:', { currentPage, showLoginModal, isAuthenticated, isLoading });
 
         // Check authentication on mount
         useEffect(() => {
