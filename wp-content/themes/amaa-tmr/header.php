@@ -37,31 +37,12 @@
                 <!-- Survey CTA Button -->
                 <a href="<?php echo esc_url(home_url('/survey')); ?>" class="btn btn-primary survey-cta">Take the Survey</a>
                 
-                <!-- User State -->
-                <div class="user-state">
-                    <?php if (is_user_logged_in()) : ?>
-                        <!-- Logged In: Avatar + Dropdown -->
-                        <div class="user-avatar" id="user-avatar">
-                            <div class="avatar-circle">
-                                <?php 
-                                $current_user = wp_get_current_user();
-                                $initials = strtoupper(substr($current_user->first_name, 0, 1) . substr($current_user->last_name, 0, 1));
-                                if (empty($initials)) {
-                                    $initials = strtoupper(substr($current_user->user_login, 0, 2));
-                                }
-                                echo $initials;
-                                ?>
-                            </div>
-                            <div class="user-dropdown" id="user-dropdown">
-                                <a href="<?php echo esc_url(home_url('/dashboard')); ?>">Dashboard</a>
-                                <a href="<?php echo esc_url(home_url('/profile')); ?>">Profile</a>
-                                <a href="<?php echo wp_logout_url(home_url()); ?>">Logout</a>
-                            </div>
-                        </div>
-                    <?php else : ?>
-                        <!-- Logged Out: Login Button -->
-                        <button id="header-login-btn" class="btn btn-secondary">Log In</button>
-                    <?php endif; ?>
+                <!-- User State (Supabase Authentication Only) -->
+                <div class="user-state" id="user-state">
+                    <!-- Supabase Authentication State - Managed by React -->
+                    <div id="supabase-auth-state">
+                        <!-- React will populate this with either login button or user avatar -->
+                    </div>
                 </div>
             </div>
             
@@ -83,9 +64,9 @@
                 <li class="mobile-survey-cta">
                     <a href="<?php echo esc_url(home_url('/survey')); ?>" class="btn btn-primary">Take the Survey</a>
                 </li>
-                <?php if (!is_user_logged_in()) : ?>
-                    <li><button id="mobile-login-btn" class="btn btn-secondary">Log In</button></li>
-                <?php endif; ?>
+                <li id="mobile-login-container">
+                    <!-- Supabase authentication state for mobile - managed by React -->
+                </li>
             </ul>
         </nav>
     </header>

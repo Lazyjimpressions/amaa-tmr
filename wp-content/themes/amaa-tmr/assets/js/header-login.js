@@ -130,6 +130,41 @@
   
   function HeaderLoginManager() {
     const [showModal, setShowModal] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userData, setUserData] = useState(null);
+    
+    // Check authentication state on mount
+    useEffect(() => {
+      const checkAuth = () => {
+        const token = localStorage.getItem('supabase_token');
+        const storedUserData = localStorage.getItem('supabase_user_data');
+        
+        if (token && storedUserData) {
+          try {
+            const user = JSON.parse(storedUserData);
+            setIsAuthenticated(true);
+            setUserData(user);
+          } catch (e) {
+            console.error('Error parsing user data:', e);
+            setIsAuthenticated(false);
+            setUserData(null);
+          }
+        } else {
+          setIsAuthenticated(false);
+          setUserData(null);
+        }
+      };
+      
+      checkAuth();
+      
+      // Listen for auth state changes
+      const handleAuthChange = () => checkAuth();
+      window.addEventListener('supabase-auth-change', handleAuthChange);
+      
+      return () => {
+        window.removeEventListener('supabase-auth-change', handleAuthChange);
+      };
+    }, []);
     
     // Listen for open modal event
     useEffect(() => {
@@ -139,8 +174,6 @@
       };
       
       window.addEventListener('open-login-modal', handleOpenModal);
-      
-      // Also expose global function for direct access
       window.openLoginModal = handleOpenModal;
       
       return () => {
@@ -148,44 +181,97 @@
       };
     }, []);
     
-    return React.createElement(LoginModal, {
-      isOpen: showModal,
-      onClose: () => setShowModal(false),
-      redirectTo: 'dashboard',
-      supabaseConfig: supabaseConfig
-    });
+    // Render authentication state
+    const renderAuthState = () => {
+      if (isAuthenticated && userData) {
+        const initials = (userData.first_name?.[0] || '') + (userData.last_name?.[0] || '') || userData.email?.[0] || 'U';
+        return React.createElement('div', { className: 'user-avatar', id: 'user-avatar' }, [
+          React.createElement('div', { 
+            className: 'avatar-circle',
+            onClick: () => {
+              const dropdown = document.getElementById('user-dropdown');
+              if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+          }, initials),
+          React.createElement('div', { 
+            className: 'user-dropdown', 
+            id: 'user-dropdown',
+            style: { display: 'none' }
+          }, [
+            React.createElement('a', { href: '/app/dashboard' }, 'Dashboard'),
+            React.createElement('a', { href: '/app/profile' }, 'Profile'),
+            React.createElement('a', { 
+              href: '#',
+              onClick: (e) => {
+                e.preventDefault();
+                localStorage.removeItem('supabase_token');
+                localStorage.removeItem('supabase_refresh_token');
+                localStorage.removeItem('supabase_user_data');
+                window.dispatchEvent(new CustomEvent('supabase-auth-change'));
+                window.location.reload();
+              }
+            }, 'Logout')
+          ])
+        ]);
+      } else {
+        return React.createElement('button', {
+          id: 'header-login-btn',
+          className: 'btn btn-secondary',
+          onClick: () => setShowModal(true)
+        }, 'Log In');
+      }
+    };
+    
+    return React.createElement('div', {}, [
+      React.createElement(LoginModal, {
+        key: 'login-modal',
+        isOpen: showModal,
+        onClose: () => setShowModal(false),
+        redirectTo: 'dashboard',
+        supabaseConfig: supabaseConfig
+      }),
+      React.createElement('div', { key: 'auth-state' }, renderAuthState())
+    ]);
   }
   
   // Initialize when React is available
   waitForReact().then(() => {
+    console.log('✅ Initializing Supabase-only authentication');
+    
+    // Mount login modal
     const modalRoot = document.getElementById('login-modal-root');
     if (modalRoot) {
-      console.log('✅ Mounting header login manager');
-      
-      // Use createRoot for React 18+
+      console.log('✅ Mounting login modal');
       if (ReactDOM.createRoot) {
         const root = ReactDOM.createRoot(modalRoot);
         root.render(React.createElement(HeaderLoginManager));
       } else {
         ReactDOM.render(React.createElement(HeaderLoginManager), modalRoot);
       }
-      
-      // Wire up header login button
-      setTimeout(() => {
-        const loginBtn = document.getElementById('header-login-btn');
-        if (loginBtn) {
-          console.log('✅ Wiring up header login button');
-          loginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('🔘 Header login button clicked');
-            window.dispatchEvent(new CustomEvent('open-login-modal'));
-          });
-        } else {
-          console.warn('⚠️ Header login button not found');
-        }
-      }, 100);
-    } else {
-      console.error('❌ #login-modal-root not found');
+    }
+    
+    // Mount desktop auth state
+    const desktopAuthState = document.getElementById('supabase-auth-state');
+    if (desktopAuthState) {
+      console.log('✅ Mounting desktop auth state');
+      if (ReactDOM.createRoot) {
+        const root = ReactDOM.createRoot(desktopAuthState);
+        root.render(React.createElement(HeaderLoginManager));
+      } else {
+        ReactDOM.render(React.createElement(HeaderLoginManager), desktopAuthState);
+      }
+    }
+    
+    // Mount mobile auth state
+    const mobileAuthState = document.getElementById('mobile-login-container');
+    if (mobileAuthState) {
+      console.log('✅ Mounting mobile auth state');
+      if (ReactDOM.createRoot) {
+        const root = ReactDOM.createRoot(mobileAuthState);
+        root.render(React.createElement(HeaderLoginManager));
+      } else {
+        ReactDOM.render(React.createElement(HeaderLoginManager), mobileAuthState);
+      }
     }
   });
 })();

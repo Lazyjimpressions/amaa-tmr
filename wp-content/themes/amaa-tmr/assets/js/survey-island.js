@@ -580,13 +580,16 @@
             })
             .then(response => response.json())
             .then(userData => {
-                localStorage.setItem('supabase_user_data', JSON.stringify(userData));
-                
-                // Clean URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-                
-                // Reload to show authenticated state
-                window.location.reload();
+                        localStorage.setItem('supabase_user_data', JSON.stringify(userData));
+                        
+                        // Clean URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        
+                        // Dispatch auth change event for header updates
+                        window.dispatchEvent(new CustomEvent('supabase-auth-change'));
+                        
+                        // Reload to show authenticated state
+                        window.location.reload();
             })
             .catch(error => {
                 console.error('Error fetching user data:', error);

@@ -24,11 +24,17 @@ AM&AA "The Market Report" (TMR) is a WordPress-hosted survey and report platform
 ## Testing & Development Workflow
 
 ### Code Changes & Testing
-- **ALWAYS commit changes** before testing to ensure changes are synced
-- **ALWAYS clear WP Engine cache** after significant code changes (JavaScript, CSS, PHP)
+- **🚨 CRITICAL: ALWAYS commit AND sync changes** before testing to ensure changes are live on staging
+- **🚨 CRITICAL: ALWAYS clear WP Engine cache** after significant code changes (JavaScript, CSS, PHP)
+- **🚨 CRITICAL: NEVER test without confirming changes are synced** - ask user to confirm sync before testing
 - **STOP testing loops** after 3-4 attempts - ask user for guidance instead of continuing
 - **Verify changes are live** before testing (check file timestamps, cache clearing)
-- **Test incrementally** - fix one issue at a time, commit, then test
+- **Test incrementally** - fix one issue at a time, commit, sync, then test
+
+### MANDATORY SYNC PROTOCOL
+- **BEFORE ANY TESTING**: Ask user to confirm "Changes committed and synced to staging"
+- **NEVER assume** changes are live without explicit confirmation
+- **ALWAYS wait** for user confirmation before proceeding with testing
 
 ### Testing Protocol
 - **Phase 1**: Environment verification (database, Edge Functions)
