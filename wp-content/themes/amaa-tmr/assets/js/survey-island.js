@@ -441,14 +441,19 @@
         // Check authentication on mount
         useEffect(() => {
             const checkAuth = async () => {
+                console.log('🔐 Checking authentication...');
                 const token = localStorage.getItem('supabase_token');
+                console.log('🔑 Token:', token ? 'Present' : 'Not present');
+                
                 if (!token) {
+                    console.log('❌ No token - showing login modal');
                     setShowLoginModal(true);
                     setIsLoading(false);
                     return;
                 }
 
                 try {
+                    console.log('🔍 Validating token with /me endpoint...');
                     const response = await fetch(`${supabaseConfig.url}/functions/v1/me`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -456,13 +461,17 @@
                         }
                     });
                     
+                    console.log('📡 /me response status:', response.status);
+                    
                     if (response.ok) {
+                        console.log('✅ Token valid - user authenticated');
                         setIsAuthenticated(true);
                     } else {
+                        console.log('❌ Token invalid - showing login modal');
                         setShowLoginModal(true);
                     }
                 } catch (error) {
-                    console.error('Error checking auth:', error);
+                    console.error('❌ Error checking auth:', error);
                     setShowLoginModal(true);
                 } finally {
                     setIsLoading(false);
@@ -497,13 +506,13 @@
                 supabaseConfig: supabaseConfig
             }),
 
-            // Survey Pages
-            currentPage === 1 && h(UserProfilePage, {
+            // Survey Pages (only show when authenticated)
+            isAuthenticated && currentPage === 1 && h(UserProfilePage, {
                 onNext: handleNext,
                 onSave: handleSave
             }),
 
-            currentPage === 2 && h(AllSectionsPage, {
+            isAuthenticated && currentPage === 2 && h(AllSectionsPage, {
                 onNext: handleNext,
                 onSave: handleSave
             })
@@ -511,8 +520,10 @@
     }
 
     // Initialize the app
-    const surveyContainer = document.getElementById('survey-app');
+    const surveyContainer = document.getElementById('survey-container');
     if (surveyContainer) {
+        // Clear existing content before mounting React
+        surveyContainer.innerHTML = '';
         ReactDOM.render(h(SurveyApp), surveyContainer);
     }
 
