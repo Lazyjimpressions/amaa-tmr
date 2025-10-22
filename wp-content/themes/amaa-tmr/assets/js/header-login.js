@@ -27,40 +27,56 @@
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setError('');
-      setIsLoading(true);
+            const handleSubmit = async (e) => {
+              e.preventDefault();
+              setError('');
+              setIsLoading(true);
 
-      try {
-        const redirectPath = redirectTo === 'dashboard' ? '/app/dashboard' : '/survey';
-        
-        const response = await fetch(`${supabaseConfig.url}/auth/v1/magiclink`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': supabaseConfig.anonKey
-          },
-          body: JSON.stringify({
-            email: email.toLowerCase(),
-            options: {
-              emailRedirectTo: `${window.location.origin}${redirectPath}`
-            }
-          })
-        });
+              try {
+                const redirectPath = redirectTo === 'dashboard' ? '/dashboard' : '/survey';
+                const fullRedirectUrl = `${window.location.origin}${redirectPath}`;
+                
+                // 🔍 DEBUG: Log what we're sending
+                console.log('🔍 Header Magic Link Debug:');
+                console.log('  - Origin:', window.location.origin);
+                console.log('  - Redirect Path:', redirectPath);
+                console.log('  - Full Redirect URL:', fullRedirectUrl);
+                console.log('  - Supabase URL:', supabaseConfig.url);
+                
+                const requestBody = {
+                  email: email.toLowerCase(),
+                  options: {
+                    emailRedirectTo: fullRedirectUrl
+                  }
+                };
+                
+                console.log('  - Request Body:', JSON.stringify(requestBody, null, 2));
+                
+                const response = await fetch(`${supabaseConfig.url}/auth/v1/magiclink`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseConfig.anonKey
+                  },
+                  body: JSON.stringify(requestBody)
+                });
 
-        if (response.ok) {
-          setSuccess(true);
-        } else {
-          throw new Error('Failed to send magic link');
-        }
-      } catch (err) {
-        setError('Failed to send magic link. Please try again.');
-        console.error('Magic link error:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+                console.log('  - Response Status:', response.status);
+                const responseData = await response.json();
+                console.log('  - Response Data:', responseData);
+
+                if (response.ok) {
+                  setSuccess(true);
+                } else {
+                  throw new Error('Failed to send magic link');
+                }
+              } catch (err) {
+                setError('Failed to send magic link. Please try again.');
+                console.error('Magic link error:', err);
+              } finally {
+                setIsLoading(false);
+              }
+            };
 
     if (!isOpen) return null;
 
