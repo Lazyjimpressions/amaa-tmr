@@ -114,13 +114,21 @@ function amaa_tmr_enqueue_scripts() {
         wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
         wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
 
-        // Survey React components - use filemtime for cache busting
+        // Survey React components - AGGRESSIVE cache busting
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
+        $survey_base_url = get_template_directory_uri() . '/assets/js/survey-island.js';
+        
+        // Create a unique version string using timestamp
+        $cache_bust_version = '3.1.0_' . time();
+        
+        // Build URL with version parameter
+        $survey_url = add_query_arg('v', $cache_bust_version, $survey_base_url);
+        
         wp_enqueue_script(
             'amaa-tmr-survey-island',
-            get_template_directory_uri() . '/assets/js/survey-island.js',
+            $survey_url,
             array('react', 'react-dom'),
-            file_exists($survey_path) ? filemtime($survey_path) : false,
+            null,  // Don't use WordPress version - we're handling it in URL
             true
         );
 
