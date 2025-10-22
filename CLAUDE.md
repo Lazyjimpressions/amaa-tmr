@@ -15,7 +15,8 @@ AM&AA "The Market Report" (TMR) is a WordPress-hosted survey and report platform
 ## MCP Supabase Access
 
 ✅ **You have full read/write access** to Supabase project `ffgjqlmulaqtfopgwenf` via MCP tools
-- Use MCP tools to query tables, deploy functions, check logs
+- **ALWAYS use MCP tools** for all Supabase operations (query tables, deploy functions, check logs)
+- **NEVER use Supabase CLI** - use MCP tools instead
 - **Always verify Supabase state via MCP** before making assumptions
 - Supabase is **online only** (not local) - SQL commands must be run in the online terminal manually
 - Core Supabase secrets are configured; remaining: `OPENAI_API_KEY`, `ADMIN_TOKEN`
