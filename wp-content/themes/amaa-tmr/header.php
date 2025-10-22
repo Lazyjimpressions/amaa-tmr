@@ -27,7 +27,7 @@
                 <ul class="nav-menu">
                     <li><a href="<?php echo esc_url(home_url('/')); ?>">Home</a></li>
                     <li><a href="<?php echo esc_url(home_url('/insights')); ?>">Insights</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/app-dashboard')); ?>">Dashboard</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/dashboard')); ?>">Dashboard</a></li>
                     <li><a href="<?php echo esc_url(home_url('/membership')); ?>">Membership</a></li>
                 </ul>
             </nav>
@@ -59,7 +59,7 @@
             <ul class="mobile-nav-menu">
                 <li><a href="<?php echo esc_url(home_url('/')); ?>">Home</a></li>
                 <li><a href="<?php echo esc_url(home_url('/insights')); ?>">Insights</a></li>
-                        <li><a href="<?php echo esc_url(home_url('/app-dashboard')); ?>">Dashboard</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/dashboard')); ?>">Dashboard</a></li>
                 <li><a href="<?php echo esc_url(home_url('/membership')); ?>">Membership</a></li>
                 <li class="mobile-survey-cta">
                     <a href="<?php echo esc_url(home_url('/survey')); ?>" class="btn btn-primary">Take the Survey</a>

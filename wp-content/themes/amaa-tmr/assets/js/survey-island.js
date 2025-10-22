@@ -363,7 +363,7 @@
             try {
                 await onSave('survey_responses', formData);
                         // Redirect to dashboard
-                        window.location.href = '/app-dashboard';
+                        window.location.href = '/dashboard';
             } catch (error) {
                 console.error('Error submitting survey:', error);
                 alert('Error submitting survey. Please try again.');
