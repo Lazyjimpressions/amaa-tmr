@@ -70,6 +70,15 @@ window.supabaseHelpers = {
     },
 
     /**
+     * Get the current access token for authenticated API calls
+     * @returns {Promise<string|null>} access token or null
+     */
+    async getAccessToken() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        return session?.access_token || null;
+    },
+
+    /**
      * Sign out and broadcast logout to all listeners
      */
     async signOut() {

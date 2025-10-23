@@ -145,9 +145,23 @@
         const [errors, setErrors] = useState({});
         const [isSaving, setIsSaving] = useState(false);
 
-                // Load user email from Supabase session on mount
+                // Load user email from cached data or Supabase session on mount
                 useEffect(() => {
                     const loadUserData = async () => {
+                        // Try cached data first for instant loading
+                        const cachedUserData = localStorage.getItem('supabase_user_data');
+                        if (cachedUserData) {
+                            try {
+                                const user = JSON.parse(cachedUserData);
+                                setFormData(prev => ({ ...prev, email: user.email }));
+                                fetchHubSpotData(user.email);
+                                return;
+                            } catch (e) {
+                                console.warn('Invalid cached user data, fetching fresh data');
+                            }
+                        }
+                        
+                        // Fallback to fresh session data
                         const user = await window.supabaseHelpers.getCurrentUser();
                         if (user) {
                             setFormData(prev => ({ ...prev, email: user.email }));
@@ -192,11 +206,11 @@
                 await onSave('user_profile', formData);
                 
                 // 2. Create/update HubSpot contact
-                const user = await window.supabaseHelpers.getCurrentUser();
+                const accessToken = await window.supabaseHelpers.getAccessToken();
                 const hubspotResponse = await fetch(`${window.location.origin}/functions/v1/hubspot-contact-create`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${user?.access_token}`,
+                        'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
@@ -451,6 +465,8 @@
 
                 if (user) {
                     console.log('✅ Active session found for:', user.email);
+                    // Cache user data for instant loading on profile page
+                    localStorage.setItem('supabase_user_data', JSON.stringify(user));
                     setIsAuthenticated(true);
                     setShowLoginModal(false);
                 } else {
