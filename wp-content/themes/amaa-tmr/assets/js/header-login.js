@@ -12,19 +12,21 @@
     });
   }
   
-          const supabaseConfig = window.supabaseConfig || {
-            url: 'https://ffgjqlmulaqtfopgwenf.supabase.co',
-            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-          };
+          // Use centralized Supabase client
+          const supabaseClient = window.supabaseClient;
           
-          // Use fetch API for magic link (more reliable than Supabase client)
-          console.log('🔧 Using fetch API for header magic link requests');
+          if (!supabaseClient) {
+            console.error('❌ Supabase client not loaded');
+            return;
+          }
+          
+          console.log('🔧 Using centralized Supabase client for header login');
   
   // Make sure React hooks are available
   const { useState, useEffect } = React;
   
   // LoginModal Component
-  function LoginModal({ isOpen, onClose, redirectTo = 'dashboard', supabaseConfig }) {
+  function LoginModal({ isOpen, onClose, redirectTo = 'dashboard' }) {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -42,28 +44,21 @@
                 console.log('🔍 Header Magic Link Debug:');
                 console.log('  - Full Redirect URL:', fullRedirectUrl);
                 
-                const response = await fetch(`${supabaseConfig.url}/auth/v1/otp`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': supabaseConfig.anonKey
-                    },
-                    body: JSON.stringify({
-                        email: email.toLowerCase(),
-                        options: {
-                            emailRedirectTo: fullRedirectUrl
-                        }
-                    })
+                const { error } = await supabaseClient.auth.signInWithOtp({
+                    email: email.toLowerCase(),
+                    options: {
+                        shouldCreateUser: false,
+                        emailRedirectTo: fullRedirectUrl
+                    }
                 });
 
-                console.log('  - Response Status:', response.status);
-                const responseData = await response.json();
-                console.log('  - Response Data:', responseData);
+                console.log('  - Magic link result:', error ? 'Error' : 'Success');
+                console.log('  - Error details:', error);
 
-                if (response.ok && responseData.error === undefined) {
-                    setSuccess(true);
+                if (error) {
+                    throw new Error(error.message);
                 } else {
-                    throw new Error(responseData.error?.message || responseData.msg || responseData.message || 'Failed to send magic link');
+                    setSuccess(true);
                 }
               } catch (err) {
                 setError(err.message || 'Failed to send magic link. Please try again.');
@@ -242,8 +237,7 @@
         key: 'modal',
         isOpen: showModal,
         onClose: () => setShowModal(false),
-        redirectTo: 'dashboard',
-        supabaseConfig: supabaseConfig
+        redirectTo: 'dashboard'
       }),
       
       // Desktop auth state (portal)

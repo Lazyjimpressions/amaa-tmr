@@ -105,8 +105,13 @@ $next_url = urldecode($next);
                         console.error('  - Verification error:', error);
                         document.querySelector('.container').innerHTML = `
                             <div class="error">
+                                <h2>Authentication Error</h2>
                                 <p><strong>Error:</strong> ${error.message}</p>
-                                <p><a href="/">Return to homepage</a></p>
+                                <p>This link may have expired or is invalid. Please request a new magic link.</p>
+                                <div class="error-actions">
+                                    <a href="/survey" class="btn btn-primary">Request New Link</a>
+                                    <a href="/" class="btn btn-secondary">Return to Homepage</a>
+                                </div>
                             </div>
                         `;
                     }
@@ -114,8 +119,12 @@ $next_url = urldecode($next);
                     console.error('  - Exception:', err);
                     document.querySelector('.container').innerHTML = `
                         <div class="error">
-                            <p><strong>Error:</strong> ${err.message}</p>
-                            <p><a href="/">Return to homepage</a></p>
+                            <h2>Unexpected Error</h2>
+                            <p>Something went wrong during authentication. Please try again.</p>
+                            <div class="error-actions">
+                                <a href="/survey" class="btn btn-primary">Try Again</a>
+                                <a href="/" class="btn btn-secondary">Return to Homepage</a>
+                            </div>
                         </div>
                     `;
                 }

@@ -10,23 +10,22 @@
     
     console.log('🚀 Survey Island Script Loading... [MODAL_AUTH_v3.0.0]');
 
-            // Global configuration from WordPress
-            const supabaseConfig = window.supabaseConfig || {
-                url: 'https://ffgjqlmulaqtfopgwenf.supabase.co',
-                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-            };
+            // Use centralized Supabase client
+            const supabaseClient = window.supabaseClient;
             
-            console.log('🔧 Supabase Config:', supabaseConfig);
-
-            // Use fetch API for magic link (more reliable than Supabase client)
-            console.log('🔧 Using fetch API for magic link requests');
+            if (!supabaseClient) {
+                console.error('❌ Supabase client not loaded');
+                return;
+            }
+            
+            console.log('🔧 Using centralized Supabase client');
 
     // React components
     const { useState, useEffect, useRef, createElement } = React;
     const h = createElement;
 
     // LoginModal Component
-    function LoginModal({ isOpen, onClose, redirectTo = 'survey', supabaseConfig }) {
+    function LoginModal({ isOpen, onClose, redirectTo = 'survey' }) {
         const [email, setEmail] = useState('');
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState('');
@@ -44,35 +43,23 @@
                         console.log('🔍 Magic Link Debug:');
                         console.log('  - Full Redirect URL:', fullRedirectUrl);
                         
-                        const response = await fetch(`${supabaseConfig.url}/auth/v1/otp`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': supabaseConfig.anonKey
-                            },
-                            body: JSON.stringify({
-                                email: email.toLowerCase(),
-                                options: {
-                                    emailRedirectTo: fullRedirectUrl
-                                }
-                            })
+                        const { error } = await supabaseClient.auth.signInWithOtp({
+                            email: email.toLowerCase(),
+                            options: {
+                                shouldCreateUser: false,
+                                emailRedirectTo: fullRedirectUrl
+                            }
                         });
 
-                        console.log('  - Response Status:', response.status);
-                        const responseData = await response.json();
-                        console.log('  - Response Data:', responseData);
-                        console.log('  - Response Data Keys:', Object.keys(responseData));
-                        console.log('  - Has Error:', !!responseData.error);
-                        console.log('  - Error Value:', responseData.error);
-                        console.log('  - Response OK:', response.ok);
-                        console.log('  - Condition check:', response.ok && !responseData.error);
+                        console.log('  - Magic link result:', error ? 'Error' : 'Success');
+                        console.log('  - Error details:', error);
 
-                        if (response.ok && responseData.error === undefined) {
+                        if (error) {
+                            console.log('❌ Magic link failed:', error.message);
+                            throw new Error(error.message);
+                        } else {
                             console.log('✅ Setting success state');
                             setSuccess(true);
-                        } else {
-                            console.log('❌ Magic link failed:', responseData.error?.message || responseData.msg || responseData.message);
-                            throw new Error(responseData.error?.message || responseData.msg || responseData.message || 'Failed to send magic link');
                         }
                     } catch (err) {
                         setError(err.message || 'Failed to send magic link. Please try again.');
@@ -177,7 +164,7 @@
 
         const fetchHubSpotData = async (email) => {
             try {
-                const response = await fetch(`${supabaseConfig.url}/functions/v1/check-membership`, {
+                const response = await fetch(`${window.location.origin}/functions/v1/check-membership`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
@@ -211,7 +198,7 @@
                 
                 // 2. Create/update HubSpot contact
                 const token = localStorage.getItem('supabase_token');
-                const hubspotResponse = await fetch(`${supabaseConfig.url}/functions/v1/hubspot-contact-create`, {
+                const hubspotResponse = await fetch(`${window.location.origin}/functions/v1/hubspot-contact-create`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -363,7 +350,7 @@
         useEffect(() => {
             const loadQuestions = async () => {
                 try {
-                    const response = await fetch(`${supabaseConfig.url}/functions/v1/get-survey-questions`);
+                    const response = await fetch(`${window.location.origin}/functions/v1/get-survey-questions`);
                     if (response.ok) {
                         const data = await response.json();
                         setQuestions(data.questions || []);
@@ -476,22 +463,18 @@
                 }
 
                 try {
-                    console.log('🔍 Validating token with /me endpoint...');
-                    const response = await fetch(`${supabaseConfig.url}/functions/v1/me`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    console.log('🔍 Validating session with Supabase client...');
+                    const { data: { session }, error } = await supabaseClient.auth.getSession();
                     
-                    console.log('📡 /me response status:', response.status);
+                    console.log('📡 Session check result:', error ? 'Error' : 'Success');
+                    console.log('📡 Session exists:', !!session);
                     
-                    if (response.ok) {
-                        console.log('✅ Token valid - user authenticated');
-                        setIsAuthenticated(true);
-                    } else {
-                        console.log('❌ Token invalid - showing login modal');
+                    if (error || !session) {
+                        console.log('❌ No valid session - showing login modal');
                         setShowLoginModal(true);
+                    } else {
+                        console.log('✅ Valid session - user authenticated');
+                        setIsAuthenticated(true);
                     }
                 } catch (error) {
                     console.error('❌ Error checking auth:', error);
@@ -523,12 +506,11 @@
 
         return React.createElement('div', { className: 'survey-container' }, [
             // Login Modal
-            React.createElement(LoginModal, {
-                isOpen: showLoginModal,
-                onClose: () => setShowLoginModal(false),
-                redirectTo: 'survey',
-                supabaseConfig: supabaseConfig
-            }),
+                    React.createElement(LoginModal, {
+                        isOpen: showLoginModal,
+                        onClose: () => setShowLoginModal(false),
+                        redirectTo: 'survey'
+                    }),
 
             // Survey Pages (only show when authenticated)
             isAuthenticated && currentPage === 1 && React.createElement(UserProfilePage, {
@@ -590,25 +572,24 @@
             localStorage.setItem('supabase_token', accessToken);
             localStorage.setItem('supabase_refresh_token', refreshToken);
             
-            // Fetch user data
-            fetch(`${supabaseConfig.url}/auth/v1/user`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'apikey': supabaseConfig.anonKey
+            // Get user data from Supabase client
+            supabaseClient.auth.getUser()
+            .then(({ data: { user }, error }) => {
+                if (error) {
+                    console.error('Error getting user data:', error);
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(userData => {
-                        localStorage.setItem('supabase_user_data', JSON.stringify(userData));
-                        
-                        // Clean URL
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        
-                        // Dispatch auth change event for header updates
-                        window.dispatchEvent(new CustomEvent('supabase-auth-change'));
-                        
-                        // Reload to show authenticated state
-                        window.location.reload();
+                
+                localStorage.setItem('supabase_user_data', JSON.stringify(user));
+                
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Dispatch auth change event for header updates
+                window.dispatchEvent(new CustomEvent('supabase-auth-change'));
+                
+                // Reload to show authenticated state
+                window.location.reload();
             })
             .catch(error => {
                 console.error('Error fetching user data:', error);
