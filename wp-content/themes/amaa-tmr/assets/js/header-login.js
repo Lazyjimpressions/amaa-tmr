@@ -141,20 +141,12 @@
     
     // Check authentication state on mount
     useEffect(() => {
-      const checkAuth = () => {
-        const token = localStorage.getItem('supabase_token');
-        const storedUserData = localStorage.getItem('supabase_user_data');
+      const checkAuth = async () => {
+        const { data: { session } } = await supabaseClient.auth.getSession();
         
-        if (token && storedUserData) {
-          try {
-            const user = JSON.parse(storedUserData);
-            setIsAuthenticated(true);
-            setUserData(user);
-          } catch (e) {
-            console.error('Error parsing user data:', e);
-            setIsAuthenticated(false);
-            setUserData(null);
-          }
+        if (session?.user) {
+          setIsAuthenticated(true);
+          setUserData(session.user);
         } else {
           setIsAuthenticated(false);
           setUserData(null);
@@ -167,8 +159,20 @@
       const handleAuthChange = () => checkAuth();
       window.addEventListener('supabase-auth-change', handleAuthChange);
       
+      // Also listen to Supabase auth events
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          setIsAuthenticated(true);
+          setUserData(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          setIsAuthenticated(false);
+          setUserData(null);
+        }
+      });
+      
       return () => {
         window.removeEventListener('supabase-auth-change', handleAuthChange);
+        subscription?.unsubscribe();
       };
     }, []);
     
@@ -208,11 +212,9 @@
             React.createElement('a', { href: '/app/profile' }, 'Profile'),
             React.createElement('a', { 
               href: '#',
-              onClick: (e) => {
+              onClick: async (e) => {
                 e.preventDefault();
-                localStorage.removeItem('supabase_token');
-                localStorage.removeItem('supabase_refresh_token');
-                localStorage.removeItem('supabase_user_data');
+                await supabaseClient.auth.signOut();
                 window.dispatchEvent(new CustomEvent('supabase-auth-change'));
                 window.location.reload();
               }

@@ -145,22 +145,17 @@
         const [errors, setErrors] = useState({});
         const [isSaving, setIsSaving] = useState(false);
 
-        // Load user email from token on mount
-        useEffect(() => {
-            const token = localStorage.getItem('supabase_token');
-            const userData = localStorage.getItem('supabase_user_data');
-            if (token && userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    setFormData(prev => ({ ...prev, email: user.email }));
-                    
-                    // Fetch HubSpot data if available
-                    fetchHubSpotData(user.email);
-                } catch (e) {
-                    console.error('Error parsing user data:', e);
-                }
-            }
-        }, []);
+                // Load user email from Supabase session on mount
+                useEffect(() => {
+                    const loadUserData = async () => {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        if (session?.user) {
+                            setFormData(prev => ({ ...prev, email: session.user.email }));
+                            fetchHubSpotData(session.user.email);
+                        }
+                    };
+                    loadUserData();
+                }, []);
 
         const fetchHubSpotData = async (email) => {
             try {
@@ -197,11 +192,11 @@
                 await onSave('user_profile', formData);
                 
                 // 2. Create/update HubSpot contact
-                const token = localStorage.getItem('supabase_token');
+                const { data: { session } } = await supabaseClient.auth.getSession();
                 const hubspotResponse = await fetch(`${window.location.origin}/functions/v1/hubspot-contact-create`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `Bearer ${session?.access_token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
@@ -448,41 +443,40 @@
         
         console.log('📊 SurveyApp state:', { currentPage, showLoginModal, isAuthenticated, isLoading });
 
-        // Check authentication on mount
+        // Check Supabase session on mount
         useEffect(() => {
             const checkAuth = async () => {
-                console.log('🔐 Checking authentication...');
-                const token = localStorage.getItem('supabase_token');
-                console.log('🔑 Token:', token ? 'Present' : 'Not present');
-                
-                if (!token) {
-                    console.log('❌ No token - showing login modal');
-                    setShowLoginModal(true);
-                    setIsLoading(false);
-                    return;
+                console.log('🔐 Checking Supabase session...');
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+                if (error) {
+                    console.error('❌ Error retrieving session:', error.message);
                 }
 
-                try {
-                    console.log('🔍 Validating session with Supabase client...');
-                    const { data: { session }, error } = await supabaseClient.auth.getSession();
-                    
-                    console.log('📡 Session check result:', error ? 'Error' : 'Success');
-                    console.log('📡 Session exists:', !!session);
-                    
-                    if (error || !session) {
-                        console.log('❌ No valid session - showing login modal');
-                        setShowLoginModal(true);
-                    } else {
-                        console.log('✅ Valid session - user authenticated');
-                        setIsAuthenticated(true);
-                    }
-                } catch (error) {
-                    console.error('❌ Error checking auth:', error);
-                    console.log('🔧 Proceeding with login modal due to auth check error');
+                if (session && session.user) {
+                    console.log('✅ Active session found for:', session.user.email);
+                    setIsAuthenticated(true);
+                    setShowLoginModal(false);
+                } else {
+                    console.log('⚠️ No session found — subscribing to auth events');
                     setShowLoginModal(true);
-                } finally {
-                    setIsLoading(false);
+
+                    // Listen for real-time auth changes
+                    supabaseClient.auth.onAuthStateChange((event, session) => {
+                        console.log('🔄 Auth event detected:', event);
+                        if (event === 'SIGNED_IN' && session?.user) {
+                            console.log('✅ User signed in:', session.user.email);
+                            setIsAuthenticated(true);
+                            setShowLoginModal(false);
+                        } else if (event === 'SIGNED_OUT') {
+                            console.log('🚪 User signed out');
+                            setIsAuthenticated(false);
+                            setShowLoginModal(true);
+                        }
+                    });
                 }
+
+                setIsLoading(false);
             };
 
             checkAuth();
@@ -559,45 +553,7 @@
         initSurveyApp();
     }
 
-    // Handle magic link callback
-    window.handleMagicLinkCallback = function() {
-        const urlParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = urlParams.get('access_token');
-        const refreshToken = urlParams.get('refresh_token');
-        
-        if (accessToken && refreshToken) {
-            console.log('🔑 Magic link callback detected');
-            
-            // Store tokens
-            localStorage.setItem('supabase_token', accessToken);
-            localStorage.setItem('supabase_refresh_token', refreshToken);
-            
-            // Get user data from Supabase client
-            supabaseClient.auth.getUser()
-            .then(({ data: { user }, error }) => {
-                if (error) {
-                    console.error('Error getting user data:', error);
-                    return;
-                }
-                
-                localStorage.setItem('supabase_user_data', JSON.stringify(user));
-                
-                // Clean URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-                
-                // Dispatch auth change event for header updates
-                window.dispatchEvent(new CustomEvent('supabase-auth-change'));
-                
-                // Reload to show authenticated state
-                window.location.reload();
-            })
-            .catch(error => {
-                console.error('Error fetching user data:', error);
-            });
-        }
-    };
-
-    // Call magic link handler on page load
-    window.handleMagicLinkCallback();
+            // Magic link callback is now handled by Supabase client automatically
+            // No manual token handling needed - Supabase manages sessions internally
 
 })();
