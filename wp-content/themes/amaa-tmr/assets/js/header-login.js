@@ -142,11 +142,11 @@
     // Check authentication state on mount
     useEffect(() => {
       const checkAuth = async () => {
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const user = await window.supabaseHelpers.getCurrentUser();
         
-        if (session?.user) {
+        if (user) {
           setIsAuthenticated(true);
-          setUserData(session.user);
+          setUserData(user);
         } else {
           setIsAuthenticated(false);
           setUserData(null);
@@ -214,8 +214,7 @@
               href: '#',
               onClick: async (e) => {
                 e.preventDefault();
-                await supabaseClient.auth.signOut();
-                window.dispatchEvent(new CustomEvent('supabase-auth-change'));
+                await window.supabaseHelpers.signOut();
                 window.location.reload();
               }
             }, 'Logout')

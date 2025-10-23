@@ -1,7 +1,7 @@
 /**
- * Supabase Client Initialization
+ * Supabase Client Initialization + Helpers
  * Centralized client for consistent session state across all components
- * Version: 1.0.0
+ * Version: 2.0.0
  * Date: 2025-01-22
  */
 
@@ -12,25 +12,74 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Initialize client
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Auth state listener for debugging and session management
+// --- Optional Debug Mode ---
+const DEBUG = true;
+function log(...args) {
+    if (DEBUG) console.log(...args);
+}
+
+// --- Auth Event Logging ---
 supabaseClient.auth.onAuthStateChange((event, session) => {
-    console.log('🔐 Supabase Auth event:', event);
+    log('🔐 Supabase Auth Event:', event);
     if (event === 'SIGNED_IN') {
-        console.log('✅ User signed in:', session?.user?.email);
-        // Dispatch custom event for other components
-        window.dispatchEvent(new CustomEvent('supabase-auth-change', {
-            detail: { event, session }
-        }));
+        log('✅ User signed in:', session?.user?.email);
+        window.dispatchEvent(new CustomEvent('supabase-auth-change', { detail: session?.user }));
     } else if (event === 'SIGNED_OUT') {
-        console.log('❌ User signed out');
-        // Dispatch custom event for other components
-        window.dispatchEvent(new CustomEvent('supabase-auth-change', {
-            detail: { event, session: null }
-        }));
+        log('🚪 User signed out');
+        window.dispatchEvent(new CustomEvent('supabase-auth-change', { detail: null }));
     }
 });
 
-// Export for other scripts
+// =====================================
+// 🔧 Global Helper Methods
+// =====================================
+window.supabaseHelpers = {
+    /**
+     * Get the current Supabase session (user + token)
+     * @returns {Promise<object|null>} user or null
+     */
+    async getCurrentUser() {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error) {
+            console.error('Error getting session:', error.message);
+            return null;
+        }
+        return session?.user || null;
+    },
+
+    /**
+     * Wait until a user is signed in (useful for deferred components)
+     */
+    async waitForSignIn(timeoutMs = 5000) {
+        const start = Date.now();
+        let user = await this.getCurrentUser();
+        if (user) return user;
+
+        return new Promise((resolve, reject) => {
+            const unsub = supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    unsub.data.subscription.unsubscribe();
+                    resolve(session.user);
+                }
+            });
+            setTimeout(() => {
+                unsub.data.subscription.unsubscribe();
+                reject(new Error('Timeout waiting for user sign-in'));
+            }, timeoutMs);
+        });
+    },
+
+    /**
+     * Sign out and broadcast logout to all listeners
+     */
+    async signOut() {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) console.error('Sign-out error:', error.message);
+        else log('✅ User signed out successfully');
+    }
+};
+
+// Export globally
 window.supabaseClient = supabaseClient;
 
 // For ES modules (future-proofing)

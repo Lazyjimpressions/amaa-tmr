@@ -148,10 +148,10 @@
                 // Load user email from Supabase session on mount
                 useEffect(() => {
                     const loadUserData = async () => {
-                        const { data: { session } } = await supabaseClient.auth.getSession();
-                        if (session?.user) {
-                            setFormData(prev => ({ ...prev, email: session.user.email }));
-                            fetchHubSpotData(session.user.email);
+                        const user = await window.supabaseHelpers.getCurrentUser();
+                        if (user) {
+                            setFormData(prev => ({ ...prev, email: user.email }));
+                            fetchHubSpotData(user.email);
                         }
                     };
                     loadUserData();
@@ -192,11 +192,11 @@
                 await onSave('user_profile', formData);
                 
                 // 2. Create/update HubSpot contact
-                const { data: { session } } = await supabaseClient.auth.getSession();
+                const user = await window.supabaseHelpers.getCurrentUser();
                 const hubspotResponse = await fetch(`${window.location.origin}/functions/v1/hubspot-contact-create`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${session?.access_token}`,
+                        'Authorization': `Bearer ${user?.access_token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
@@ -447,14 +447,10 @@
         useEffect(() => {
             const checkAuth = async () => {
                 console.log('🔐 Checking Supabase session...');
-                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                const user = await window.supabaseHelpers.getCurrentUser();
 
-                if (error) {
-                    console.error('❌ Error retrieving session:', error.message);
-                }
-
-                if (session && session.user) {
-                    console.log('✅ Active session found for:', session.user.email);
+                if (user) {
+                    console.log('✅ Active session found for:', user.email);
                     setIsAuthenticated(true);
                     setShowLoginModal(false);
                 } else {
