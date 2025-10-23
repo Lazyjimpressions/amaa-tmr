@@ -475,30 +475,31 @@
                     return;
                 }
 
-                try {
-                    console.log('🔍 Validating token with /me endpoint...');
-                    const response = await fetch(`${supabaseConfig.url}/functions/v1/me`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
+                        try {
+                            console.log('🔍 Validating token with /me endpoint...');
+                            const response = await fetch(`${supabaseConfig.url}/functions/v1/me`, {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            console.log('📡 /me response status:', response.status);
+                            
+                            if (response.ok) {
+                                console.log('✅ Token valid - user authenticated');
+                                setIsAuthenticated(true);
+                            } else {
+                                console.log('❌ Token invalid - showing login modal');
+                                setShowLoginModal(true);
+                            }
+                        } catch (error) {
+                            console.error('❌ Error checking auth:', error);
+                            console.log('🔧 Proceeding with login modal due to auth check error');
+                            setShowLoginModal(true);
+                        } finally {
+                            setIsLoading(false);
                         }
-                    });
-                    
-                    console.log('📡 /me response status:', response.status);
-                    
-                    if (response.ok) {
-                        console.log('✅ Token valid - user authenticated');
-                        setIsAuthenticated(true);
-                    } else {
-                        console.log('❌ Token invalid - showing login modal');
-                        setShowLoginModal(true);
-                    }
-                } catch (error) {
-                    console.error('❌ Error checking auth:', error);
-                    setShowLoginModal(true);
-                } finally {
-                    setIsLoading(false);
-                }
             };
 
             checkAuth();
