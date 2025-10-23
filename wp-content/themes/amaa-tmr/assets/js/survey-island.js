@@ -71,8 +71,8 @@
                             console.log('✅ Setting success state');
                             setSuccess(true);
                         } else {
-                            console.log('❌ Magic link failed:', responseData.error?.message || responseData.message);
-                            throw new Error(responseData.error?.message || responseData.message || 'Failed to send magic link');
+                            console.log('❌ Magic link failed:', responseData.error?.message || responseData.msg || responseData.message);
+                            throw new Error(responseData.error?.message || responseData.msg || responseData.message || 'Failed to send magic link');
                         }
                     } catch (err) {
                         setError(err.message || 'Failed to send magic link. Please try again.');
