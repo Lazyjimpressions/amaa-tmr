@@ -493,9 +493,11 @@
                     localStorage.setItem('supabase_user_data', JSON.stringify(user));
                     setIsAuthenticated(true);
                     setShowLoginModal(false);
+                    setIsLoading(false);
                 } else {
                     console.log('⚠️ No session found — subscribing to auth events');
                     setShowLoginModal(true);
+                    setIsLoading(false);
 
                     // Listen for real-time auth changes
                     if (supabaseClient && supabaseClient.auth) {
@@ -513,8 +515,6 @@
                         });
                     }
                 }
-
-                setIsLoading(false);
             };
 
             checkAuth();
