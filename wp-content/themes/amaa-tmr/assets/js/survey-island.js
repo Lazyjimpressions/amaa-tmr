@@ -458,54 +458,72 @@
         const [isAuthenticated, setIsAuthenticated] = useState(false);
         const [isLoading, setIsLoading] = useState(true);
         
-        console.log('📊 SurveyApp state:', { currentPage, showLoginModal, isAuthenticated, isLoading });
+        console.log('📊 Render cycle →', { isAuthenticated, isLoading, showLoginModal });
 
         // Check Supabase session on mount
         useEffect(() => {
+            let authListener;
+
             const checkAuth = async () => {
                 console.log('🔐 Checking Supabase session...');
-                
-                // Use supabaseHelpers (now guaranteed to be loaded by WordPress dependencies)
-                if (!window.supabaseHelpers) {
-                    console.error('❌ SupabaseHelpers not available - this should not happen with proper dependencies');
-                    setShowLoginModal(true);
-                    setIsLoading(false);
-                    return;
-                }
-                
-                const user = await window.supabaseHelpers.getCurrentUser();
 
-                if (user) {
-                    console.log('✅ Active session found for:', user.email);
-                    // Cache user data for instant loading on profile page
-                    localStorage.setItem('supabase_user_data', JSON.stringify(user));
-                    setIsAuthenticated(true);
-                    setShowLoginModal(false);
-                    setIsLoading(false);
-                } else {
-                    console.log('⚠️ No session found — subscribing to auth events');
-                    setShowLoginModal(true);
-                    setIsLoading(false);
+                try {
+                    // Ensure SupabaseHelpers are ready
+                    if (!window.supabaseHelpers) {
+                        console.warn('⏳ SupabaseHelpers not yet available, retrying...');
+                        setTimeout(checkAuth, 200);
+                        return;
+                    }
 
-                    // Listen for real-time auth changes
-                    if (supabaseClient && supabaseClient.auth) {
-                        supabaseClient.auth.onAuthStateChange((event, session) => {
+                    // Try current session first
+                    const user = await window.supabaseHelpers.getCurrentUser();
+
+                    if (user) {
+                        console.log('✅ Active session found for:', user.email);
+                        localStorage.setItem('supabase_user_data', JSON.stringify(user));
+                        setIsAuthenticated(true);
+                        setShowLoginModal(false);
+                        setIsLoading(false);
+                    } else {
+                        console.log('⚠️ No session found — listening for SIGNED_IN event');
+                        setShowLoginModal(true);
+                        setIsAuthenticated(false);
+                        setIsLoading(false);
+                    }
+
+                    // Always attach listener
+                    if (supabaseClient?.auth) {
+                        authListener = supabaseClient.auth.onAuthStateChange((event, session) => {
                             console.log('🔄 Auth event detected:', event);
                             if (event === 'SIGNED_IN' && session?.user) {
                                 console.log('✅ User signed in:', session.user.email);
+                                localStorage.setItem('supabase_user_data', JSON.stringify(session.user));
                                 setIsAuthenticated(true);
                                 setShowLoginModal(false);
+                                setIsLoading(false); // 👈 Critical
                             } else if (event === 'SIGNED_OUT') {
                                 console.log('🚪 User signed out');
                                 setIsAuthenticated(false);
                                 setShowLoginModal(true);
+                                setIsLoading(false); // 👈 also reset
                             }
                         });
                     }
+                } catch (err) {
+                    console.error('❌ Auth check failed:', err);
+                    setShowLoginModal(true);
+                    setIsLoading(false);
                 }
             };
 
             checkAuth();
+
+            // Cleanup on unmount
+            return () => {
+                if (authListener?.data?.subscription) {
+                    authListener.data.subscription.unsubscribe();
+                }
+            };
         }, []);
 
         const handleSave = async (type, data) => {
