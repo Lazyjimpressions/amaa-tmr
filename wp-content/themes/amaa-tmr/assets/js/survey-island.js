@@ -62,10 +62,10 @@
                         const responseData = await response.json();
                         console.log('  - Response Data:', responseData);
 
-                        if (response.ok) {
+                        if (response.ok && !responseData.error) {
                             setSuccess(true);
                         } else {
-                            throw new Error(responseData.message || 'Failed to send magic link');
+                            throw new Error(responseData.error?.message || responseData.message || 'Failed to send magic link');
                         }
                     } catch (err) {
                         setError(err.message || 'Failed to send magic link. Please try again.');
