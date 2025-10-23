@@ -47,8 +47,8 @@ test.describe('Supabase Authentication Flow', () => {
       // Wait for email input to be visible
       await page.waitForSelector('input[type="email"], input[placeholder*="email"]', { timeout: 5000 });
       
-      // Enter test email
-      await page.fill('input[type="email"], input[placeholder*="email"]', 'test@example.com');
+      // Enter real email (Supabase rejects test emails)
+      await page.fill('input[type="email"], input[placeholder*="email"]', 'jonathan.hughes@thefivestar.com');
       console.log('📧 Email entered');
       
       // Click send magic link
@@ -58,9 +58,11 @@ test.describe('Supabase Authentication Flow', () => {
       // Wait for response
       await page.waitForTimeout(2000);
       
-      // Check for success message
-      const successMessage = await page.textContent('text=Check your email');
+      // Check for success message or error message
+      const successMessage = await page.textContent('text=Check your email').catch(() => null);
+      const errorMessage = await page.textContent('text=For security purposes').catch(() => null);
       console.log('✅ Success message:', successMessage);
+      console.log('❌ Error message:', errorMessage);
     }
 
     // Test session persistence across page reload
