@@ -76,49 +76,6 @@
 
     <!-- Supabase Auth State Script -->
     <script>
-    // Update header login state based on localStorage tokens
-    function updateHeaderLoginState() {
-        const token = localStorage.getItem('supabase_token');
-        const userData = localStorage.getItem('supabase_user_data');
-        
-        if (token && userData) {
-            try {
-                const user = JSON.parse(userData);
-                const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
-                
-                // Find the user state container and replace with avatar
-                const userStateContainer = document.querySelector('.user-state');
-                if (userStateContainer) {
-                    userStateContainer.innerHTML = `
-                        <div class="user-avatar" onclick="toggleUserDropdown()">
-                            <span class="avatar-initials">${initials}</span>
-                        </div>
-                        <div class="user-dropdown" id="user-dropdown" style="display: none;">
-                            <div class="dropdown-item" onclick="handleLogout()">Logout</div>
-                        </div>
-                    `;
-                }
-            } catch (e) {
-                console.error('Error parsing user data:', e);
-            }
-        }
-    }
-
-    // Global dropdown functions
-    window.toggleUserDropdown = function() {
-        const dropdown = document.getElementById('user-dropdown');
-        if (dropdown) {
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        }
-    };
-
-    window.handleLogout = function() {
-        localStorage.removeItem('supabase_token');
-        localStorage.removeItem('supabase_refresh_token');
-        localStorage.removeItem('supabase_user_data');
-        location.reload();
-    };
-
-    // Update header on page load
-    document.addEventListener('DOMContentLoaded', updateHeaderLoginState);
+    // Legacy authentication code removed - now handled by React components
+    // The header-login.js script manages all authentication state
     </script>
