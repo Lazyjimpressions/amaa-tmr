@@ -38,11 +38,8 @@
                 <a href="<?php echo esc_url(home_url('/survey')); ?>" class="btn btn-primary survey-cta">Take the Survey</a>
                 
                 <!-- User State (Supabase Authentication Only) -->
-                <div class="user-state" id="user-state">
-                    <!-- Supabase Authentication State - Managed by React -->
-                    <div id="supabase-auth-state">
-                        <!-- React will populate this with either login button or user avatar -->
-                    </div>
+                <div id="supabase-auth-state">
+                    <!-- React will populate this with either login button or user avatar -->
                 </div>
             </div>
             

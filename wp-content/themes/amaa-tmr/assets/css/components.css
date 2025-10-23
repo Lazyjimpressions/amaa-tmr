@@ -61,6 +61,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-16);
+    flex-wrap: nowrap; /* Prevent wrapping */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .survey-cta {
@@ -81,6 +83,12 @@
 /* User State */
 .user-state {
     position: relative;
+}
+
+/* Ensure the auth state container doesn't cause issues */
+#supabase-auth-state {
+    display: flex;
+    align-items: center;
 }
 
 .user-avatar {

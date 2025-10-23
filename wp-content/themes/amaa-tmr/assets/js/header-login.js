@@ -249,39 +249,198 @@
   waitForReact().then(() => {
     console.log('✅ Initializing Supabase-only authentication');
     
-    // Mount login modal
+    // Create a single HeaderLoginManager instance
+    const headerLoginManager = React.createElement(HeaderLoginManager);
+    
+    // Mount login modal (only the modal part)
     const modalRoot = document.getElementById('login-modal-root');
     if (modalRoot) {
       console.log('✅ Mounting login modal');
       if (ReactDOM.createRoot) {
         const root = ReactDOM.createRoot(modalRoot);
-        root.render(React.createElement(HeaderLoginManager));
+        root.render(headerLoginManager);
       } else {
-        ReactDOM.render(React.createElement(HeaderLoginManager), modalRoot);
+        ReactDOM.render(headerLoginManager, modalRoot);
       }
     }
     
-    // Mount desktop auth state
+    // Mount desktop auth state (only the auth state part, not the modal)
     const desktopAuthState = document.getElementById('supabase-auth-state');
     if (desktopAuthState) {
       console.log('✅ Mounting desktop auth state');
+      // Create a component that only renders the auth state, not the modal
+      const AuthStateOnly = () => {
+        const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+        const [userData, setUserData] = React.useState(null);
+        
+        React.useEffect(() => {
+          const checkAuth = () => {
+            const token = localStorage.getItem('supabase_token');
+            const storedUserData = localStorage.getItem('supabase_user_data');
+            
+            if (token && storedUserData) {
+              try {
+                const user = JSON.parse(storedUserData);
+                setIsAuthenticated(true);
+                setUserData(user);
+              } catch (e) {
+                console.error('Error parsing user data:', e);
+                setIsAuthenticated(false);
+                setUserData(null);
+              }
+            } else {
+              setIsAuthenticated(false);
+              setUserData(null);
+            }
+          };
+          
+          checkAuth();
+          
+          const handleAuthChange = () => checkAuth();
+          window.addEventListener('supabase-auth-change', handleAuthChange);
+          
+          return () => {
+            window.removeEventListener('supabase-auth-change', handleAuthChange);
+          };
+        }, []);
+        
+        if (isAuthenticated && userData) {
+          const initials = (userData.first_name?.[0] || '') + (userData.last_name?.[0] || '') || userData.email?.[0] || 'U';
+          return React.createElement('div', { className: 'user-avatar', id: 'user-avatar' }, [
+            React.createElement('div', { 
+              className: 'avatar-circle',
+              onClick: () => {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+              }
+            }, initials),
+            React.createElement('div', { 
+              className: 'user-dropdown', 
+              id: 'user-dropdown',
+              style: { display: 'none' }
+            }, [
+              React.createElement('a', { href: '/app/dashboard' }, 'Dashboard'),
+              React.createElement('a', { href: '/app/profile' }, 'Profile'),
+              React.createElement('a', { 
+                href: '#',
+                onClick: (e) => {
+                  e.preventDefault();
+                  localStorage.removeItem('supabase_token');
+                  localStorage.removeItem('supabase_refresh_token');
+                  localStorage.removeItem('supabase_user_data');
+                  window.dispatchEvent(new CustomEvent('supabase-auth-change'));
+                  window.location.reload();
+                }
+              }, 'Logout')
+            ])
+          ]);
+        } else {
+          return React.createElement('button', {
+            id: 'header-login-btn',
+            className: 'btn btn-secondary',
+            onClick: () => {
+              console.log('📣 Opening login modal...');
+              window.dispatchEvent(new CustomEvent('open-login-modal'));
+            }
+          }, 'Log In');
+        }
+      };
+      
       if (ReactDOM.createRoot) {
         const root = ReactDOM.createRoot(desktopAuthState);
-        root.render(React.createElement(HeaderLoginManager));
+        root.render(React.createElement(AuthStateOnly));
       } else {
-        ReactDOM.render(React.createElement(HeaderLoginManager), desktopAuthState);
+        ReactDOM.render(React.createElement(AuthStateOnly), desktopAuthState);
       }
     }
     
-    // Mount mobile auth state
+    // Mount mobile auth state (only the auth state part, not the modal)
     const mobileAuthState = document.getElementById('mobile-login-container');
     if (mobileAuthState) {
       console.log('✅ Mounting mobile auth state');
+      // Use the same AuthStateOnly component for mobile
+      const AuthStateOnly = () => {
+        const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+        const [userData, setUserData] = React.useState(null);
+        
+        React.useEffect(() => {
+          const checkAuth = () => {
+            const token = localStorage.getItem('supabase_token');
+            const storedUserData = localStorage.getItem('supabase_user_data');
+            
+            if (token && storedUserData) {
+              try {
+                const user = JSON.parse(storedUserData);
+                setIsAuthenticated(true);
+                setUserData(user);
+              } catch (e) {
+                console.error('Error parsing user data:', e);
+                setIsAuthenticated(false);
+                setUserData(null);
+              }
+            } else {
+              setIsAuthenticated(false);
+              setUserData(null);
+            }
+          };
+          
+          checkAuth();
+          
+          const handleAuthChange = () => checkAuth();
+          window.addEventListener('supabase-auth-change', handleAuthChange);
+          
+          return () => {
+            window.removeEventListener('supabase-auth-change', handleAuthChange);
+          };
+        }, []);
+        
+        if (isAuthenticated && userData) {
+          const initials = (userData.first_name?.[0] || '') + (userData.last_name?.[0] || '') || userData.email?.[0] || 'U';
+          return React.createElement('div', { className: 'user-avatar', id: 'mobile-user-avatar' }, [
+            React.createElement('div', { 
+              className: 'avatar-circle',
+              onClick: () => {
+                const dropdown = document.getElementById('mobile-user-dropdown');
+                if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+              }
+            }, initials),
+            React.createElement('div', { 
+              className: 'user-dropdown', 
+              id: 'mobile-user-dropdown',
+              style: { display: 'none' }
+            }, [
+              React.createElement('a', { href: '/app/dashboard' }, 'Dashboard'),
+              React.createElement('a', { href: '/app/profile' }, 'Profile'),
+              React.createElement('a', { 
+                href: '#',
+                onClick: (e) => {
+                  e.preventDefault();
+                  localStorage.removeItem('supabase_token');
+                  localStorage.removeItem('supabase_refresh_token');
+                  localStorage.removeItem('supabase_user_data');
+                  window.dispatchEvent(new CustomEvent('supabase-auth-change'));
+                  window.location.reload();
+                }
+              }, 'Logout')
+            ])
+          ]);
+        } else {
+          return React.createElement('button', {
+            id: 'mobile-login-btn',
+            className: 'btn btn-secondary',
+            onClick: () => {
+              console.log('📣 Opening login modal...');
+              window.dispatchEvent(new CustomEvent('open-login-modal'));
+            }
+          }, 'Log In');
+        }
+      };
+      
       if (ReactDOM.createRoot) {
         const root = ReactDOM.createRoot(mobileAuthState);
-        root.render(React.createElement(HeaderLoginManager));
+        root.render(React.createElement(AuthStateOnly));
       } else {
-        ReactDOM.render(React.createElement(HeaderLoginManager), mobileAuthState);
+        ReactDOM.render(React.createElement(AuthStateOnly), mobileAuthState);
       }
     }
   });
