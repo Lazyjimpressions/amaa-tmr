@@ -463,32 +463,40 @@
         // Check Supabase session on mount
         useEffect(() => {
             let authListener;
+            let supabaseInitRetries = 0;
 
             const checkAuth = async () => {
                 console.log('🔐 Checking Supabase session...');
 
-                try {
-                    // Ensure SupabaseHelpers are ready
-                    if (!window.supabaseHelpers) {
-                        console.warn('⏳ SupabaseHelpers not yet available, retrying...');
-                        setTimeout(checkAuth, 200);
+                // Wait until Supabase client and helpers are ready
+                if (!window.supabaseClient || !window.supabaseHelpers) {
+                    supabaseInitRetries++;
+                    if (supabaseInitRetries > 25) { // ~5 seconds max
+                        console.error('❌ Supabase not ready after retries — aborting.');
+                        setIsLoading(false);
+                        setShowLoginModal(true);
                         return;
                     }
 
-                    // Try current session first
-                    const user = await window.supabaseHelpers.getCurrentUser();
+                    console.warn(`⏳ SupabaseHelpers not yet available (retry ${supabaseInitRetries}/25)...`);
+                    setTimeout(checkAuth, 200);
+                    return;
+                }
 
+                supabaseInitRetries = 0; // reset on success
+                console.log('✅ Supabase client and helpers ready — proceeding with session check.');
+
+                try {
+                    const user = await window.supabaseHelpers.getCurrentUser();
                     if (user) {
                         console.log('✅ Active session found for:', user.email);
                         localStorage.setItem('supabase_user_data', JSON.stringify(user));
                         setIsAuthenticated(true);
                         setShowLoginModal(false);
-                        setIsLoading(false);
                     } else {
-                        console.log('⚠️ No session found — listening for SIGNED_IN event');
+                        console.log('⚠️ No active session found.');
                         setShowLoginModal(true);
                         setIsAuthenticated(false);
-                        setIsLoading(false);
                     }
 
                     // Always attach listener
@@ -510,8 +518,9 @@
                         });
                     }
                 } catch (err) {
-                    console.error('❌ Auth check failed:', err);
+                    console.error('❌ Auth check error:', err);
                     setShowLoginModal(true);
+                } finally {
                     setIsLoading(false);
                 }
             };
