@@ -15,6 +15,21 @@
             
             if (!supabaseClient) {
                 console.error('❌ Supabase client not loaded');
+                console.error('Available window objects:', Object.keys(window).filter(key => key.includes('supabase')));
+                console.error('Supabase JS loaded:', !!window.supabase);
+                console.error('SupabaseHelpers loaded:', !!window.supabaseHelpers);
+                
+                // Wait for supabaseClient to load
+                const waitForSupabase = () => {
+                    if (window.supabaseClient) {
+                        console.log('✅ Supabase client loaded, retrying...');
+                        initSurveyApp();
+                    } else {
+                        console.log('⏳ Still waiting for Supabase client...');
+                        setTimeout(waitForSupabase, 100);
+                    }
+                };
+                setTimeout(waitForSupabase, 100);
                 return;
             }
             
@@ -461,6 +476,15 @@
         useEffect(() => {
             const checkAuth = async () => {
                 console.log('🔐 Checking Supabase session...');
+                
+                // Check if supabaseHelpers is available
+                if (!window.supabaseHelpers) {
+                    console.error('❌ SupabaseHelpers not available - showing login modal');
+                    setShowLoginModal(true);
+                    setIsLoading(false);
+                    return;
+                }
+                
                 const user = await window.supabaseHelpers.getCurrentUser();
 
                 if (user) {
@@ -474,18 +498,20 @@
                     setShowLoginModal(true);
 
                     // Listen for real-time auth changes
-                    supabaseClient.auth.onAuthStateChange((event, session) => {
-                        console.log('🔄 Auth event detected:', event);
-                        if (event === 'SIGNED_IN' && session?.user) {
-                            console.log('✅ User signed in:', session.user.email);
-                            setIsAuthenticated(true);
-                            setShowLoginModal(false);
-                        } else if (event === 'SIGNED_OUT') {
-                            console.log('🚪 User signed out');
-                            setIsAuthenticated(false);
-                            setShowLoginModal(true);
-                        }
-                    });
+                    if (supabaseClient && supabaseClient.auth) {
+                        supabaseClient.auth.onAuthStateChange((event, session) => {
+                            console.log('🔄 Auth event detected:', event);
+                            if (event === 'SIGNED_IN' && session?.user) {
+                                console.log('✅ User signed in:', session.user.email);
+                                setIsAuthenticated(true);
+                                setShowLoginModal(false);
+                            } else if (event === 'SIGNED_OUT') {
+                                console.log('🚪 User signed out');
+                                setIsAuthenticated(false);
+                                setShowLoginModal(true);
+                            }
+                        });
+                    }
                 }
 
                 setIsLoading(false);
@@ -506,7 +532,15 @@
 
         if (isLoading) {
             return React.createElement('div', { className: 'survey-container' }, [
-                React.createElement('div', { className: 'loading-spinner' }, 'Loading...')
+                React.createElement('div', { 
+                    className: 'loading-spinner',
+                    style: { 
+                        textAlign: 'center', 
+                        padding: '2rem',
+                        fontSize: '1.2rem',
+                        color: '#666'
+                    }
+                }, 'Loading survey...')
             ]);
         }
 
