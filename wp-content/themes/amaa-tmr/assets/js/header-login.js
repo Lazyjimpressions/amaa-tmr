@@ -12,10 +12,14 @@
     });
   }
   
-  const supabaseConfig = window.supabaseConfig || {
-    url: 'https://ffgjqlmulaqtfopgwenf.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
-  };
+          const supabaseConfig = window.supabaseConfig || {
+            url: 'https://ffgjqlmulaqtfopgwenf.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
+          };
+          
+          // Initialize Supabase client
+          const { createClient } = supabase;
+          const supabaseClient = createClient(supabaseConfig.url, supabaseConfig.anonKey);
   
   // Make sure React hooks are available
   const { useState, useEffect } = React;
@@ -36,42 +40,25 @@
                 const redirectPath = redirectTo === 'dashboard' ? '/dashboard' : '/survey';
                 const fullRedirectUrl = `${window.location.origin}${redirectPath}`;
                 
-                // 🔍 DEBUG: Log what we're sending
                 console.log('🔍 Header Magic Link Debug:');
-                console.log('  - Origin:', window.location.origin);
-                console.log('  - Redirect Path:', redirectPath);
                 console.log('  - Full Redirect URL:', fullRedirectUrl);
-                console.log('  - Supabase URL:', supabaseConfig.url);
                 
-                const requestBody = {
+                const { data, error } = await supabaseClient.auth.signInWithOtp({
                   email: email.toLowerCase(),
                   options: {
                     emailRedirectTo: fullRedirectUrl
                   }
-                };
-                
-                console.log('  - Request Body:', JSON.stringify(requestBody, null, 2));
-                
-                const response = await fetch(`${supabaseConfig.url}/auth/v1/magiclink`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': supabaseConfig.anonKey
-                  },
-                  body: JSON.stringify(requestBody)
                 });
 
-                console.log('  - Response Status:', response.status);
-                const responseData = await response.json();
-                console.log('  - Response Data:', responseData);
+                console.log('  - Response:', { data, error });
 
-                if (response.ok) {
-                  setSuccess(true);
-                } else {
-                  throw new Error('Failed to send magic link');
+                if (error) {
+                  throw error;
                 }
+
+                setSuccess(true);
               } catch (err) {
-                setError('Failed to send magic link. Please try again.');
+                setError(err.message || 'Failed to send magic link. Please try again.');
                 console.error('Magic link error:', err);
               } finally {
                 setIsLoading(false);
