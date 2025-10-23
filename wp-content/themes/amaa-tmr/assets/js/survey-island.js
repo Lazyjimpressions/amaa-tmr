@@ -64,6 +64,8 @@
                         console.log('  - Response Data Keys:', Object.keys(responseData));
                         console.log('  - Has Error:', !!responseData.error);
                         console.log('  - Error Value:', responseData.error);
+                        console.log('  - Response OK:', response.ok);
+                        console.log('  - Condition check:', response.ok && !responseData.error);
 
                         if (response.ok && !responseData.error) {
                             console.log('✅ Setting success state');
