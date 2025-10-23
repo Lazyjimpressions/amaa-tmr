@@ -13,6 +13,24 @@ function amaa_tmr_add_auth_rewrite_rules() {
 }
 add_action('init', 'amaa_tmr_add_auth_rewrite_rules');
 
+// Force flush rewrite rules on theme activation
+function amaa_tmr_flush_rewrite_rules() {
+    amaa_tmr_add_auth_rewrite_rules();
+    flush_rewrite_rules();
+}
+add_action('after_switch_theme', 'amaa_tmr_flush_rewrite_rules');
+
+// Force flush rewrite rules via URL parameter (for development)
+function amaa_tmr_force_flush_rewrite_rules() {
+    if (isset($_GET['flush_rewrite_rules']) && $_GET['flush_rewrite_rules'] === '1') {
+        amaa_tmr_add_auth_rewrite_rules();
+        flush_rewrite_rules();
+        wp_redirect(home_url('/'));
+        exit;
+    }
+}
+add_action('admin_init', 'amaa_tmr_force_flush_rewrite_rules');
+
 // Add query var for auth confirmation
 function amaa_tmr_add_auth_query_vars($vars) {
     $vars[] = 'auth_confirm';
