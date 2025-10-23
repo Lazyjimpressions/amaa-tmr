@@ -10,27 +10,15 @@
     
     console.log('🚀 Survey Island Script Loading... [MODAL_AUTH_v3.0.0]');
 
-            // Use centralized Supabase client or create fallback
-            let supabaseClient = window.supabaseClient;
+            // Use centralized Supabase client (now guaranteed to be loaded by WordPress dependencies)
+            const supabaseClient = window.supabaseClient;
             
             if (!supabaseClient) {
-                console.error('❌ Supabase client not loaded');
+                console.error('❌ Supabase client not loaded - this should not happen with proper dependencies');
                 console.error('Available window objects:', Object.keys(window).filter(key => key.includes('supabase')));
                 console.error('Supabase JS loaded:', !!window.supabase);
                 console.error('SupabaseHelpers loaded:', !!window.supabaseHelpers);
-                
-                // Create fallback client if Supabase JS is available
-                if (window.supabase) {
-                    console.log('🔧 Creating fallback Supabase client');
-                    const SUPABASE_URL = 'https://ffgjqlmulaqtfopgwenf.supabase.co';
-                    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g';
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    window.supabaseClient = supabaseClient;
-                    console.log('✅ Fallback Supabase client created');
-                } else {
-                    console.error('❌ Supabase JS not available - cannot create client');
-                    return;
-                }
+                return;
             }
             
             console.log('🔧 Using centralized Supabase client');
@@ -477,36 +465,15 @@
             const checkAuth = async () => {
                 console.log('🔐 Checking Supabase session...');
                 
-                // Check if supabaseHelpers is available
+                // Use supabaseHelpers (now guaranteed to be loaded by WordPress dependencies)
                 if (!window.supabaseHelpers) {
-                    console.error('❌ SupabaseHelpers not available - showing login modal');
-                    console.error('Available window objects:', Object.keys(window).filter(key => key.includes('supabase')));
-                    console.error('Supabase JS loaded:', !!window.supabase);
-                    console.error('SupabaseClient loaded:', !!window.supabaseClient);
-                    
-                    // Wait for supabaseHelpers to load
-                    const waitForSupabaseHelpers = () => {
-                        if (window.supabaseHelpers) {
-                            console.log('✅ SupabaseHelpers loaded, retrying auth check...');
-                            checkAuth();
-                        } else {
-                            console.log('⏳ Still waiting for SupabaseHelpers...');
-                            setTimeout(waitForSupabaseHelpers, 100);
-                        }
-                    };
-                    setTimeout(waitForSupabaseHelpers, 100);
+                    console.error('❌ SupabaseHelpers not available - this should not happen with proper dependencies');
+                    setShowLoginModal(true);
+                    setIsLoading(false);
                     return;
                 }
                 
-                // Use supabaseHelpers if available, otherwise fallback to direct client
-                let user = null;
-                if (window.supabaseHelpers) {
-                    user = await window.supabaseHelpers.getCurrentUser();
-                } else if (supabaseClient && supabaseClient.auth) {
-                    console.log('🔧 Using fallback authentication method');
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    user = session?.user || null;
-                }
+                const user = await window.supabaseHelpers.getCurrentUser();
 
                 if (user) {
                     console.log('✅ Active session found for:', user.email);
