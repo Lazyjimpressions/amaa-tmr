@@ -538,7 +538,13 @@
         useEffect(() => {
             const handleAuthChange = async (event) => {
                 console.log(`📡 Auth event received in SurveyApp: ${event.type || event}`);
+                
+                // Add delay to ensure session is fully established
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 const user = await window.supabaseHelpers?.getCurrentUser?.();
+                console.log('🔍 getCurrentUser result:', user);
+                
                 if (user) {
                     console.log('✅ User revalidated after event:', user.email);
                     setIsAuthenticated(true);
