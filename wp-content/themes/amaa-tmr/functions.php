@@ -119,8 +119,8 @@ function amaa_tmr_enqueue_scripts() {
         $survey_path = get_template_directory() . '/assets/js/survey-island.js';
         $survey_base_url = get_template_directory_uri() . '/assets/js/survey-island.js';
         
-        // Create a unique version string using timestamp
-        $cache_bust_version = '3.1.0_' . time();
+            // Create a unique version string using timestamp
+            $cache_bust_version = '3.2.0_' . time();
         
         // Build URL with version parameter
         $survey_url = add_query_arg('v', $cache_bust_version, $survey_base_url);
