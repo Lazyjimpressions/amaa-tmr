@@ -39,7 +39,7 @@
 
               try {
                 const redirectPath = redirectTo === 'dashboard' ? '/dashboard' : '/survey';
-                const fullRedirectUrl = `${window.location.origin}/auth/confirm?next=${redirectPath}`;
+                const fullRedirectUrl = `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`;
                 
                 console.log('🔍 Header Magic Link Debug:');
                 console.log('  - Full Redirect URL:', fullRedirectUrl);
