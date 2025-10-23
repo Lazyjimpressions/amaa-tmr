@@ -61,10 +61,15 @@
                         console.log('  - Response Status:', response.status);
                         const responseData = await response.json();
                         console.log('  - Response Data:', responseData);
+                        console.log('  - Response Data Keys:', Object.keys(responseData));
+                        console.log('  - Has Error:', !!responseData.error);
+                        console.log('  - Error Value:', responseData.error);
 
                         if (response.ok && !responseData.error) {
+                            console.log('✅ Setting success state');
                             setSuccess(true);
                         } else {
+                            console.log('❌ Magic link failed:', responseData.error?.message || responseData.message);
                             throw new Error(responseData.error?.message || responseData.message || 'Failed to send magic link');
                         }
                     } catch (err) {
