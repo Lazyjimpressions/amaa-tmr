@@ -33,3 +33,11 @@
 - ✅ **ALWAYS ask** for clarification when uncertain about current state
 - ✅ **Reference** docs/runbooks/VERIFICATION_PROTOCOL.md for complete checklist
 - always remember that we use supabase online, not a local. we need to make sql commands in the online terminal manually.
+
+## MANDATORY SYNC PROTOCOL
+- 🚨 **CRITICAL: NEVER test changes without confirming they are synced to staging**
+- 🚨 **CRITICAL: ALWAYS ask user to confirm "Changes committed and synced to staging" before testing**
+- 🚨 **CRITICAL: NEVER assume changes are live without explicit user confirmation**
+- 🚨 **CRITICAL: STOP testing loops after 3-4 attempts - ask user for guidance**
+- 🚨 **CRITICAL: ALWAYS clear WP Engine cache after significant code changes**
+- 🚨 **CRITICAL: NEVER test without confirming changes are synced** - ask user to confirm sync before testing
