@@ -249,18 +249,42 @@
   waitForReact().then(() => {
     console.log('✅ Initializing Supabase-only authentication');
     
-    // Create a single HeaderLoginManager instance
-    const headerLoginManager = React.createElement(HeaderLoginManager);
-    
-    // Mount login modal (only the modal part)
+    // Mount login modal (only the modal part, not the auth state)
     const modalRoot = document.getElementById('login-modal-root');
     if (modalRoot) {
       console.log('✅ Mounting login modal');
+      // Create a component that only manages the modal, not the auth state
+      const ModalManager = () => {
+        const [showModal, setShowModal] = React.useState(false);
+        
+        // Listen for open modal event
+        React.useEffect(() => {
+          const handleOpenModal = () => {
+            console.log('📣 Opening login modal...');
+            setShowModal(true);
+          };
+          
+          window.addEventListener('open-login-modal', handleOpenModal);
+          window.openLoginModal = handleOpenModal;
+          
+          return () => {
+            window.removeEventListener('open-login-modal', handleOpenModal);
+          };
+        }, []);
+        
+        return React.createElement(LoginModal, {
+          isOpen: showModal,
+          onClose: () => setShowModal(false),
+          redirectTo: 'dashboard',
+          supabaseConfig: supabaseConfig
+        });
+      };
+      
       if (ReactDOM.createRoot) {
         const root = ReactDOM.createRoot(modalRoot);
-        root.render(headerLoginManager);
+        root.render(React.createElement(ModalManager));
       } else {
-        ReactDOM.render(headerLoginManager, modalRoot);
+        ReactDOM.render(React.createElement(ModalManager), modalRoot);
       }
     }
     
