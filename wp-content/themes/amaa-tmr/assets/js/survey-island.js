@@ -463,28 +463,23 @@
         // Check Supabase session on mount
         useEffect(() => {
             let authListener;
-            let supabaseInitRetries = 0;
+            let retries = 0;
+            
+            const waitForHelpers = setInterval(() => {
+                if (window.supabaseHelpers && window.supabaseClient) {
+                    clearInterval(waitForHelpers);
+                    console.log('✅ Supabase ready — starting checkAuth()');
+                    checkAuth();
+                } else if (++retries > 25) {
+                    clearInterval(waitForHelpers);
+                    console.error('❌ SupabaseHelpers never loaded after 5s — showing login modal');
+                    setIsLoading(false);
+                    setShowLoginModal(true);
+                }
+            }, 200);
 
             const checkAuth = async () => {
                 console.log('🔐 Checking Supabase session...');
-
-                // Wait until Supabase client and helpers are ready
-                if (!window.supabaseClient || !window.supabaseHelpers) {
-                    supabaseInitRetries++;
-                    if (supabaseInitRetries > 25) { // ~5 seconds max
-                        console.error('❌ Supabase not ready after retries — aborting.');
-                        setIsLoading(false);
-                        setShowLoginModal(true);
-                        return;
-                    }
-
-                    console.warn(`⏳ SupabaseHelpers not yet available (retry ${supabaseInitRetries}/25)...`);
-                    setTimeout(checkAuth, 200);
-                    return;
-                }
-
-                supabaseInitRetries = 0; // reset on success
-                console.log('✅ Supabase client and helpers ready — proceeding with session check.');
 
                 try {
                     const user = await window.supabaseHelpers.getCurrentUser();
@@ -525,10 +520,9 @@
                 }
             };
 
-            checkAuth();
-
             // Cleanup on unmount
             return () => {
+                clearInterval(waitForHelpers);
                 if (authListener?.data?.subscription) {
                     authListener.data.subscription.unsubscribe();
                 }

@@ -90,6 +90,9 @@ window.supabaseHelpers = {
 
 // Export globally
 window.supabaseClient = supabaseClient;
+window.supabaseHelpers = window.supabaseHelpers;
+
+console.log('✅ Supabase client & helpers initialized');
 
 // For ES modules (future-proofing)
 if (typeof module !== 'undefined' && module.exports) {
