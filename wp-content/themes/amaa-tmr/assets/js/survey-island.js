@@ -67,7 +67,7 @@
                         console.log('  - Response OK:', response.ok);
                         console.log('  - Condition check:', response.ok && !responseData.error);
 
-                        if (response.ok && !responseData.error) {
+                        if (response.ok && responseData.error === undefined) {
                             console.log('✅ Setting success state');
                             setSuccess(true);
                         } else {
