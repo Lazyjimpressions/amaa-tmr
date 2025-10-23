@@ -460,6 +460,11 @@
         
         console.log('📊 Render cycle →', { isAuthenticated, isLoading, showLoginModal });
 
+        // Defensive check on reload
+        if (!isAuthenticated && !isLoading) {
+            console.log('⚠️ No authenticated session yet — waiting for re-check');
+        }
+
         // Check Supabase session on mount
         useEffect(() => {
             let authListener;
@@ -526,6 +531,41 @@
                 if (authListener?.data?.subscription) {
                     authListener.data.subscription.unsubscribe();
                 }
+            };
+        }, []);
+
+        // 🔄 Re-run auth check whenever Supabase broadcasts an auth change
+        useEffect(() => {
+            const handleAuthChange = async (event) => {
+                console.log(`📡 Auth event received in SurveyApp: ${event.type || event}`);
+                const user = await window.supabaseHelpers?.getCurrentUser?.();
+                if (user) {
+                    console.log('✅ User revalidated after event:', user.email);
+                    setIsAuthenticated(true);
+                    setShowLoginModal(false);
+                    setIsLoading(false);
+                } else {
+                    console.log('⚠️ User signed out or missing session');
+                    setIsAuthenticated(false);
+                    setShowLoginModal(true);
+                }
+            };
+
+            // Listen to both Supabase + custom dispatch
+            window.addEventListener('supabase-auth-change', handleAuthChange);
+            const { data: listener } = window.supabaseClient?.auth?.onAuthStateChange(
+                (event, session) => {
+                    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                        handleAuthChange({ type: event });
+                    } else if (event === 'SIGNED_OUT') {
+                        handleAuthChange({ type: event });
+                    }
+                }
+            );
+
+            return () => {
+                window.removeEventListener('supabase-auth-change', handleAuthChange);
+                listener?.unsubscribe?.();
             };
         }, []);
 
