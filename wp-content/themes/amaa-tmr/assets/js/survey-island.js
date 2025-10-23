@@ -18,9 +18,8 @@
             
             console.log('🔧 Supabase Config:', supabaseConfig);
 
-            // Initialize Supabase client
-            const { createClient } = supabase;
-            const supabaseClient = createClient(supabaseConfig.url, supabaseConfig.anonKey);
+            // Use fetch API for magic link (more reliable than Supabase client)
+            console.log('🔧 Using fetch API for magic link requests');
 
     // React components
     const { useState, useEffect, useRef, createElement } = React;
@@ -45,20 +44,29 @@
                         console.log('🔍 Magic Link Debug:');
                         console.log('  - Full Redirect URL:', fullRedirectUrl);
                         
-                        const { data, error } = await supabaseClient.auth.signInWithOtp({
-                            email: email.toLowerCase(),
-                            options: {
-                                emailRedirectTo: fullRedirectUrl
-                            }
+                        const response = await fetch(`${supabaseConfig.url}/auth/v1/otp`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': supabaseConfig.anonKey
+                            },
+                            body: JSON.stringify({
+                                email: email.toLowerCase(),
+                                options: {
+                                    emailRedirectTo: fullRedirectUrl
+                                }
+                            })
                         });
 
-                        console.log('  - Response:', { data, error });
+                        console.log('  - Response Status:', response.status);
+                        const responseData = await response.json();
+                        console.log('  - Response Data:', responseData);
 
-                        if (error) {
-                            throw error;
+                        if (response.ok) {
+                            setSuccess(true);
+                        } else {
+                            throw new Error(responseData.message || 'Failed to send magic link');
                         }
-
-                        setSuccess(true);
                     } catch (err) {
                         setError(err.message || 'Failed to send magic link. Please try again.');
                         console.error('Magic link error:', err);
