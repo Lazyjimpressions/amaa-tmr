@@ -109,9 +109,22 @@ function wireLogout() {
   const btn = document.getElementById("tmr-logout-btn");
   if (!btn) return;
   btn.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    sessionStorage.removeItem("tmr_membership_v1");
-    window.location.reload();
+    try {
+      // Use AuthManager if available, fallback to direct Supabase
+      if (window.authManager) {
+        console.log('🔧 [TMR Plugin] Using AuthManager for logout');
+        await window.authManager.signOut();
+      } else {
+        console.log('⚠️ [TMR Plugin] AuthManager not available, using direct Supabase');
+        await supabase.auth.signOut();
+        sessionStorage.removeItem("tmr_membership_v1");
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error('❌ [TMR Plugin] Logout failed:', error);
+      // Still reload to clear any partial state
+      window.location.reload();
+    }
   });
 }
 

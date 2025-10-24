@@ -120,7 +120,7 @@ function amaa_tmr_enqueue_scripts() {
                 'amaa-tmr-supabase-client',
                 get_template_directory_uri() . '/assets/js/supabaseClient.js',
                 array('react', 'react-dom', 'supabase-js'), // Must load after CDN
-                file_exists(get_template_directory() . '/assets/js/supabaseClient.js') ? filemtime(get_template_directory() . '/assets/js/supabaseClient.js') : '1.0.0',
+                file_exists(get_template_directory() . '/assets/js/supabaseClient.js') ? filemtime(get_template_directory() . '/assets/js/supabaseClient.js') : '3.0.0',
                 true
             );
 
@@ -131,7 +131,7 @@ function amaa_tmr_enqueue_scripts() {
         $survey_base_url = get_template_directory_uri() . '/assets/js/survey-island.js';
         
             // Create a unique version string using timestamp
-            $cache_bust_version = '3.2.0_' . time();
+            $cache_bust_version = '4.0.0_' . time();
         
         // Build URL with version parameter
         $survey_url = add_query_arg('v', $cache_bust_version, $survey_base_url);
@@ -160,7 +160,7 @@ function amaa_tmr_enqueue_scripts() {
         'amaa-tmr-header-login',
         get_template_directory_uri() . '/assets/js/header-login.js',
         array('react', 'react-dom', 'amaa-tmr-supabase-client'), // Clean dependency chain
-        file_exists($header_login_path) ? filemtime($header_login_path) : '1.0.0',
+        file_exists($header_login_path) ? filemtime($header_login_path) : '2.0.0',
         true
     );
 
