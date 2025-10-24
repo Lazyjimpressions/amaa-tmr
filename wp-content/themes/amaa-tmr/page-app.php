@@ -2,6 +2,8 @@
 /*
 Template Name: App Shell
 Template Post Type: page
+Version: 2.0.0 - AuthManager Only
+Date: 2025-10-24
 */
 get_header(); ?>
 

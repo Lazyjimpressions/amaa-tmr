@@ -1,11 +1,11 @@
 /**
- * Supabase Client Initialization + Helpers
- * Centralized client for consistent session state across all components
- * Version: 2.2.0 - AuthManager Logout Fallback Fix
+ * Supabase Client Initialization + AuthManager
+ * Centralized authentication state management with single source of truth
+ * Version: 3.0.0 - AuthManager Only Architecture
  * Date: 2025-10-24
  */
 
-console.log('🚀 SupabaseClient.js v2.2.0 - AuthManager Logout Fallback Fix');
+console.log('🚀 SupabaseClient.js v3.0.0 - AuthManager Only Architecture');
 
 // Configuration (use constants already defined in functions.php)
 const SUPABASE_URL = 'https://ffgjqlmulaqtfopgwenf.supabase.co';
@@ -102,31 +102,7 @@ window.supabaseHelpers = {
         return session?.access_token || null;
     },
 
-    /**
-     * Sign out and broadcast logout to all listeners
-     * DEPRECATED: Use AuthManager.signOut() instead
-     * Kept for backward compatibility
-     */
-    async signOut() {
-        console.warn('⚠️ supabaseHelpers.signOut() is deprecated. Use AuthManager.signOut() instead.');
-        
-        // Delegate to AuthManager if available
-        if (window.authManager) {
-            return await window.authManager.signOut();
-        }
-        
-        // Fallback to direct Supabase call
-        const client = await this.waitForClient();
-        const { error } = await client.auth.signOut();
-        
-        if (error) {
-            console.error('Sign-out error:', error.message);
-            throw error;
-        } else {
-            log('✅ User signed out successfully (legacy method)');
-            localStorage.removeItem('supabase_user_data');
-        }
-    }
+    // signOut() method removed - use AuthManager.signOut() instead
 };
 
 /**
@@ -294,10 +270,10 @@ class AuthManager {
     
     async signOut() {
         try {
-            // Check if client is available
+            console.log('🚪 AuthManager: Starting logout');
+            
             if (!this.client) {
-                console.warn('⚠️ AuthManager: Client not available, using legacy logout');
-                return await window.supabaseHelpers.signOut();
+                throw new Error('Supabase client not initialized');
             }
             
             const { error } = await this.client.auth.signOut();
@@ -306,8 +282,9 @@ class AuthManager {
                 throw error;
             }
             
-            // Clear cached data
+            // Clear all auth data
             localStorage.removeItem('supabase_user_data');
+            sessionStorage.removeItem('tmr_membership_v1');
             
             // Update state
             this.setState({
@@ -326,7 +303,7 @@ class AuthManager {
             // Dispatch events
             this.dispatchAuthEvent('SIGNED_OUT', null);
             
-            console.log('✅ AuthManager: Logout successful');
+            console.log('✅ AuthManager: Logout complete');
             
         } catch (error) {
             console.error('❌ AuthManager: Logout failed:', error);

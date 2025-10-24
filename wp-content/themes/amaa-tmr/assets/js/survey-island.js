@@ -1,14 +1,14 @@
 /**
- * AM&AA TMR Survey Island - Refactored Version
+ * AM&AA TMR Survey Island - AuthManager Only
  * Modal-first authentication + 2-page survey structure
- * Version: 3.1.0 - Fixed DOM container ID mismatch
- * Date: 2025-10-22
+ * Version: 4.0.0 - AuthManager Only Architecture
+ * Date: 2025-10-24
  */
 
 (function() {
     'use strict';
     
-    console.log('🚀 Survey Island Script Loading... [MODAL_AUTH_v3.0.0]');
+    console.log('🚀 Survey Island Script Loading... [AUTHMANAGER_ONLY_v4.0.0]');
 
             // Use centralized Supabase client (now guaranteed to be loaded by WordPress dependencies)
             const supabaseClient = window.supabaseClient;
@@ -468,18 +468,33 @@
             console.log('⚠️ No authenticated session yet — waiting for re-check');
         }
 
-        // 🚀 HYBRID: AuthManager with fallback to legacy auth
+        // 🚀 AuthManager Only - Single source of truth
         useEffect(() => {
-            console.log('🚀 [SurveyApp] Mounting auth lifecycle with hybrid approach');
+            console.log('🚀 [SurveyApp] Mounting auth lifecycle with AuthManager only');
 
-            // Try AuthManager first, fallback to legacy if it fails
+            // Wait for AuthManager to be available
             const setupAuth = () => {
                 if (window.authManager && !window.authManager.getError) {
                     console.log('✅ [SurveyApp] Using AuthManager for auth state');
                     return setupAuthManagerSubscription();
                 } else {
-                    console.log('⚠️ [SurveyApp] AuthManager not available, using legacy auth');
-                    return setupLegacyAuth();
+                    console.log('⚠️ [SurveyApp] AuthManager not available, waiting...');
+                    // Wait up to 5 seconds for AuthManager
+                    let attempts = 0;
+                    const interval = setInterval(() => {
+                        if (window.authManager && !window.authManager.getError) {
+                            clearInterval(interval);
+                            console.log('✅ [SurveyApp] AuthManager now available');
+                            return setupAuthManagerSubscription();
+                        } else if (++attempts > 50) {
+                            clearInterval(interval);
+                            console.error('❌ [SurveyApp] AuthManager not available after waiting');
+                            setIsLoading(false);
+                            setShowLoginModal(true);
+                            return null;
+                        }
+                    }, 100);
+                    return null;
                 }
             };
 
@@ -515,87 +530,7 @@
                 return unsubscribe;
             };
 
-            const setupLegacyAuth = () => {
-                const supabase = window.supabaseClient;
-                if (!supabase) {
-                    console.error('❌ [SurveyApp] No Supabase client available');
-                    setIsLoading(false);
-                    setShowLoginModal(true);
-                    return null;
-                }
-
-                // Legacy auth check with retry
-                let attempts = 0;
-                const maxAttempts = 5;
-
-                const checkAuth = async () => {
-                    attempts++;
-                    console.log(`🕓 [SurveyApp] Legacy auth check (attempt ${attempts})`);
-                    
-                    try {
-                        const [userResult, sessionResult] = await Promise.all([
-                            supabase.auth.getUser(),
-                            supabase.auth.getSession()
-                        ]);
-                        
-                        const user = userResult.data.user;
-                        const session = sessionResult.data.session;
-                        
-                        if (user && session) {
-                            console.log("✅ [SurveyApp] Legacy auth: User found:", user.email);
-                            setIsAuthenticated(true);
-                            setShowLoginModal(false);
-                            setIsLoading(false);
-                            
-                            // Trigger HubSpot data fetch
-                            if (window.fetchHubSpotData) {
-                                window.fetchHubSpotData(user.email);
-                            }
-                        } else if (attempts < maxAttempts) {
-                            console.log(`⏳ [SurveyApp] No session yet, retrying in 1s (attempt ${attempts}/${maxAttempts})`);
-                            setTimeout(checkAuth, 1000);
-                        } else {
-                            console.warn("⚠️ [SurveyApp] No session found after retries");
-                            setIsAuthenticated(false);
-                            setShowLoginModal(true);
-                            setIsLoading(false);
-                        }
-                    } catch (error) {
-                        console.error('❌ [SurveyApp] Legacy auth check failed:', error);
-                        setIsAuthenticated(false);
-                        setShowLoginModal(true);
-                        setIsLoading(false);
-                    }
-                };
-
-                checkAuth();
-
-                // Set up auth state listener
-                const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
-                    console.log(`📡 [SurveyApp] Legacy auth event: ${event}`);
-                    
-                    if (event === 'SIGNED_IN' && session?.user) {
-                        console.log('✅ [SurveyApp] Legacy auth: User signed in:', session.user.email);
-                        setIsAuthenticated(true);
-                        setShowLoginModal(false);
-                        setIsLoading(false);
-                        
-                        // Trigger HubSpot data fetch
-                        if (window.fetchHubSpotData) {
-                            window.fetchHubSpotData(session.user.email);
-                        }
-                    } else if (event === 'SIGNED_OUT') {
-                        console.log('🚪 [SurveyApp] Legacy auth: User signed out');
-                        setIsAuthenticated(false);
-                        setShowLoginModal(true);
-                        setIsLoading(false);
-                    }
-                });
-
-                return () => {
-                    subscription?.unsubscribe();
-                };
-            };
+            // Legacy auth setup removed - AuthManager only
 
             // Start auth setup
             const unsubscribe = setupAuth();

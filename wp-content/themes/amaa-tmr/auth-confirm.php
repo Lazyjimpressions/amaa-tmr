@@ -2,6 +2,8 @@
 /**
  * Auth Confirmation Handler
  * Handles magic link token verification and redirects
+ * Version: 2.0.0 - AuthManager Only
+ * Date: 2025-10-24
  */
 
 // Get URL parameters

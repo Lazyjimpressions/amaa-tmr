@@ -221,13 +221,29 @@
                   e.target.textContent = 'Logging out...';
                   e.target.style.pointerEvents = 'none';
                   
-                  // Use AuthManager for centralized logout
-                  if (window.authManager) {
-                    await window.authManager.signOut();
-                  } else {
-                    // Fallback to old method
-                    await window.supabaseHelpers.signOut();
-                  }
+                  // Wait for AuthManager to be available
+                  const getAuthManager = () => {
+                    return new Promise((resolve, reject) => {
+                      if (window.authManager) {
+                        resolve(window.authManager);
+                      } else {
+                        // Wait up to 5 seconds for AuthManager
+                        let attempts = 0;
+                        const interval = setInterval(() => {
+                          if (window.authManager) {
+                            clearInterval(interval);
+                            resolve(window.authManager);
+                          } else if (++attempts > 50) {
+                            clearInterval(interval);
+                            reject(new Error('AuthManager not available'));
+                          }
+                        }, 100);
+                      }
+                    });
+                  };
+                  
+                  const authManager = await getAuthManager();
+                  await authManager.signOut();
                   
                   // Redirect to homepage after successful logout
                   console.log('✅ Logout successful, redirecting to homepage');
