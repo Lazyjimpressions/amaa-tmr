@@ -157,7 +157,7 @@
                             try {
                                 const user = JSON.parse(cachedUserData);
                                 setFormData(prev => ({ ...prev, email: user.email }));
-                                fetchHubSpotData(user.email);
+                                // HubSpot data will be fetched by checkUntilReady after session verification
                                 return;
                             } catch (e) {
                                 console.warn('Invalid cached user data, fetching fresh data');
@@ -168,7 +168,7 @@
                         const user = await window.supabaseHelpers.getCurrentUser();
                         if (user) {
                             setFormData(prev => ({ ...prev, email: user.email }));
-                            fetchHubSpotData(user.email);
+                            // HubSpot data will be fetched by checkUntilReady after session verification
                         }
                     };
                     loadUserData();
@@ -199,6 +199,9 @@
                 console.error('Error fetching HubSpot data:', error);
             }
         };
+        
+        // Make fetchHubSpotData globally accessible
+        window.fetchHubSpotData = fetchHubSpotData;
 
         const handleSubmit = async () => {
             if (!validateForm()) return;
@@ -516,6 +519,11 @@
                     setIsAuthenticated(true);
                     setShowLoginModal(false);
                     setIsLoading(false);
+                    
+                    // Trigger HubSpot data fetch only after verified session
+                    if (window.fetchHubSpotData) {
+                        window.fetchHubSpotData(user.email);
+                    }
                 } else if (attempts < maxAttempts) {
                     setTimeout(checkUntilReady, 500); // try again in 0.5s
                 } else {
@@ -540,12 +548,13 @@
                 }
             });
 
-            // 4️⃣ Also listen to the header's custom window event
-            const handleHeaderChange = () => refreshUserState("header-sync");
+            // 4️⃣ Also listen to the header's custom window event (throttled)
+            const handleHeaderChange = () => {
+                if (!refreshing) refreshUserState("header-sync");
+            };
             window.addEventListener("supabase-auth-change", handleHeaderChange);
 
             return () => {
-                clearTimeout(initialCheck);
                 window.removeEventListener("supabase-auth-change", handleHeaderChange);
                 subscription?.unsubscribe();
             };
