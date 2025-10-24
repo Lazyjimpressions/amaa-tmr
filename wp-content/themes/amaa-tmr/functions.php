@@ -110,19 +110,19 @@ function amaa_tmr_enqueue_scripts() {
         $is_survey_page = ($page_template === 'page-survey.php') || ($page_slug === 'survey');
     }
     
-    // ✅ Load Supabase core once globally (before both header and survey)
-    wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
-    wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
-    wp_enqueue_script('supabase-js', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), '2.0.0', true);
-    
-    // Supabase client (depends on supabase-js to ensure proper initialization)
-    wp_enqueue_script(
-        'amaa-tmr-supabase-client',
-        get_template_directory_uri() . '/assets/js/supabaseClient.js',
-        array('react', 'react-dom', 'supabase-js'), // CRITICAL: Must load after supabase-js
-        file_exists(get_template_directory() . '/assets/js/supabaseClient.js') ? filemtime(get_template_directory() . '/assets/js/supabaseClient.js') : '1.0.0',
-        true
-    );
+            // ✅ Load Supabase core once globally (before both header and survey)
+            wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18.0.0', true);
+            wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18.0.0', true);
+            wp_enqueue_script('supabase-js', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), '2.0.0', true);
+            
+            // Supabase client (depends on supabase-js to ensure proper initialization)
+            wp_enqueue_script(
+                'amaa-tmr-supabase-client',
+                get_template_directory_uri() . '/assets/js/supabaseClient.js',
+                array('supabase-js'), // CRITICAL: Must load after supabase-js only
+                file_exists(get_template_directory() . '/assets/js/supabaseClient.js') ? filemtime(get_template_directory() . '/assets/js/supabaseClient.js') : '1.0.0',
+                true
+            );
 
     if ($is_survey_page) {
 

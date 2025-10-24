@@ -477,21 +477,29 @@
 
             console.log("🚀 [SurveyApp] Mounting auth lifecycle");
 
-            // 1️⃣ Helper to refresh user state
+            // 1️⃣ Helper to refresh user state (with guard to prevent parallel execution)
+            let refreshing = false;
             const refreshUserState = async (reason = "manual") => {
+                if (refreshing) {
+                    console.log(`⏳ [SurveyApp] Already refreshing, skipping (${reason})`);
+                    return;
+                }
+                refreshing = true;
+                
                 console.log(`🔁 [SurveyApp] Refreshing user state (${reason})`);
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    console.log("✅ [SurveyApp] Active session found:", session.user.email);
-                    localStorage.setItem('supabase_user_data', JSON.stringify(session.user));
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    console.log("✅ [SurveyApp] Active user found:", user.email);
+                    localStorage.setItem('supabase_user_data', JSON.stringify(user));
                     setIsAuthenticated(true);
                     setShowLoginModal(false);
                 } else {
-                    console.log("⚠️ [SurveyApp] No active session");
+                    console.log("⚠️ [SurveyApp] No active user");
                     setIsAuthenticated(false);
                     setShowLoginModal(true);
                 }
                 setIsLoading(false);
+                refreshing = false;
             };
 
             // 2️⃣ Initial check (wait for Supabase to rehydrate session)
