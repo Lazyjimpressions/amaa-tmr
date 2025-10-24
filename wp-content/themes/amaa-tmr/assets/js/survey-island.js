@@ -468,118 +468,62 @@
             console.log('⚠️ No authenticated session yet — waiting for re-check');
         }
 
-        // 🚀 NEW: Bulletproof auth handling that syncs with header
+        // 🚀 NEW: Centralized auth handling via AuthManager
         useEffect(() => {
-            const supabase = window.supabaseClient;
-            const helpers = window.supabaseHelpers;
+            console.log('🚀 [SurveyApp] Mounting auth lifecycle with AuthManager');
 
-            if (!supabase) {
-                console.error("❌ Supabase client missing in SurveyApp");
-                return;
-            }
-
-            console.log("🚀 [SurveyApp] Mounting auth lifecycle");
-
-            // 1️⃣ Helper to refresh user state (with guard to prevent parallel execution)
-            let refreshing = false;
-            const refreshUserState = async (reason = "manual") => {
-                if (refreshing) {
-                    console.log(`⏳ [SurveyApp] Already refreshing, skipping (${reason})`);
-                    return;
-                }
-                refreshing = true;
-                
-                console.log(`🔁 [SurveyApp] Refreshing user state (${reason})`);
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    console.log("✅ [SurveyApp] Active user found:", user.email);
-                    localStorage.setItem('supabase_user_data', JSON.stringify(user));
-                    setIsAuthenticated(true);
-                    setShowLoginModal(false);
+            // Wait for AuthManager to be available
+            const waitForAuthManager = () => {
+                if (window.authManager) {
+                    console.log('✅ [SurveyApp] AuthManager available, subscribing to auth state');
+                    return setupAuthSubscription();
                 } else {
-                    console.log("⚠️ [SurveyApp] No active user");
-                    setIsAuthenticated(false);
-                    setShowLoginModal(true);
+                    console.log('⏳ [SurveyApp] Waiting for AuthManager...');
+                    setTimeout(waitForAuthManager, 100);
+                    return null;
                 }
-                setIsLoading(false);
-                refreshing = false;
             };
 
-            // 2️⃣ Initial check with retry loop (wait for Supabase to rehydrate session)
-            let attempts = 0;
-            const maxAttempts = 10; // Increased from 5 to 10
-
-            const checkUntilReady = async () => {
-                attempts++;
-                console.log(`🕓 Waiting for Supabase hydration (attempt ${attempts})`);
+            const setupAuthSubscription = () => {
+                const authManager = window.authManager;
                 
-                // Try both getUser() and getSession() for better session detection
-                const [userResult, sessionResult] = await Promise.all([
-                    supabase.auth.getUser(),
-                    supabase.auth.getSession()
-                ]);
-                
-                const user = userResult.data.user;
-                const session = sessionResult.data.session;
-                
-                if (user && session) {
-                    console.log("✅ [SurveyApp] Session restored:", user.email);
-                    // Cache user data for performance (Supabase manages session)
-                    localStorage.setItem('supabase_user_data', JSON.stringify(user));
-                    setIsAuthenticated(true);
-                    setShowLoginModal(false);
-                    setIsLoading(false);
+                // Subscribe to auth state changes
+                const unsubscribe = authManager.subscribe((newState, prevState) => {
+                    console.log('📡 [SurveyApp] Auth state changed:', {
+                        user: !!newState.user,
+                        loading: newState.loading,
+                        error: newState.error
+                    });
                     
-                    // Trigger HubSpot data fetch only after verified session
-                    if (window.fetchHubSpotData) {
-                        window.fetchHubSpotData(user.email);
+                    // Update component state
+                    setIsLoading(newState.loading);
+                    setIsAuthenticated(!!newState.user);
+                    setShowLoginModal(!newState.user && !newState.loading);
+                    
+                    // Handle user data
+                    if (newState.user && !prevState.user) {
+                        console.log('✅ [SurveyApp] User authenticated:', newState.user.email);
+                        
+                        // Trigger HubSpot data fetch
+                        if (window.fetchHubSpotData) {
+                            window.fetchHubSpotData(newState.user.email);
+                        }
+                    } else if (!newState.user && prevState.user) {
+                        console.log('🚪 [SurveyApp] User logged out');
                     }
-                } else if (attempts < maxAttempts) {
-                    console.log(`⏳ [SurveyApp] No session yet, retrying in 1s (attempt ${attempts}/${maxAttempts})`);
-                    setTimeout(checkUntilReady, 1000); // Increased from 500ms to 1s
-                } else {
-                    console.warn("⚠️ [SurveyApp] No session found after retries");
-                    setIsAuthenticated(false);
-                    setShowLoginModal(true);
-                    setIsLoading(false);
-                }
+                });
+                
+                // Cleanup subscription on unmount
+                return unsubscribe;
             };
 
-            checkUntilReady();
-
-            // 3️⃣ Subscribe to Supabase auth changes
-            const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
-                console.log(`📡 [SurveyApp] Auth event received: ${event}`);
-                if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
-                    refreshUserState(event);
-                } else if (event === "SIGNED_OUT") {
-                    setIsAuthenticated(false);
-                    setShowLoginModal(true);
-                    setIsLoading(false);
-                }
-            });
-
-            // 4️⃣ Also listen to the header's custom window event (throttled)
-            const handleHeaderChange = () => {
-                if (!refreshing) refreshUserState("header-sync");
-            };
-            window.addEventListener("supabase-auth-change", handleHeaderChange);
+            // Start waiting for AuthManager
+            const unsubscribe = waitForAuthManager();
             
-            // 5️⃣ Listen for logout events to immediately clear state
-            const handleLogout = () => {
-                console.log('🚪 [SurveyApp] Logout event received, clearing state');
-                setIsAuthenticated(false);
-                setShowLoginModal(true);
-                setIsLoading(false);
-                // Clear any cached user data
-                localStorage.removeItem('supabase_user_data');
-            };
-            window.addEventListener("supabase-logout", handleLogout);
-
             return () => {
-                window.removeEventListener("supabase-auth-change", handleHeaderChange);
-                window.removeEventListener("supabase-logout", handleLogout);
-                subscription?.unsubscribe();
+                if (unsubscribe) {
+                    unsubscribe();
+                }
             };
         }, []);
 

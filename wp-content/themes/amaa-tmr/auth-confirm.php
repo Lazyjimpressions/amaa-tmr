@@ -78,12 +78,11 @@ $next_url = urldecode($next);
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
         );
         
-        // Supabase manages session storage automatically
-        // Only cache user data for performance
+        // AuthManager will handle session management
+        // Just dispatch events for backward compatibility
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) {
-                console.log('✅ Auth confirm: User signed in, caching user data');
-                localStorage.setItem('supabase_user_data', JSON.stringify(session.user));
+                console.log('✅ Auth confirm: User signed in, AuthManager will handle session');
                 // Dispatch event to notify other components
                 window.dispatchEvent(new CustomEvent('supabase-auth-change', { detail: session.user }));
             }

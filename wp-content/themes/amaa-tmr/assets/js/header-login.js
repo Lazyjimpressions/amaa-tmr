@@ -221,8 +221,13 @@
                   e.target.textContent = 'Logging out...';
                   e.target.style.pointerEvents = 'none';
                   
-                  // Call centralized logout
-                  await window.supabaseHelpers.signOut();
+                  // Use AuthManager for centralized logout
+                  if (window.authManager) {
+                    await window.authManager.signOut();
+                  } else {
+                    // Fallback to old method
+                    await window.supabaseHelpers.signOut();
+                  }
                   
                   // Redirect to homepage after successful logout
                   console.log('✅ Logout successful, redirecting to homepage');

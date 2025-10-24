@@ -143,9 +143,259 @@ window.supabaseHelpers = {
     }
 };
 
+/**
+ * Centralized Authentication Manager
+ * Handles auth state, cross-tab sync, and event broadcasting
+ */
+class AuthManager {
+    constructor() {
+        this.state = {
+            user: null,
+            session: null,
+            loading: true,
+            error: null
+        };
+        this.listeners = [];
+        this.broadcastChannel = null;
+        this.retryCount = 0;
+        this.maxRetries = 3;
+        
+        this.init();
+    }
+    
+    async init() {
+        try {
+            // Initialize Supabase client
+            this.client = await this.waitForClient();
+            
+            // Set up cross-tab communication
+            this.setupCrossTabSync();
+            
+            // Set up auth state listener
+            this.setupAuthListener();
+            
+            // Initial auth check
+            await this.checkAuthState();
+            
+        } catch (error) {
+            console.error('❌ AuthManager initialization failed:', error);
+            this.setState({ error: error.message, loading: false });
+        }
+    }
+    
+    setupCrossTabSync() {
+        // Use BroadcastChannel for cross-tab communication
+        if (typeof BroadcastChannel !== 'undefined') {
+            this.broadcastChannel = new BroadcastChannel('supabase-auth');
+            this.broadcastChannel.onmessage = (event) => {
+                this.handleCrossTabMessage(event.data);
+            };
+        }
+    }
+    
+    setupAuthListener() {
+        this.client.auth.onAuthStateChange((event, session) => {
+            console.log(`🔐 AuthManager: ${event}`, session?.user?.email || 'No user');
+            
+            this.setState({
+                user: session?.user || null,
+                session: session,
+                loading: false,
+                error: null
+            });
+            
+            // Broadcast to other tabs
+            this.broadcastToTabs({
+                type: 'AUTH_STATE_CHANGE',
+                event,
+                user: session?.user || null,
+                session: session
+            });
+            
+            // Dispatch custom events for components
+            this.dispatchAuthEvent(event, session);
+        });
+    }
+    
+    async checkAuthState() {
+        try {
+            const [userResult, sessionResult] = await Promise.all([
+                this.client.auth.getUser(),
+                this.client.auth.getSession()
+            ]);
+            
+            const user = userResult.data.user;
+            const session = sessionResult.data.session;
+            
+            this.setState({
+                user,
+                session,
+                loading: false,
+                error: null
+            });
+            
+            // Cache user data for performance (not for auth)
+            if (user) {
+                localStorage.setItem('supabase_user_data', JSON.stringify(user));
+            }
+            
+        } catch (error) {
+            console.error('❌ Auth state check failed:', error);
+            this.setState({ error: error.message, loading: false });
+        }
+    }
+    
+    setState(newState) {
+        const prevState = { ...this.state };
+        this.state = { ...this.state, ...newState };
+        
+        // Notify listeners
+        this.listeners.forEach(listener => {
+            listener(this.state, prevState);
+        });
+    }
+    
+    subscribe(listener) {
+        this.listeners.push(listener);
+        return () => {
+            const index = this.listeners.indexOf(listener);
+            if (index > -1) {
+                this.listeners.splice(index, 1);
+            }
+        };
+    }
+    
+    handleCrossTabMessage(data) {
+        switch (data.type) {
+            case 'AUTH_STATE_CHANGE':
+                // Update state from other tab
+                this.setState({
+                    user: data.user,
+                    session: data.session,
+                    loading: false
+                });
+                break;
+                
+            case 'LOGOUT':
+                // Handle logout from other tab
+                this.setState({
+                    user: null,
+                    session: null,
+                    loading: false
+                });
+                break;
+        }
+    }
+    
+    broadcastToTabs(message) {
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage(message);
+        }
+    }
+    
+    dispatchAuthEvent(event, session) {
+        // Dispatch custom events for backward compatibility
+        window.dispatchEvent(new CustomEvent('supabase-auth-change', {
+            detail: session?.user || null
+        }));
+        
+        if (event === 'SIGNED_OUT') {
+            window.dispatchEvent(new CustomEvent('supabase-logout', {
+                detail: { timestamp: Date.now() }
+            }));
+        }
+    }
+    
+    async signOut() {
+        try {
+            const { error } = await this.client.auth.signOut();
+            
+            if (error) {
+                throw error;
+            }
+            
+            // Clear cached data
+            localStorage.removeItem('supabase_user_data');
+            
+            // Update state
+            this.setState({
+                user: null,
+                session: null,
+                loading: false,
+                error: null
+            });
+            
+            // Broadcast logout to other tabs
+            this.broadcastToTabs({
+                type: 'LOGOUT',
+                timestamp: Date.now()
+            });
+            
+            // Dispatch events
+            this.dispatchAuthEvent('SIGNED_OUT', null);
+            
+            console.log('✅ AuthManager: Logout successful');
+            
+        } catch (error) {
+            console.error('❌ AuthManager: Logout failed:', error);
+            this.setState({ error: error.message });
+            throw error;
+        }
+    }
+    
+    getState() {
+        return { ...this.state };
+    }
+    
+    isAuthenticated() {
+        return !!(this.state.user && this.state.session);
+    }
+    
+    getUser() {
+        return this.state.user;
+    }
+    
+    getSession() {
+        return this.state.session;
+    }
+    
+    isLoading() {
+        return this.state.loading;
+    }
+    
+    getError() {
+        return this.state.error;
+    }
+}
+
 // Export globally
 window.supabaseClient = supabaseClient;
 window.supabaseHelpers = window.supabaseHelpers;
+window.AuthManager = AuthManager;
+
+// Initialize global AuthManager instance
+let globalAuthManager = null;
+
+// Initialize AuthManager when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    if (!globalAuthManager) {
+        globalAuthManager = new AuthManager();
+        window.authManager = globalAuthManager;
+        console.log('🚀 Global AuthManager initialized');
+    }
+});
+
+// Also initialize immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+} else {
+    // DOM is already loaded
+    if (!globalAuthManager) {
+        globalAuthManager = new AuthManager();
+        window.authManager = globalAuthManager;
+        console.log('🚀 Global AuthManager initialized (DOM already loaded)');
+    }
+}
 
 // Update global client when it becomes available
 if (!supabaseClient) {
