@@ -1,11 +1,11 @@
 /**
  * Supabase Client Initialization + Helpers
  * Centralized client for consistent session state across all components
- * Version: 2.1.0 - Dynamic Loading Fix
- * Date: 2025-01-22
+ * Version: 2.2.0 - AuthManager Logout Fallback Fix
+ * Date: 2025-10-24
  */
 
-console.log('🚀 SupabaseClient.js v2.1.0 - Dynamic Loading Fix');
+console.log('🚀 SupabaseClient.js v2.2.0 - AuthManager Logout Fallback Fix');
 
 // Configuration (use constants already defined in functions.php)
 const SUPABASE_URL = 'https://ffgjqlmulaqtfopgwenf.supabase.co';
