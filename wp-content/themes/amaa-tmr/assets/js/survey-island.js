@@ -502,8 +502,31 @@
                 refreshing = false;
             };
 
-            // 2️⃣ Initial check (wait for Supabase to rehydrate session)
-            let initialCheck = setTimeout(refreshUserState, 300);
+            // 2️⃣ Initial check with retry loop (wait for Supabase to rehydrate session)
+            let attempts = 0;
+            const maxAttempts = 5;
+
+            const checkUntilReady = async () => {
+                attempts++;
+                console.log(`🕓 Waiting for Supabase hydration (attempt ${attempts})`);
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    console.log("✅ [SurveyApp] Session restored:", user.email);
+                    localStorage.setItem('supabase_user_data', JSON.stringify(user));
+                    setIsAuthenticated(true);
+                    setShowLoginModal(false);
+                    setIsLoading(false);
+                } else if (attempts < maxAttempts) {
+                    setTimeout(checkUntilReady, 500); // try again in 0.5s
+                } else {
+                    console.warn("⚠️ [SurveyApp] No session found after retries");
+                    setIsAuthenticated(false);
+                    setShowLoginModal(true);
+                    setIsLoading(false);
+                }
+            };
+
+            checkUntilReady();
 
             // 3️⃣ Subscribe to Supabase auth changes
             const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
