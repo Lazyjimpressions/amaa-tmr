@@ -468,23 +468,22 @@
             console.log('⚠️ No authenticated session yet — waiting for re-check');
         }
 
-        // 🚀 NEW: Centralized auth handling via AuthManager
+        // 🚀 HYBRID: AuthManager with fallback to legacy auth
         useEffect(() => {
-            console.log('🚀 [SurveyApp] Mounting auth lifecycle with AuthManager');
+            console.log('🚀 [SurveyApp] Mounting auth lifecycle with hybrid approach');
 
-            // Wait for AuthManager to be available
-            const waitForAuthManager = () => {
-                if (window.authManager) {
-                    console.log('✅ [SurveyApp] AuthManager available, subscribing to auth state');
-                    return setupAuthSubscription();
+            // Try AuthManager first, fallback to legacy if it fails
+            const setupAuth = () => {
+                if (window.authManager && !window.authManager.getError) {
+                    console.log('✅ [SurveyApp] Using AuthManager for auth state');
+                    return setupAuthManagerSubscription();
                 } else {
-                    console.log('⏳ [SurveyApp] Waiting for AuthManager...');
-                    setTimeout(waitForAuthManager, 100);
-                    return null;
+                    console.log('⚠️ [SurveyApp] AuthManager not available, using legacy auth');
+                    return setupLegacyAuth();
                 }
             };
 
-            const setupAuthSubscription = () => {
+            const setupAuthManagerSubscription = () => {
                 const authManager = window.authManager;
                 
                 // Subscribe to auth state changes
@@ -513,12 +512,93 @@
                     }
                 });
                 
-                // Cleanup subscription on unmount
                 return unsubscribe;
             };
 
-            // Start waiting for AuthManager
-            const unsubscribe = waitForAuthManager();
+            const setupLegacyAuth = () => {
+                const supabase = window.supabaseClient;
+                if (!supabase) {
+                    console.error('❌ [SurveyApp] No Supabase client available');
+                    setIsLoading(false);
+                    setShowLoginModal(true);
+                    return null;
+                }
+
+                // Legacy auth check with retry
+                let attempts = 0;
+                const maxAttempts = 5;
+
+                const checkAuth = async () => {
+                    attempts++;
+                    console.log(`🕓 [SurveyApp] Legacy auth check (attempt ${attempts})`);
+                    
+                    try {
+                        const [userResult, sessionResult] = await Promise.all([
+                            supabase.auth.getUser(),
+                            supabase.auth.getSession()
+                        ]);
+                        
+                        const user = userResult.data.user;
+                        const session = sessionResult.data.session;
+                        
+                        if (user && session) {
+                            console.log("✅ [SurveyApp] Legacy auth: User found:", user.email);
+                            setIsAuthenticated(true);
+                            setShowLoginModal(false);
+                            setIsLoading(false);
+                            
+                            // Trigger HubSpot data fetch
+                            if (window.fetchHubSpotData) {
+                                window.fetchHubSpotData(user.email);
+                            }
+                        } else if (attempts < maxAttempts) {
+                            console.log(`⏳ [SurveyApp] No session yet, retrying in 1s (attempt ${attempts}/${maxAttempts})`);
+                            setTimeout(checkAuth, 1000);
+                        } else {
+                            console.warn("⚠️ [SurveyApp] No session found after retries");
+                            setIsAuthenticated(false);
+                            setShowLoginModal(true);
+                            setIsLoading(false);
+                        }
+                    } catch (error) {
+                        console.error('❌ [SurveyApp] Legacy auth check failed:', error);
+                        setIsAuthenticated(false);
+                        setShowLoginModal(true);
+                        setIsLoading(false);
+                    }
+                };
+
+                checkAuth();
+
+                // Set up auth state listener
+                const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+                    console.log(`📡 [SurveyApp] Legacy auth event: ${event}`);
+                    
+                    if (event === 'SIGNED_IN' && session?.user) {
+                        console.log('✅ [SurveyApp] Legacy auth: User signed in:', session.user.email);
+                        setIsAuthenticated(true);
+                        setShowLoginModal(false);
+                        setIsLoading(false);
+                        
+                        // Trigger HubSpot data fetch
+                        if (window.fetchHubSpotData) {
+                            window.fetchHubSpotData(session.user.email);
+                        }
+                    } else if (event === 'SIGNED_OUT') {
+                        console.log('🚪 [SurveyApp] Legacy auth: User signed out');
+                        setIsAuthenticated(false);
+                        setShowLoginModal(true);
+                        setIsLoading(false);
+                    }
+                });
+
+                return () => {
+                    subscription?.unsubscribe();
+                };
+            };
+
+            // Start auth setup
+            const unsubscribe = setupAuth();
             
             return () => {
                 if (unsubscribe) {
