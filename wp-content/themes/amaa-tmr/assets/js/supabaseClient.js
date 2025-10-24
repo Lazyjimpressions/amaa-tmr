@@ -152,7 +152,7 @@ class AuthManager {
     async init() {
         try {
             // Initialize Supabase client
-            this.client = await this.waitForClient();
+            this.client = await window.supabaseHelpers.waitForClient();
             
             // Set up cross-tab communication
             this.setupCrossTabSync();
