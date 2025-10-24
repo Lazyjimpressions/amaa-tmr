@@ -524,6 +524,7 @@
                 
                 if (user && session) {
                     console.log("✅ [SurveyApp] Session restored:", user.email);
+                    // Cache user data for performance (Supabase manages session)
                     localStorage.setItem('supabase_user_data', JSON.stringify(user));
                     setIsAuthenticated(true);
                     setShowLoginModal(false);

@@ -113,6 +113,7 @@ window.supabaseHelpers = {
 
     /**
      * Sign out and broadcast logout to all listeners
+     * Uses Supabase-managed session storage (no manual localStorage manipulation)
      */
     async signOut() {
         const client = await this.waitForClient();
@@ -123,20 +124,9 @@ window.supabaseHelpers = {
         } else {
             log('✅ User signed out successfully');
             
-            // Clear all session data from localStorage
+            // Supabase handles session cleanup automatically
+            // Only clear our custom user data cache
             localStorage.removeItem('supabase_user_data');
-            localStorage.removeItem('supabase.auth.token');
-            localStorage.removeItem('supabase.auth.refresh_token');
-            
-            // Clear any other session-related data
-            const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.includes('supabase')) {
-                    keysToRemove.push(key);
-                }
-            }
-            keysToRemove.forEach(key => localStorage.removeItem(key));
             
             // Broadcast logout event to all components
             window.dispatchEvent(new CustomEvent('supabase-auth-change', { 
@@ -148,7 +138,7 @@ window.supabaseHelpers = {
                 detail: { timestamp: Date.now() }
             }));
             
-            log('🧹 Cleared all session data and broadcasted logout events');
+            log('🧹 Logout complete - Supabase managed session cleanup');
         }
     }
 };
