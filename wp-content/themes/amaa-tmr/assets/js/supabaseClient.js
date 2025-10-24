@@ -117,8 +117,39 @@ window.supabaseHelpers = {
     async signOut() {
         const client = await this.waitForClient();
         const { error } = await client.auth.signOut();
-        if (error) console.error('Sign-out error:', error.message);
-        else log('✅ User signed out successfully');
+        
+        if (error) {
+            console.error('Sign-out error:', error.message);
+        } else {
+            log('✅ User signed out successfully');
+            
+            // Clear all session data from localStorage
+            localStorage.removeItem('supabase_user_data');
+            localStorage.removeItem('supabase.auth.token');
+            localStorage.removeItem('supabase.auth.refresh_token');
+            
+            // Clear any other session-related data
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.includes('supabase')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            // Broadcast logout event to all components
+            window.dispatchEvent(new CustomEvent('supabase-auth-change', { 
+                detail: null 
+            }));
+            
+            // Dispatch custom logout event for additional cleanup
+            window.dispatchEvent(new CustomEvent('supabase-logout', { 
+                detail: { timestamp: Date.now() }
+            }));
+            
+            log('🧹 Cleared all session data and broadcasted logout events');
+        }
     }
 };
 

@@ -214,8 +214,26 @@
               href: '#',
               onClick: async (e) => {
                 e.preventDefault();
-                await window.supabaseHelpers.signOut();
-                window.location.reload();
+                console.log('🚪 Logout initiated by user');
+                
+                try {
+                  // Show loading state
+                  e.target.textContent = 'Logging out...';
+                  e.target.style.pointerEvents = 'none';
+                  
+                  // Call centralized logout
+                  await window.supabaseHelpers.signOut();
+                  
+                  // Redirect to homepage after successful logout
+                  console.log('✅ Logout successful, redirecting to homepage');
+                  window.location.href = '/';
+                } catch (error) {
+                  console.error('❌ Logout failed:', error);
+                  // Reset button state on error
+                  e.target.textContent = 'Logout';
+                  e.target.style.pointerEvents = 'auto';
+                  alert('Logout failed. Please try again.');
+                }
               }
             }, 'Logout')
           ])

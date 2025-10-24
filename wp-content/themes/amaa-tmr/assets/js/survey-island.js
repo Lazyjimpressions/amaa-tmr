@@ -563,9 +563,21 @@
                 if (!refreshing) refreshUserState("header-sync");
             };
             window.addEventListener("supabase-auth-change", handleHeaderChange);
+            
+            // 5️⃣ Listen for logout events to immediately clear state
+            const handleLogout = () => {
+                console.log('🚪 [SurveyApp] Logout event received, clearing state');
+                setIsAuthenticated(false);
+                setShowLoginModal(true);
+                setIsLoading(false);
+                // Clear any cached user data
+                localStorage.removeItem('supabase_user_data');
+            };
+            window.addEventListener("supabase-logout", handleLogout);
 
             return () => {
                 window.removeEventListener("supabase-auth-change", handleHeaderChange);
+                window.removeEventListener("supabase-logout", handleLogout);
                 subscription?.unsubscribe();
             };
         }, []);
