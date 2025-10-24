@@ -465,113 +465,58 @@
             console.log('⚠️ No authenticated session yet — waiting for re-check');
         }
 
-        // Check Supabase session on mount
+        // 🚀 NEW: Bulletproof auth handling that syncs with header
         useEffect(() => {
-            let authListener;
-            let retries = 0;
-            
-            const waitForHelpers = setInterval(() => {
-                if (window.supabaseHelpers && window.supabaseClient) {
-                    clearInterval(waitForHelpers);
-                    console.log('✅ Supabase ready — starting checkAuth()');
-                    checkAuth();
-                } else if (++retries > 25) {
-                    clearInterval(waitForHelpers);
-                    console.error('❌ SupabaseHelpers never loaded after 5s — showing login modal');
-                    setIsLoading(false);
-                    setShowLoginModal(true);
-                }
-            }, 200);
+            const supabase = window.supabaseClient;
+            const helpers = window.supabaseHelpers;
 
-            const checkAuth = async () => {
-                console.log('🔐 Checking Supabase session...');
+            if (!supabase) {
+                console.error("❌ Supabase client missing in SurveyApp");
+                return;
+            }
 
-                try {
-                    const user = await window.supabaseHelpers.getCurrentUser();
-                    if (user) {
-                        console.log('✅ Active session found for:', user.email);
-                        localStorage.setItem('supabase_user_data', JSON.stringify(user));
-                        setIsAuthenticated(true);
-                        setShowLoginModal(false);
-                    } else {
-                        console.log('⚠️ No active session found.');
-                        setShowLoginModal(true);
-                        setIsAuthenticated(false);
-                    }
+            console.log("🚀 [SurveyApp] Mounting auth lifecycle");
 
-                    // Always attach listener
-                    if (supabaseClient?.auth) {
-                        authListener = supabaseClient.auth.onAuthStateChange((event, session) => {
-                            console.log('🔄 Auth event detected:', event);
-                            if (event === 'SIGNED_IN' && session?.user) {
-                                console.log('✅ User signed in:', session.user.email);
-                                localStorage.setItem('supabase_user_data', JSON.stringify(session.user));
-                                setIsAuthenticated(true);
-                                setShowLoginModal(false);
-                                setIsLoading(false); // 👈 Critical
-                            } else if (event === 'SIGNED_OUT') {
-                                console.log('🚪 User signed out');
-                                setIsAuthenticated(false);
-                                setShowLoginModal(true);
-                                setIsLoading(false); // 👈 also reset
-                            }
-                        });
-                    }
-                } catch (err) {
-                    console.error('❌ Auth check error:', err);
-                    setShowLoginModal(true);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-
-            // Cleanup on unmount
-            return () => {
-                clearInterval(waitForHelpers);
-                if (authListener?.data?.subscription) {
-                    authListener.data.subscription.unsubscribe();
-                }
-            };
-        }, []);
-
-        // 🔄 Re-run auth check whenever Supabase broadcasts an auth change
-        useEffect(() => {
-            const handleAuthChange = async (event) => {
-                console.log(`📡 Auth event received in SurveyApp: ${event.type || event}`);
-                
-                // Add delay to ensure session is fully established
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                const user = await window.supabaseHelpers?.getCurrentUser?.();
-                console.log('🔍 getCurrentUser result:', user);
-                
-                if (user) {
-                    console.log('✅ User revalidated after event:', user.email);
+            // 1️⃣ Helper to refresh user state
+            const refreshUserState = async (reason = "manual") => {
+                console.log(`🔁 [SurveyApp] Refreshing user state (${reason})`);
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    console.log("✅ [SurveyApp] Active session found:", session.user.email);
+                    localStorage.setItem('supabase_user_data', JSON.stringify(session.user));
                     setIsAuthenticated(true);
                     setShowLoginModal(false);
-                    setIsLoading(false);
                 } else {
-                    console.log('⚠️ User signed out or missing session');
+                    console.log("⚠️ [SurveyApp] No active session");
                     setIsAuthenticated(false);
                     setShowLoginModal(true);
                 }
+                setIsLoading(false);
             };
 
-            // Listen to both Supabase + custom dispatch
-            window.addEventListener('supabase-auth-change', handleAuthChange);
-            const { data: listener } = window.supabaseClient?.auth?.onAuthStateChange(
-                (event, session) => {
-                    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-                        handleAuthChange({ type: event });
-                    } else if (event === 'SIGNED_OUT') {
-                        handleAuthChange({ type: event });
-                    }
+            // 2️⃣ Initial check (wait for Supabase to rehydrate session)
+            let initialCheck = setTimeout(refreshUserState, 300);
+
+            // 3️⃣ Subscribe to Supabase auth changes
+            const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+                console.log(`📡 [SurveyApp] Auth event received: ${event}`);
+                if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+                    refreshUserState(event);
+                } else if (event === "SIGNED_OUT") {
+                    setIsAuthenticated(false);
+                    setShowLoginModal(true);
+                    setIsLoading(false);
                 }
-            );
+            });
+
+            // 4️⃣ Also listen to the header's custom window event
+            const handleHeaderChange = () => refreshUserState("header-sync");
+            window.addEventListener("supabase-auth-change", handleHeaderChange);
 
             return () => {
-                window.removeEventListener('supabase-auth-change', handleAuthChange);
-                listener?.unsubscribe?.();
+                clearTimeout(initialCheck);
+                window.removeEventListener("supabase-auth-change", handleHeaderChange);
+                subscription?.unsubscribe();
             };
         }, []);
 
