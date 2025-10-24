@@ -294,6 +294,12 @@ class AuthManager {
     
     async signOut() {
         try {
+            // Check if client is available
+            if (!this.client) {
+                console.warn('⚠️ AuthManager: Client not available, using legacy logout');
+                return await window.supabaseHelpers.signOut();
+            }
+            
             const { error } = await this.client.auth.signOut();
             
             if (error) {
