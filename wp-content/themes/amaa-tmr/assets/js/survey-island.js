@@ -1,14 +1,14 @@
 /**
  * AM&AA TMR Survey Island - AuthManager Only
  * Modal-first authentication + 2-page survey structure
- * Version: 4.0.0 - AuthManager Only Architecture
+ * Version: 4.1.0 - Fixed Initial State Read
  * Date: 2025-10-24
  */
 
 (function() {
     'use strict';
     
-    console.log('🚀 Survey Island Script Loading... [AUTHMANAGER_ONLY_v4.0.0]');
+    console.log('🚀 Survey Island Script Loading... [AUTHMANAGER_ONLY_v4.1.0]');
 
             // Use centralized Supabase client (now guaranteed to be loaded by WordPress dependencies)
             const supabaseClient = window.supabaseClient;
@@ -501,12 +501,33 @@
             const setupAuthManagerSubscription = () => {
                 const authManager = window.authManager;
                 
-                // Subscribe to auth state changes
+                // ✅ CRITICAL FIX: Read current state immediately on subscription
+                const currentState = authManager.getState();
+                console.log('📊 [SurveyApp] Initial AuthManager state:', {
+                    user: !!currentState.user,
+                    email: currentState.user?.email,
+                    loading: currentState.loading,
+                    error: currentState.error
+                });
+                
+                // ✅ Set component state from AuthManager's current state
+                setIsLoading(currentState.loading);
+                setIsAuthenticated(!!currentState.user);
+                setShowLoginModal(!currentState.user && !currentState.loading);
+                
+                // If already authenticated, trigger HubSpot fetch
+                if (currentState.user && window.fetchHubSpotData) {
+                    console.log('✅ [SurveyApp] User already authenticated, fetching HubSpot data');
+                    window.fetchHubSpotData(currentState.user.email);
+                }
+                
+                // Subscribe to FUTURE auth state changes
                 const unsubscribe = authManager.subscribe((newState, prevState) => {
                     console.log('📡 [SurveyApp] Auth state changed:', {
                         user: !!newState.user,
                         loading: newState.loading,
-                        error: newState.error
+                        error: newState.error,
+                        userChanged: (!!newState.user) !== (!!prevState.user)
                     });
                     
                     // Update component state
@@ -514,16 +535,16 @@
                     setIsAuthenticated(!!newState.user);
                     setShowLoginModal(!newState.user && !newState.loading);
                     
-                    // Handle user data
+                    // Handle user data changes
                     if (newState.user && !prevState.user) {
-                        console.log('✅ [SurveyApp] User authenticated:', newState.user.email);
+                        console.log('✅ [SurveyApp] User just authenticated:', newState.user.email);
                         
                         // Trigger HubSpot data fetch
                         if (window.fetchHubSpotData) {
                             window.fetchHubSpotData(newState.user.email);
                         }
                     } else if (!newState.user && prevState.user) {
-                        console.log('🚪 [SurveyApp] User logged out');
+                        console.log('🚪 [SurveyApp] User just logged out');
                     }
                 });
                 
