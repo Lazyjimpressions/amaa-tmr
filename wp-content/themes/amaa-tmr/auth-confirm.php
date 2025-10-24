@@ -111,11 +111,37 @@ $next_url = urldecode($next);
                     console.log('  - Verification result:', error ? 'Error' : 'Success');
                     
                     if (!error) {
+                        console.log('✅ Auth verification successful');
                         console.log('  - Redirecting to:', next);
-                        // Small delay to ensure session is stored
-                        setTimeout(() => {
-                            window.location.href = next;
-                        }, 500);
+                        
+                        // Check if this window was opened by clicking a link (opener exists)
+                        if (window.opener && !window.opener.closed) {
+                            console.log('  - Detected opener window, redirecting parent');
+                            try {
+                                // Redirect the original window
+                                window.opener.location.href = next;
+                                // Close this popup/tab
+                                window.close();
+                                
+                                // Fallback if window.close() is blocked
+                                setTimeout(() => {
+                                    if (!window.closed) {
+                                        console.log('  - Could not close window, redirecting this window instead');
+                                        window.location.href = next;
+                                    }
+                                }, 1000);
+                            } catch (e) {
+                                console.error('  - Error redirecting opener:', e);
+                                // Fallback to normal redirect
+                                window.location.href = next;
+                            }
+                        } else {
+                            // Normal redirect (same window or no opener)
+                            console.log('  - Normal redirect (same window)');
+                            setTimeout(() => {
+                                window.location.href = next;
+                            }, 500);
+                        }
                     } else {
                         console.error('  - Verification error:', error);
                         document.querySelector('.container').innerHTML = `

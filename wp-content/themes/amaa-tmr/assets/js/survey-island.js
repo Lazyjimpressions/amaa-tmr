@@ -1,14 +1,14 @@
 /**
  * AM&AA TMR Survey Island - AuthManager Only
  * Modal-first authentication + 2-page survey structure
- * Version: 4.1.0 - Fixed Initial State Read
+ * Version: 4.2.0 - Fixed AuthManager Readiness & Window Handling
  * Date: 2025-10-24
  */
 
 (function() {
     'use strict';
     
-    console.log('🚀 Survey Island Script Loading... [AUTHMANAGER_ONLY_v4.1.0]');
+    console.log('🚀 Survey Island Script Loading... [AUTHMANAGER_ONLY_v4.2.0]');
 
             // Use centralized Supabase client (now guaranteed to be loaded by WordPress dependencies)
             const supabaseClient = window.supabaseClient;
@@ -472,30 +472,58 @@
         useEffect(() => {
             console.log('🚀 [SurveyApp] Mounting auth lifecycle with AuthManager only');
 
-            // Wait for AuthManager to be available
+            // Wait for AuthManager to be available AND initialized
             const setupAuth = () => {
-                if (window.authManager && !window.authManager.getError) {
-                    console.log('✅ [SurveyApp] Using AuthManager for auth state');
-                    return setupAuthManagerSubscription();
-                } else {
-                    console.log('⚠️ [SurveyApp] AuthManager not available, waiting...');
-                    // Wait up to 5 seconds for AuthManager
-                    let attempts = 0;
-                    const interval = setInterval(() => {
-                        if (window.authManager && !window.authManager.getError) {
-                            clearInterval(interval);
-                            console.log('✅ [SurveyApp] AuthManager now available');
-                            return setupAuthManagerSubscription();
-                        } else if (++attempts > 50) {
-                            clearInterval(interval);
-                            console.error('❌ [SurveyApp] AuthManager not available after waiting');
-                            setIsLoading(false);
-                            setShowLoginModal(true);
-                            return null;
-                        }
-                    }, 100);
-                    return null;
+                // ✅ Check if AuthManager exists and has a valid state
+                if (window.authManager && typeof window.authManager.getState === 'function') {
+                    const state = window.authManager.getState();
+                    
+                    console.log('🔍 [SurveyApp] AuthManager state check:', {
+                        exists: true,
+                        loading: state.loading,
+                        hasUser: !!state.user,
+                        userEmail: state.user?.email
+                    });
+                    
+                    // If AuthManager has finished initializing (loading: false OR has user)
+                    if (state.loading === false || state.user !== null) {
+                        console.log('✅ [SurveyApp] AuthManager ready, setting up subscription');
+                        return setupAuthManagerSubscription();
+                    }
                 }
+                
+                console.log('⚠️ [SurveyApp] AuthManager not ready yet, waiting...');
+                
+                // Wait up to 5 seconds for AuthManager to finish initializing
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    if (window.authManager && typeof window.authManager.getState === 'function') {
+                        const state = window.authManager.getState();
+                        
+                        console.log(`🔄 [SurveyApp] Waiting for AuthManager... attempt ${attempts + 1}/50`, {
+                            loading: state.loading,
+                            hasUser: !!state.user
+                        });
+                        
+                        // Check if initialization is complete
+                        if (state.loading === false || state.user !== null) {
+                            clearInterval(interval);
+                            console.log('✅ [SurveyApp] AuthManager now ready');
+                            return setupAuthManagerSubscription();
+                        }
+                    }
+                    
+                    if (++attempts > 50) {
+                        clearInterval(interval);
+                        console.error('❌ [SurveyApp] AuthManager not ready after 5 seconds');
+                        console.error('Final AuthManager state:', window.authManager?.getState());
+                        setIsLoading(false);
+                        setShowLoginModal(true);
+                        return null;
+                    }
+                }, 100);
+                
+                return null;
             };
 
             const setupAuthManagerSubscription = () => {
