@@ -37,17 +37,8 @@ function log(...args) {
     if (DEBUG) console.log(...args);
 }
 
-// --- Auth Event Logging ---
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    log('🔐 Supabase Auth Event:', event);
-    if (event === 'SIGNED_IN') {
-        log('✅ User signed in:', session?.user?.email);
-        window.dispatchEvent(new CustomEvent('supabase-auth-change', { detail: session?.user }));
-    } else if (event === 'SIGNED_OUT') {
-        log('🚪 User signed out');
-        window.dispatchEvent(new CustomEvent('supabase-auth-change', { detail: null }));
-    }
-});
+// --- Auth Event Logging (Legacy - AuthManager handles this now) ---
+// Removed duplicate auth listener - AuthManager handles all auth events
 
 // =====================================
 // 🔧 Global Helper Methods
@@ -113,32 +104,27 @@ window.supabaseHelpers = {
 
     /**
      * Sign out and broadcast logout to all listeners
-     * Uses Supabase-managed session storage (no manual localStorage manipulation)
+     * DEPRECATED: Use AuthManager.signOut() instead
+     * Kept for backward compatibility
      */
     async signOut() {
+        console.warn('⚠️ supabaseHelpers.signOut() is deprecated. Use AuthManager.signOut() instead.');
+        
+        // Delegate to AuthManager if available
+        if (window.authManager) {
+            return await window.authManager.signOut();
+        }
+        
+        // Fallback to direct Supabase call
         const client = await this.waitForClient();
         const { error } = await client.auth.signOut();
         
         if (error) {
             console.error('Sign-out error:', error.message);
+            throw error;
         } else {
-            log('✅ User signed out successfully');
-            
-            // Supabase handles session cleanup automatically
-            // Only clear our custom user data cache
+            log('✅ User signed out successfully (legacy method)');
             localStorage.removeItem('supabase_user_data');
-            
-            // Broadcast logout event to all components
-            window.dispatchEvent(new CustomEvent('supabase-auth-change', { 
-                detail: null 
-            }));
-            
-            // Dispatch custom logout event for additional cleanup
-            window.dispatchEvent(new CustomEvent('supabase-logout', { 
-                detail: { timestamp: Date.now() }
-            }));
-            
-            log('🧹 Logout complete - Supabase managed session cleanup');
         }
     }
 };
@@ -397,15 +383,7 @@ if (document.readyState === 'loading') {
     }
 }
 
-// Update global client when it becomes available
-if (!supabaseClient) {
-    const checkClient = setInterval(() => {
-        if (supabaseClient) {
-            window.supabaseClient = supabaseClient;
-            clearInterval(checkClient);
-        }
-    }, 100);
-}
+// Global client is set above - no need for polling
 
 console.log('✅ Supabase client & helpers initialized');
 

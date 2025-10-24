@@ -139,16 +139,29 @@ get_header(); ?>
 <script>
 // Personalize dashboard on load
 (async function() {
-  const token = localStorage.getItem('supabase_token');
-  if (!token) {
+  // Wait for AuthManager to be available
+  const waitForAuth = () => {
+    return new Promise((resolve) => {
+      if (window.authManager) {
+        resolve(window.authManager);
+      } else {
+        setTimeout(() => waitForAuth().then(resolve), 100);
+      }
+    });
+  };
+  
+  const authManager = await waitForAuth();
+  
+  if (!authManager.isAuthenticated()) {
     window.location.href = '/survey';
     return;
   }
   
   try {
+    const session = authManager.getSession();
     const response = await fetch('<?php echo esc_url(rest_url('supabase/v1/me')); ?>', {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json'
       }
     });
