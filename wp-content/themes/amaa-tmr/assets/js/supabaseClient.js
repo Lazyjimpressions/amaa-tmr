@@ -9,8 +9,25 @@
 const SUPABASE_URL = 'https://ffgjqlmulaqtfopgwenf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g';
 
-// Initialize client
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Wait for Supabase to be available, then initialize client
+let supabaseClient;
+
+if (window.supabase) {
+    // Supabase CDN is already loaded
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+    // Load Supabase CDN dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = () => {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client loaded dynamically');
+    };
+    script.onerror = () => {
+        console.error('❌ Failed to load Supabase CDN');
+    };
+    document.head.appendChild(script);
+}
 
 // --- Optional Debug Mode ---
 const DEBUG = true;
@@ -35,11 +52,23 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 // =====================================
 window.supabaseHelpers = {
     /**
+     * Wait for Supabase client to be ready
+     * @returns {Promise<object>} Supabase client
+     */
+    async waitForClient() {
+        while (!supabaseClient) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return supabaseClient;
+    },
+
+    /**
      * Get the current Supabase session (user + token)
      * @returns {Promise<object|null>} user or null
      */
     async getCurrentUser() {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        const client = await this.waitForClient();
+        const { data: { session }, error } = await client.auth.getSession();
         if (error) {
             console.error('Error getting session:', error.message);
             return null;
@@ -55,8 +84,9 @@ window.supabaseHelpers = {
         let user = await this.getCurrentUser();
         if (user) return user;
 
-        return new Promise((resolve, reject) => {
-            const unsub = supabaseClient.auth.onAuthStateChange((event, session) => {
+        return new Promise(async (resolve, reject) => {
+            const client = await this.waitForClient();
+            const unsub = client.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session?.user) {
                     unsub.data.subscription.unsubscribe();
                     resolve(session.user);
@@ -74,7 +104,8 @@ window.supabaseHelpers = {
      * @returns {Promise<string|null>} access token or null
      */
     async getAccessToken() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const client = await this.waitForClient();
+        const { data: { session } } = await client.auth.getSession();
         return session?.access_token || null;
     },
 
@@ -82,7 +113,8 @@ window.supabaseHelpers = {
      * Sign out and broadcast logout to all listeners
      */
     async signOut() {
-        const { error } = await supabaseClient.auth.signOut();
+        const client = await this.waitForClient();
+        const { error } = await client.auth.signOut();
         if (error) console.error('Sign-out error:', error.message);
         else log('✅ User signed out successfully');
     }
@@ -91,6 +123,16 @@ window.supabaseHelpers = {
 // Export globally
 window.supabaseClient = supabaseClient;
 window.supabaseHelpers = window.supabaseHelpers;
+
+// Update global client when it becomes available
+if (!supabaseClient) {
+    const checkClient = setInterval(() => {
+        if (supabaseClient) {
+            window.supabaseClient = supabaseClient;
+            clearInterval(checkClient);
+        }
+    }, 100);
+}
 
 console.log('✅ Supabase client & helpers initialized');
 
