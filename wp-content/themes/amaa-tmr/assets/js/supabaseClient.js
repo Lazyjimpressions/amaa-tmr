@@ -1,9 +1,11 @@
 /**
  * Supabase Client Initialization + Helpers
  * Centralized client for consistent session state across all components
- * Version: 2.0.0
+ * Version: 2.1.0 - Dynamic Loading Fix
  * Date: 2025-01-22
  */
+
+console.log('🚀 SupabaseClient.js v2.1.0 - Dynamic Loading Fix');
 
 // Configuration (use constants already defined in functions.php)
 const SUPABASE_URL = 'https://ffgjqlmulaqtfopgwenf.supabase.co';
