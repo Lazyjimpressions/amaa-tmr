@@ -78,6 +78,16 @@ $next_url = urldecode($next);
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2pxbG11bGFxdGZvcGd3ZW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTU2ODEsImV4cCI6MjA3NTE3MTY4MX0.dR0jytzP7h07DkaYdFwkrqyCAZOfVWUfzJwfiJy_O5g'
         );
         
+        // Ensure session is properly stored in localStorage for the main app
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                console.log('✅ Auth confirm: User signed in, storing session');
+                localStorage.setItem('supabase_user_data', JSON.stringify(session.user));
+                // Dispatch event to notify other components
+                window.dispatchEvent(new CustomEvent('supabase-auth-change', { detail: session.user }));
+            }
+        });
+        
         async function confirm() {
             const params = new URLSearchParams(window.location.search);
             const token_hash = params.get('token_hash');
@@ -100,7 +110,10 @@ $next_url = urldecode($next);
                     
                     if (!error) {
                         console.log('  - Redirecting to:', next);
-                        window.location.href = next;
+                        // Small delay to ensure session is stored
+                        setTimeout(() => {
+                            window.location.href = next;
+                        }, 500);
                     } else {
                         console.error('  - Verification error:', error);
                         document.querySelector('.container').innerHTML = `

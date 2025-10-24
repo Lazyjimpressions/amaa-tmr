@@ -507,13 +507,22 @@
 
             // 2️⃣ Initial check with retry loop (wait for Supabase to rehydrate session)
             let attempts = 0;
-            const maxAttempts = 5;
+            const maxAttempts = 10; // Increased from 5 to 10
 
             const checkUntilReady = async () => {
                 attempts++;
                 console.log(`🕓 Waiting for Supabase hydration (attempt ${attempts})`);
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
+                
+                // Try both getUser() and getSession() for better session detection
+                const [userResult, sessionResult] = await Promise.all([
+                    supabase.auth.getUser(),
+                    supabase.auth.getSession()
+                ]);
+                
+                const user = userResult.data.user;
+                const session = sessionResult.data.session;
+                
+                if (user && session) {
                     console.log("✅ [SurveyApp] Session restored:", user.email);
                     localStorage.setItem('supabase_user_data', JSON.stringify(user));
                     setIsAuthenticated(true);
@@ -525,7 +534,8 @@
                         window.fetchHubSpotData(user.email);
                     }
                 } else if (attempts < maxAttempts) {
-                    setTimeout(checkUntilReady, 500); // try again in 0.5s
+                    console.log(`⏳ [SurveyApp] No session yet, retrying in 1s (attempt ${attempts}/${maxAttempts})`);
+                    setTimeout(checkUntilReady, 1000); // Increased from 500ms to 1s
                 } else {
                     console.warn("⚠️ [SurveyApp] No session found after retries");
                     setIsAuthenticated(false);
